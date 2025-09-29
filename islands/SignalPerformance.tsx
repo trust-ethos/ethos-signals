@@ -10,7 +10,7 @@ interface Props {
   tweetTimestamp?: string;
   project?: {
     type: "token" | "nft" | "pre_tge";
-    chain?: "ethereum" | "base" | "solana";
+    chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
     link?: string;
     coinGeckoId?: string;
   };
@@ -105,16 +105,16 @@ export default function SignalPerformance({ signalId, projectHandle, sentiment, 
 
   if (loading) {
     return (
-      <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
-        <div class="text-xs text-gray-500">Loading performance...</div>
+      <div class="glass-subtle rounded-xl p-3 border border-white/10">
+        <div class="text-xs text-gray-400">Loading performance...</div>
       </div>
     );
   }
 
   if (performance === null || callPrice === null || currentPrice === null) {
     return (
-      <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
-        <div class="text-xs text-gray-500">Performance data unavailable</div>
+      <div class="glass-subtle rounded-xl p-3 border border-white/10">
+        <div class="text-xs text-gray-400">Performance data unavailable</div>
       </div>
     );
   }
@@ -134,30 +134,30 @@ export default function SignalPerformance({ signalId, projectHandle, sentiment, 
   };
   
   return (
-    <div class={`rounded-lg p-3 border-2 ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+    <div class={`rounded-xl p-3 border-2 backdrop-blur-sm ${isCorrect ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
       {/* Price Information */}
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
         <div>
-          <div class="text-xs text-gray-500 mb-0.5">Post Price</div>
-          <div class="text-sm font-semibold text-gray-900">{formatPrice(callPrice)}</div>
+          <div class="text-xs text-gray-400 mb-0.5">Post Price</div>
+          <div class="text-sm font-semibold text-white">{formatPrice(callPrice)}</div>
         </div>
         <div class="text-right">
-          <div class="text-xs text-gray-500 mb-0.5">Current Price</div>
-          <div class="text-sm font-semibold text-gray-900">{formatPrice(currentPrice)}</div>
+          <div class="text-xs text-gray-400 mb-0.5">Current Price</div>
+          <div class="text-sm font-semibold text-white">{formatPrice(currentPrice)}</div>
         </div>
       </div>
       
       {/* Performance Metrics */}
       <div class="flex items-center justify-between">
         <div>
-          <div class="text-xs text-gray-600 font-medium mb-1">Performance</div>
-          <div class={`text-2xl font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <div class="text-xs text-gray-400 font-medium mb-1">Performance</div>
+          <div class={`text-2xl font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
             {isPositive ? '↗' : '↘'} {Math.abs(performance).toFixed(1)}%
           </div>
         </div>
         <div class="text-right">
-          <div class="text-xs text-gray-600 mb-1">Accuracy</div>
-          <div class={`text-xl font-semibold ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+          <div class="text-xs text-gray-400 mb-1">Accuracy</div>
+          <div class={`text-xl font-semibold ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
             {isCorrect ? '✅' : '❌'}
           </div>
         </div>

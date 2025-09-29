@@ -9,16 +9,16 @@ interface ButtonProps extends Omit<JSX.HTMLAttributes<HTMLButtonElement>, 'size'
 }
 
 const variants = {
-  default: "bg-gray-900 text-gray-50 hover:bg-gray-900/90",
-  secondary: "bg-gray-100 text-gray-900 hover:bg-gray-100/80",
-  outline: "border border-gray-200 bg-white hover:bg-gray-100 hover:text-gray-900",
-  ghost: "hover:bg-gray-100 hover:text-gray-900",
+  default: "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50",
+  secondary: "bg-gradient-to-r from-gray-700 to-gray-600 text-gray-100 hover:from-gray-600 hover:to-gray-500 shadow-lg shadow-gray-700/30",
+  outline: "border-2 border-blue-500/50 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 hover:border-blue-400/70 backdrop-blur-sm",
+  ghost: "hover:bg-white/10 text-gray-300 hover:text-white backdrop-blur-sm",
 };
 
 const sizes = {
-  sm: "h-9 rounded-md px-3 text-xs",
-  md: "h-10 px-4 py-2 text-sm",
-  lg: "h-11 rounded-md px-8 text-base",
+  sm: "h-9 rounded-xl px-4 text-xs",
+  md: "h-11 px-6 py-2 text-sm rounded-xl",
+  lg: "h-13 rounded-xl px-8 text-base",
 };
 
 export function Button({ 
@@ -35,10 +35,11 @@ export function Button({
       type={type}
       disabled={disabled}
       class={`
-        inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium 
-        ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 
-        focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:pointer-events-none 
-        disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}
+        inline-flex items-center justify-center whitespace-nowrap font-semibold 
+        ring-offset-black transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 
+        focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none 
+        disabled:opacity-40 disabled:grayscale hover:scale-105 active:scale-95
+        ${variants[variant]} ${sizes[size]} ${className}
       `}
       {...props}
     >

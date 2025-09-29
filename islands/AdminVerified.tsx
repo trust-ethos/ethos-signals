@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { EthosUser, searchUsersByTwitter } from "../utils/ethos-api.ts";
+import { EthosUser } from "../utils/ethos-api.ts";
 
 type ProjectType = "token" | "pre_tge" | "nft";
 
@@ -13,6 +13,7 @@ interface Props {
     link?: string; 
     chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
     coinGeckoId?: string;
+    ticker?: string;
   }>;
 }
 
@@ -24,6 +25,7 @@ export default function AdminVerified({ initialItems }: Props) {
   const [link, setLink] = useState("");
   const [chain, setChain] = useState<"ethereum" | "base" | "solana" | "bsc" | "plasma">("ethereum");
   const [coinGeckoId, setCoinGeckoId] = useState("");
+  const [ticker, setTicker] = useState("");
   const [items, setItems] = useState(initialItems);
   const boxRef = useRef<HTMLDivElement | null>(null);
 
@@ -78,13 +80,14 @@ export default function AdminVerified({ initialItems }: Props) {
       type,
       link: link || undefined,
       coinGeckoId: coinGeckoId || undefined,
+      ticker: ticker || undefined,
       chain,
     };
     const res = await fetch('/api/verified', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     if (res.ok) {
       const list = await fetch('/api/verified').then(r => r.json());
       setItems(list.values || []);
-      setQuery(""); setSelected(null); setResults([]); setLink(""); setCoinGeckoId("");
+      setQuery(""); setSelected(null); setResults([]); setLink(""); setCoinGeckoId(""); setTicker("");
     }
   }
 
@@ -111,32 +114,33 @@ export default function AdminVerified({ initialItems }: Props) {
   return (
     <div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 relative">
-        <input class="input" placeholder="Search Ethos by Twitter handle" value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
-        <select class="input" value={type} onInput={(e) => setType((e.target as HTMLSelectElement).value as ProjectType)}>
+        <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="Search Ethos by Twitter handle" value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
+        <select class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" value={type} onInput={(e) => setType((e.target as HTMLSelectElement).value as ProjectType)}>
           <option value="token">Token</option>
           <option value="pre_tge">Pre-TGE</option>
           <option value="nft">NFT</option>
         </select>
-        <select class="input" value={chain} onInput={(e) => setChain((e.target as HTMLSelectElement).value as "ethereum" | "base" | "solana" | "bsc" | "plasma")}>
+        <select class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" value={chain} onInput={(e) => setChain((e.target as HTMLSelectElement).value as "ethereum" | "base" | "solana" | "bsc" | "plasma")}>
           <option value="ethereum">Ethereum</option>
           <option value="base">Base</option>
           <option value="solana">Solana</option>
           <option value="bsc">BSC</option>
           <option value="plasma">Plasma</option>
         </select>
-        <input class="input" placeholder="Contract address (optional)" value={link} onInput={(e) => setLink((e.target as HTMLInputElement).value)} />
-        <input class="input" placeholder="CoinGecko ID (for Layer 1 tokens)" value={coinGeckoId} onInput={(e) => setCoinGeckoId((e.target as HTMLInputElement).value)} />
+        <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="Contract address (optional)" value={link} onInput={(e) => setLink((e.target as HTMLInputElement).value)} />
+        <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="CoinGecko ID (for Layer 1 tokens)" value={coinGeckoId} onInput={(e) => setCoinGeckoId((e.target as HTMLInputElement).value)} />
+        <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="Ticker symbol (e.g., MKR, XPL)" value={ticker} onInput={(e) => setTicker((e.target as HTMLInputElement).value)} />
         <div class="md:col-span-2 flex gap-2">
-          <button class="btn btn-primary flex-1" type="button" onClick={save}>Save</button>
-          <button class="btn btn-secondary" type="button" onClick={autoPopulate}>Auto-populate from CoinGecko</button>
+          <button class="flex-1 inline-flex items-center justify-center h-12 px-6 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105" type="button" onClick={save}>Save</button>
+          <button class="inline-flex items-center justify-center h-12 px-6 rounded-xl font-semibold bg-gradient-to-r from-gray-700 to-gray-600 text-gray-100 hover:from-gray-600 hover:to-gray-500 shadow-lg shadow-gray-700/30 transition-all duration-300 hover:scale-105" type="button" onClick={autoPopulate}>Auto-populate from CoinGecko</button>
         </div>
 
         {results.length > 0 && (
-          <div ref={boxRef} class="absolute top-12 left-0 w-full rounded-md border border-gray-200 bg-white shadow-lg z-10">
+          <div ref={boxRef} class="absolute top-12 left-0 w-full rounded-2xl border border-white/20 glass-strong shadow-2xl shadow-black/40 z-10">
             {results.map((u) => (
-              <div class="flex items-center gap-3 p-2 cursor-pointer hover:bg-gray-50" onClick={() => { setSelected(u); setQuery(u.username || u.displayName); setResults([]); }}>
+              <div class="flex items-center gap-3 p-3 cursor-pointer hover:bg-white/10 rounded-xl transition-all duration-200" onClick={() => { setSelected(u); setQuery(u.username || u.displayName); setResults([]); }}>
                 <img src={u.avatarUrl} width={24} height={24} class="rounded-full" />
-                <div class="text-sm">{u.displayName}{u.username ? ` @${u.username}` : ""}</div>
+                <div class="text-sm text-white">{u.displayName}{u.username ? ` @${u.username}` : ""}</div>
               </div>
             ))}
           </div>
@@ -145,13 +149,14 @@ export default function AdminVerified({ initialItems }: Props) {
 
       <div class="space-y-3">
         {items.map((p) => (
-          <div key={p.id} class="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+          <div key={p.id} class="flex items-center justify-between p-4 glass-strong rounded-2xl border border-white/10">
             <div class="flex items-center gap-3">
               <img src={p.avatarUrl} class="w-8 h-8 rounded-full" />
               <div>
-                <div class="font-medium">{p.displayName} @{p.twitterUsername}</div>
-                <div class="text-xs text-gray-600">
+                <div class="font-medium text-white">{p.displayName} @{p.twitterUsername}</div>
+                <div class="text-xs text-gray-400">
                   {p.type} • {p.chain ?? "ethereum"}
+                  {p.ticker && ` • $${p.ticker}`}
                   {p.link && ` • ${p.link.slice(0, 10)}...`}
                   {p.coinGeckoId && ` • ID: ${p.coinGeckoId}`}
                 </div>
@@ -159,7 +164,7 @@ export default function AdminVerified({ initialItems }: Props) {
             </div>
             <button
               type="button"
-              class="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded border border-red-200 hover:border-red-300 transition-colors"
+              class="px-4 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-red-500/20 rounded-xl border border-red-500/30 hover:border-red-500/50 transition-all duration-200 backdrop-blur-sm"
               onClick={() => remove(p.id, p.displayName)}
             >
               Delete
