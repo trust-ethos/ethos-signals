@@ -1,0 +1,24 @@
+🔑 CoinGecko API Key Setup - Quick Start
+========================================
+
+1. Get Your API Key
+   Visit: https://www.coingecko.com/en/api/pricing
+   Plan: Demo ($129/month) or Pro ($399/month)
+
+2. Add to Your .env File
+   echo 'COINGECKO_API_KEY=CG-your-key-here' >> .env
+
+3. Restart Server
+   The API key will be automatically used
+   Pro API will use pro-api.coingecko.com automatically
+
+✅ Benefits:
+   - No more 429 rate limit errors
+   - 500+ calls per minute (Demo plan)
+   - Faster import scripts
+   - Better reliability
+
+📊 Test It:
+   deno run -A --env scripts/import-test.ts
+
+For full documentation, see COINGECKO_SETUP.md

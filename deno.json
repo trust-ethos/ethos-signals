@@ -1,0 +1,44 @@
+{
+  "lock": false,
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
+    "cli": "echo \"import '$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
+    "manifest": "deno task cli manifest $(pwd)",
+    "start": "deno run -A --watch=static/,routes/,islands/,components/ dev.ts",
+    "build": "deno run -A dev.ts build",
+    "preview": "deno run -A main.ts",
+    "update": "deno run -A -r https://fresh.deno.dev/update .",
+    "import-tokens": "deno run -A scripts/import-top-tokens.ts",
+    "test-import": "deno run -A scripts/import-test.ts",
+    "import-sample": "deno run -A scripts/import-sample.ts",
+    "import-known": "deno run -A scripts/import-known-tokens.ts",
+    "import-1000": "deno run -A scripts/import-top-1000.ts",
+    "import-fast": "deno run -A scripts/import-fast-1000.ts",
+    "import-batch": "deno run -A scripts/import-batch.ts",
+    "import-moralis": "deno run -A scripts/import-moralis-fast.ts"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["fresh", "recommended"]
+    }
+  },
+  "exclude": ["**/_fresh/*"],
+  "imports": {
+    "$fresh/": "https://deno.land/x/fresh@1.6.8/",
+    "$std/": "https://deno.land/std@0.216.0/",
+    "preact": "https://esm.sh/preact@10.19.6",
+    "preact/": "https://esm.sh/preact@10.19.6/",
+    "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
+    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
+    "tailwindcss": "npm:tailwindcss@3.4.1",
+    "tailwindcss/": "npm:/tailwindcss@3.4.1/",
+    "tailwindcss/plugin": "npm:/tailwindcss@3.4.1/plugin.js",
+    "postgres": "https://deno.land/x/postgres@v0.17.0/mod.ts",
+    "lightweight-charts": "https://esm.sh/lightweight-charts@4.2.1"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "nodeModulesDir": "auto"
+}

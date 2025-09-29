@@ -1,0 +1,23 @@
+/* Signals Chrome Extension - Content Styles */
+
+.signals-save-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.signals-save-icon:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4) !important;
+}
+
+.signals-modal-overlay {
+  backdrop-filter: blur(4px);
+}
+
+/* Ensure our buttons don't interfere with X.com's layout */
+[data-testid="tweet"] .signals-save-btn {
+  z-index: 1;
+}
+
+

@@ -1,0 +1,29 @@
+# Deno
+/.deno_dir/
+/node_modules/
+
+# Fresh build
+/_fresh/
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime files
+*.pid
+*.seed
+
+
+
