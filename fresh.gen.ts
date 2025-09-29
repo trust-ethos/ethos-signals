@@ -4,6 +4,7 @@
 
 import * as $_app from "./routes/_app.tsx";
 import * as $admin_verified from "./routes/admin/verified.tsx";
+import * as $api_cache_stats from "./routes/api/cache/stats.ts";
 import * as $api_coins_search from "./routes/api/coins/search.ts";
 import * as $api_price_chart from "./routes/api/price/chart.ts";
 import * as $api_price_coingecko from "./routes/api/price/coingecko.ts";
@@ -26,6 +27,7 @@ const manifest = {
   routes: {
     "./routes/_app.tsx": $_app,
     "./routes/admin/verified.tsx": $admin_verified,
+    "./routes/api/cache/stats.ts": $api_cache_stats,
     "./routes/api/coins/search.ts": $api_coins_search,
     "./routes/api/price/chart.ts": $api_price_chart,
     "./routes/api/price/coingecko.ts": $api_price_coingecko,

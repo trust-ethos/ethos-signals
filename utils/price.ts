@@ -1,4 +1,4 @@
-import { getCachedPrice, setCachedPrice } from "./database.ts";
+import { getCachedPrice, setCachedPrice } from "./kv-cache.ts";
 import { buildCoinGeckoUrl } from "./coingecko-api.ts";
 
 // helper kept for future use
@@ -6,7 +6,7 @@ function _toDateISO(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-function findPriceInResponse(data: any, chain: string, address: string): number | undefined {
+function findPriceInResponse(data: { coins?: Record<string, { price?: number }> }, chain: string, address: string): number | undefined {
   const expectedKey = `${chain}:${address}`;
   // DefiLlama returns keys in original case, find matching key
   const actualKey = Object.keys(data?.coins || {}).find(k => k.toLowerCase() === expectedKey.toLowerCase());

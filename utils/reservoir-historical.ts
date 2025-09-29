@@ -1,4 +1,4 @@
-import { getCachedPrice, setCachedPrice } from "./database.ts";
+import { getCachedPrice, setCachedPrice } from "./kv-cache.ts";
 
 // Reservoir API for comprehensive NFT historical data
 // Docs: https://docs.reservoir.tools/reference/getcollectionsstatshistoryv1
@@ -75,7 +75,7 @@ export async function getReservoirHistoricalFloor(
 }
 
 export async function getReservoirCurrentFloor(
-  chain: "ethereum" | "base" | "bsc",
+  _chain: "ethereum" | "base" | "bsc",
   contractAddress: string,
 ): Promise<number | null> {
   const apiKey = getReservoirApiKey();

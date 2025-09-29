@@ -1,4 +1,4 @@
-import { getCachedPrice, setCachedPrice } from "./database.ts";
+import { getCachedPrice, setCachedPrice } from "./kv-cache.ts";
 import { getReservoirHistoricalFloor, getReservoirCurrentFloor } from "./reservoir-historical.ts";
 
 // Moralis API for NFT floor prices with historical data support

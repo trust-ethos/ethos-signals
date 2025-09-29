@@ -158,6 +158,7 @@ export default function AdminVerified({ initialItems }: Props) {
               </div>
             </div>
             <button
+              type="button"
               class="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded border border-red-200 hover:border-red-300 transition-colors"
               onClick={() => remove(p.id, p.displayName)}
             >
