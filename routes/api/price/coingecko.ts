@@ -13,7 +13,7 @@ export const handler: Handlers = {
   },
   async GET(req) {
     const url = new URL(req.url);
-    const coinGeckoId = url.searchParams.get("id"); // e.g., "plasma" for Plasma (XPL)
+    const coinGeckoId = url.searchParams.get("id"); // e.g., "trillions" or "plasma"
     const date = url.searchParams.get("date"); // yyyy-mm-dd optional
     const timestamp = url.searchParams.get("timestamp"); // ISO datetime optional
     
@@ -33,12 +33,14 @@ export const handler: Handlers = {
     }
     
     if (date) {
-      // Use daily price
-      const price = await getDefiLlamaTokenPriceAt(fullId, "", date);
+      // Convert date to timestamp (noon UTC) and use CoinGecko's market_chart/range API
+      // This ensures we get data from CoinGecko, not DefiLlama
+      const dateTimestamp = `${date}T12:00:00Z`;
+      const price = await getCoinGeckoPriceAtTimestamp(coinGeckoId, dateTimestamp);
       return new Response(JSON.stringify({ price }), { headers: corsHeaders });
     }
     
-    // Current price
+    // Current price - DefiLlama supports coingecko: prefix for live prices
     const price = await getDefiLlamaTokenPriceNow(fullId);
     return new Response(JSON.stringify({ price }), { headers: corsHeaders });
   },

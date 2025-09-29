@@ -256,22 +256,23 @@ export default function SignalsForm({ username }: Props) {
                     (() => {
                       const project = verifiedByUsername[s.projectHandle.toLowerCase()];
                       if (project.type === 'token') {
-                        if (project.link) {
+                        // Prefer CoinGecko ID if available (more reliable price data)
+                        if (project.coinGeckoId) {
                           return (
-                            <PriceDelta
+                            <CoinGeckoPriceDelta
                               id={s.id}
-                              chain={(project.chain ?? 'ethereum') as 'ethereum' | 'base' | 'solana' | 'bsc' | 'plasma'}
-                              address={project.link!}
+                              coinGeckoId={project.coinGeckoId}
                               notedAt={s.notedAt}
                               tweetTimestamp={s.tweetTimestamp}
                               sentiment={s.sentiment}
                             />
                           );
-                        } else if (project.coinGeckoId) {
+                        } else if (project.link) {
                           return (
-                            <CoinGeckoPriceDelta
+                            <PriceDelta
                               id={s.id}
-                              coinGeckoId={project.coinGeckoId}
+                              chain={(project.chain ?? 'ethereum') as 'ethereum' | 'base' | 'solana' | 'bsc' | 'plasma'}
+                              address={project.link!}
                               notedAt={s.notedAt}
                               tweetTimestamp={s.tweetTimestamp}
                               sentiment={s.sentiment}

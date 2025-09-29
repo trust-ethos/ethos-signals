@@ -189,27 +189,27 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
                           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                           </svg>
                         </div>
-                        <span class="text-sm font-medium text-green-700">Total XP</span>
+                        <span class="text-sm font-medium text-green-700">Positive Reviews</span>
                       </div>
-                      <div class="text-3xl font-bold text-green-900">{user.xpTotal.toLocaleString()}</div>
+                      <div class="text-3xl font-bold text-green-900">{user.stats.review.received.positive}</div>
+                      <div class="text-xs text-green-600">
+                        {user.stats.review.received.neutral} neutral
+                      </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200/50">
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200/50">
                       <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
                           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
                           </svg>
                         </div>
-                        <span class="text-sm font-medium text-purple-700">Reviews</span>
+                        <span class="text-sm font-medium text-red-700">Negative Reviews</span>
                       </div>
-                      <div class="text-3xl font-bold text-purple-900">{user.stats.review.received.positive}</div>
-                      <div class="text-xs text-purple-600">
-                        {user.stats.review.received.negative} negative • {user.stats.review.received.neutral} neutral
-                      </div>
+                      <div class="text-3xl font-bold text-red-900">{user.stats.review.received.negative}</div>
                     </div>
 
                     <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200/50">

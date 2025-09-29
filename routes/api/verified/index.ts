@@ -1,13 +1,49 @@
 import { Handlers } from "$fresh/server.ts";
 import { createUlid, deleteVerifiedProject, listVerifiedProjects, saveVerifiedProject, type VerifiedProjectType } from "../../../utils/database.ts";
 
+// Simple authentication check
+function checkAuth(req: Request): boolean {
+  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
+  
+  // If no password is set, allow access (for development)
+  if (!adminPassword) {
+    return true;
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return false;
+  }
+
+  try {
+    const base64Credentials = authHeader.slice(6);
+    const credentials = atob(base64Credentials);
+    const [_username, password] = credentials.split(":");
+    return password === adminPassword;
+  } catch {
+    return false;
+  }
+}
+
+function unauthorizedResponse(): Response {
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401,
+    headers: {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+      "WWW-Authenticate": 'Basic realm="Admin Area"',
+    },
+  });
+}
+
 export const handler: Handlers = {
-  async OPTIONS() {
+  OPTIONS() {
     return new Response(null, {
       headers: {
         "access-control-allow-origin": "*",
         "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
-        "access-control-allow-headers": "content-type, x-ethos-client",
+        "access-control-allow-headers": "content-type, x-ethos-client, authorization",
       },
     });
   },
@@ -23,6 +59,11 @@ export const handler: Handlers = {
     });
   },
   async POST(req) {
+    // Check authentication for POST (creating/updating projects)
+    if (!checkAuth(req)) {
+      return unauthorizedResponse();
+    }
+
     const body = await req.json();
         const { ethosUserId, twitterUsername, displayName, avatarUrl, type, link, chain, coinGeckoId } = body as {
           ethosUserId: number;
@@ -57,6 +98,11 @@ export const handler: Handlers = {
     });
   },
   async DELETE(req) {
+    // Check authentication for DELETE
+    if (!checkAuth(req)) {
+      return unauthorizedResponse();
+    }
+
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400 });

@@ -117,17 +117,23 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
           top: 0.1,    // Reduced from default 0.2 (10% padding instead of 20%)
           bottom: 0.1, // Reduced from default 0.2 (10% padding instead of 20%)
         },
+        minMove: 0.00000001, // Allow very small price movements
       },
     });
 
     chartRef.current = chart;
 
-    // Create area series
+    // Create area series with high precision for low-value tokens
     const areaSeries = chart.addAreaSeries({
       lineColor: "#2962FF",
       topColor: "rgba(41, 98, 255, 0.4)",
       bottomColor: "rgba(41, 98, 255, 0.0)",
       lineWidth: 2,
+      priceFormat: {
+        type: 'price',
+        precision: 8,  // Show up to 8 decimal places
+        minMove: 0.00000001,
+      },
     });
 
     seriesRef.current = areaSeries;

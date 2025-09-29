@@ -62,18 +62,19 @@ export default function Home({ data }: PageProps<PageData>) {
           <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
               <div class="flex items-center">
-                <img
-                  src="/logo.svg"
-                  width="32"
-                  height="32"
-                  alt="Signals logo"
-                  class="mr-3"
-                />
-                <span class="text-xl font-bold text-gray-900">Signals</span>
+                <a href="/" class="flex items-center">
+                  <img
+                    src="/logo.svg"
+                    width="32"
+                    height="32"
+                    alt="Signals logo"
+                    class="mr-3"
+                  />
+                  <span class="text-xl font-bold text-gray-900">Signals</span>
+                </a>
               </div>
               <div class="flex items-center space-x-4">
-                <a href="#" class="text-gray-500 hover:text-gray-900 transition-colors">About</a>
-                <a href="#" class="text-gray-500 hover:text-gray-900 transition-colors">How it Works</a>
+                <a href="/admin/verified" class="text-gray-500 hover:text-gray-900 transition-colors">Admin</a>
               </div>
             </div>
           </div>
@@ -82,7 +83,7 @@ export default function Home({ data }: PageProps<PageData>) {
         {/* Main Content */}
         <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Search Section */}
-          <div class="mb-8">
+          <div class="mb-8 flex justify-center">
             <SearchForm />
           </div>
           
