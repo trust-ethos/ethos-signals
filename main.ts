@@ -1,4 +1,5 @@
 #!/usr/bin/env -S deno run -A
+// Deno Deploy entrypoint for Ethos Signals
 
 import "$std/dotenv/load.ts";
 import { start } from "$fresh/server.ts";
