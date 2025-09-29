@@ -13,7 +13,8 @@ try {
 } catch (error) {
   console.error("❌ Failed to initialize database:", error);
   console.log("Make sure your DATABASE_URL environment variable is set correctly");
-  Deno.exit(1);
+  // Throw error instead of Deno.exit() for Deno Deploy compatibility
+  throw new Error("Database initialization failed. Check DATABASE_URL environment variable.");
 }
 
 await start(manifest, config);
