@@ -47,7 +47,12 @@ export const handler: Handlers = {
       },
     });
   },
-  async GET() {
+  async GET(req) {
+    // Check authentication for GET (listing projects)
+    if (!checkAuth(req)) {
+      return unauthorizedResponse();
+    }
+    
     const items = await listVerifiedProjects();
     return new Response(JSON.stringify({ values: items }), { 
       headers: { 
