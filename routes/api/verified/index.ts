@@ -70,7 +70,7 @@ export const handler: Handlers = {
     }
 
     const body = await req.json();
-        const { ethosUserId, twitterUsername, displayName, avatarUrl, type, link, chain, coinGeckoId } = body as {
+        const { ethosUserId, twitterUsername, displayName, avatarUrl, type, link, chain, coinGeckoId, ticker } = body as {
           ethosUserId: number;
           twitterUsername: string;
           displayName: string;
@@ -79,6 +79,7 @@ export const handler: Handlers = {
           link?: string;
           chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
           coinGeckoId?: string;
+          ticker?: string;
         };
     if (!ethosUserId || !twitterUsername || !displayName || !avatarUrl || !type) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
@@ -93,6 +94,7 @@ export const handler: Handlers = {
       chain: chain ?? "ethereum",
       link,
       coinGeckoId,
+      ticker,
       createdAt: Date.now(),
     });
     return new Response(JSON.stringify({ ok }), { 

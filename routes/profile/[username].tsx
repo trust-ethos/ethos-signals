@@ -41,16 +41,16 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
         <Head>
           <title>Profile Not Found - Signals</title>
         </Head>
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-          <Card class="max-w-md mx-auto">
+        <div class="min-h-screen gradient-mesh flex items-center justify-center">
+          <Card class="max-w-md mx-auto glass-strong">
             <CardContent class="p-8 text-center">
-              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h1 class="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h1>
-              <p class="text-gray-600 mb-6">The user you're looking for doesn't exist or isn't connected to Ethos.</p>
+              <h1 class="text-2xl font-bold text-white mb-2">Profile Not Found</h1>
+              <p class="text-gray-400 mb-6">The user you're looking for doesn't exist or isn't connected to Ethos.</p>
               <a href="/">
                 <Button variant="outline">
                   ← Back to Search
@@ -88,9 +88,9 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
         <meta name="description" content={`View ${user.displayName}'s Ethos profile and trading signals history.`} />
       </Head>
       
-      <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div class="min-h-screen gradient-mesh">
         {/* Navigation */}
-        <nav class="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+        <nav class="glass-nav fixed top-0 left-0 right-0 z-50">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
               <div class="flex items-center">
@@ -104,16 +104,15 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                     </div>
                   </Button>
                 </a>
-                <img src="/logo.svg" width="32" height="32" alt="Signals logo" class="mr-3" />
-                <span class="text-xl font-bold text-gray-900">Signals</span>
+                <span class="text-xl font-bold text-white">Signals</span>
               </div>
             </div>
           </div>
         </nav>
 
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
           {/* Profile Header Card */}
-          <Card class="mb-8 backdrop-blur-sm bg-white/90 border-gray-200/50">
+          <Card class="mb-8 glass-strong hover-glow">
             <CardContent class="p-8">
               <div class="flex flex-col lg:flex-row items-start gap-8">
                 {/* Avatar and Basic Info */}
@@ -122,10 +121,10 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                     <img
                       src={user.avatarUrl}
                       alt={user.displayName}
-                      class="w-32 h-32 rounded-full ring-4 ring-white shadow-lg"
+                      class="w-32 h-32 rounded-full ring-4 ring-blue-500/50 shadow-2xl shadow-blue-500/30"
                     />
                     {user.status === "ACTIVE" && (
-                      <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white"></div>
+                      <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-black shadow-lg shadow-green-500/50"></div>
                     )}
                   </div>
                   
@@ -155,11 +154,11 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                 <div class="flex-1 w-full">
                   <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6">
                     <div>
-                      <h1 class="text-4xl font-bold text-gray-900 mb-3">
+                      <h1 class="text-4xl font-bold text-white mb-3">
                         {user.displayName}
                       </h1>
                       {user.username && (
-                        <p class="text-xl text-gray-600 mb-3">@{user.username}</p>
+                        <p class="text-xl text-gray-400 mb-3">@{user.username}</p>
                       )}
                       <Badge variant={getScoreBadgeVariant(user.score)} class="text-sm">
                         {`${getScoreLevel(user.score)} • ${scoreDetails.level}`}
@@ -168,61 +167,61 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                   </div>
 
                   {user.description && (
-                    <p class="text-gray-700 mb-6 text-lg leading-relaxed">{user.description}</p>
+                    <p class="text-gray-300 mb-6 text-lg leading-relaxed">{user.description}</p>
                   )}
 
                   {/* Stats Grid */}
                   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200/50">
+                    <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30 backdrop-blur-sm">
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                           </svg>
                         </div>
-                        <span class="text-sm font-medium text-blue-700">Ethos Score</span>
+                        <span class="text-sm font-medium text-blue-300">Ethos Score</span>
                       </div>
-                      <div class="text-3xl font-bold text-blue-900">{user.score}</div>
+                      <div class="text-3xl font-bold text-blue-100">{user.score}</div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200/50">
+                    <div class="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl p-4 border border-green-500/30 backdrop-blur-sm">
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
                           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                           </svg>
                         </div>
-                        <span class="text-sm font-medium text-green-700">Positive Reviews</span>
+                        <span class="text-sm font-medium text-green-300">Positive Reviews</span>
                       </div>
-                      <div class="text-3xl font-bold text-green-900">{user.stats.review.received.positive}</div>
-                      <div class="text-xs text-green-600">
+                      <div class="text-3xl font-bold text-green-100">{user.stats.review.received.positive}</div>
+                      <div class="text-xs text-green-300">
                         {user.stats.review.received.neutral} neutral
                       </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200/50">
+                    <div class="bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-xl p-4 border border-red-500/30 backdrop-blur-sm">
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
                           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
                           </svg>
                         </div>
-                        <span class="text-sm font-medium text-red-700">Negative Reviews</span>
+                        <span class="text-sm font-medium text-red-300">Negative Reviews</span>
                       </div>
-                      <div class="text-3xl font-bold text-red-900">{user.stats.review.received.negative}</div>
+                      <div class="text-3xl font-bold text-red-100">{user.stats.review.received.negative}</div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200/50">
+                    <div class="bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl p-4 border border-orange-500/30 backdrop-blur-sm">
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
                           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
                         </div>
-                        <span class="text-sm font-medium text-orange-700">Vouches</span>
+                        <span class="text-sm font-medium text-orange-300">Vouches</span>
                       </div>
-                      <div class="text-3xl font-bold text-orange-900">{user.stats.vouch.received.count}</div>
-                      <div class="text-xs text-orange-600">
+                      <div class="text-3xl font-bold text-orange-100">{user.stats.vouch.received.count}</div>
+                      <div class="text-xs text-orange-300">
                         {(parseFloat(user.stats.vouch.received.amountWeiTotal.toString()) / 1e18).toFixed(2)} ETH
                       </div>
                     </div>

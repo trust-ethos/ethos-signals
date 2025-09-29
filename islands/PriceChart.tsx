@@ -99,12 +99,12 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
     // Create chart
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { color: "#ffffff" },
-        textColor: "#333",
+        background: { color: "rgba(0, 0, 0, 0.2)" },
+        textColor: "#9ca3af",
       },
       grid: {
-        vertLines: { color: "#f0f0f0" },
-        horzLines: { color: "#f0f0f0" },
+        vertLines: { color: "rgba(255, 255, 255, 0.05)" },
+        horzLines: { color: "rgba(255, 255, 255, 0.05)" },
       },
       width: chartContainerRef.current.clientWidth,
       height: 400,
@@ -125,9 +125,9 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
 
     // Create area series with high precision for low-value tokens
     const areaSeries = chart.addAreaSeries({
-      lineColor: "#2962FF",
-      topColor: "rgba(41, 98, 255, 0.4)",
-      bottomColor: "rgba(41, 98, 255, 0.0)",
+      lineColor: "#60a5fa",
+      topColor: "rgba(96, 165, 250, 0.3)",
+      bottomColor: "rgba(96, 165, 250, 0.0)",
       lineWidth: 2,
       priceFormat: {
         type: 'price',
@@ -330,23 +330,23 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
     <div class="mt-4">
       {/* Chart Controls */}
       <div class="mb-3 flex items-center justify-between flex-wrap gap-2">
-        <div class="text-sm font-medium text-gray-700">
-          {projectName} Price Chart {isLoading && <span class="text-gray-400">(Loading...)</span>}
+        <div class="text-sm font-medium text-white">
+          {projectName} Price Chart {isLoading && <span class="text-gray-500">(Loading...)</span>}
         </div>
         
         <div class="flex gap-2 flex-wrap">
           {/* Time Interval Selector (only for CoinGecko data) */}
           {coinGeckoId && (
-            <div class="flex border border-gray-300 rounded-md overflow-hidden">
+            <div class="flex border border-white/20 rounded-xl overflow-hidden backdrop-blur-sm">
               {(["1h", "4h", "1d"] as TimeInterval[]).map((interval) => (
                 <button
                   key={interval}
                   type="button"
                   onClick={() => setTimeInterval(interval)}
-                  class={`px-3 py-1 text-xs font-medium transition-colors ${
+                  class={`px-3 py-1 text-xs font-medium transition-all duration-200 ${
                     timeInterval === interval
                       ? "bg-blue-500 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-50"
+                      : "bg-white/5 text-gray-300 hover:bg-white/10"
                   }`}
                   disabled={isLoading}
                 >
@@ -357,16 +357,16 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
           )}
           
           {/* Date Range Selector */}
-          <div class="flex border border-gray-300 rounded-md overflow-hidden">
+          <div class="flex border border-white/20 rounded-xl overflow-hidden backdrop-blur-sm">
             {(["30d", "90d", "180d", "1y", "all"] as DateRange[]).map((range) => (
               <button
                 key={range}
                 type="button"
                 onClick={() => setDateRange(range)}
-                class={`px-3 py-1 text-xs font-medium transition-colors ${
+                class={`px-3 py-1 text-xs font-medium transition-all duration-200 ${
                   dateRange === range
                     ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
+                    : "bg-white/5 text-gray-300 hover:bg-white/10"
                 }`}
                 disabled={isLoading}
               >
@@ -379,7 +379,7 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
       
       {/* Chart Container */}
       <div style={{ position: "relative" }}>
-        <div ref={chartContainerRef} class="rounded-lg border border-gray-200 overflow-hidden" />
+        <div ref={chartContainerRef} class="rounded-2xl border border-white/10 overflow-hidden glass-subtle" />
       </div>
     </div>
   );

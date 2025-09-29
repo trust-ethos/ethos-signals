@@ -35,6 +35,7 @@ export interface VerifiedProject {
   chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
   link?: string;
   coinGeckoId?: string; // For Layer 1 tokens without contracts
+  ticker?: string; // Token ticker symbol (e.g., MKR, ETH, XPL)
   createdAt: number;
 }
 
@@ -198,9 +199,9 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
     await client.queryObject(`
       INSERT INTO verified_projects (
         id, ethos_user_id, twitter_username, display_name, 
-        avatar_url, type, chain, link, coingecko_id, created_at
+        avatar_url, type, chain, link, coingecko_id, ticker, created_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, to_timestamp($10)
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, to_timestamp($11)
       )
       ON CONFLICT (ethos_user_id) DO UPDATE SET
         twitter_username = EXCLUDED.twitter_username,
@@ -209,7 +210,8 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
         type = EXCLUDED.type,
         chain = EXCLUDED.chain,
         link = EXCLUDED.link,
-        coingecko_id = EXCLUDED.coingecko_id
+        coingecko_id = EXCLUDED.coingecko_id,
+        ticker = EXCLUDED.ticker
     `, [
       project.id,
       project.ethosUserId,
@@ -220,6 +222,7 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
       project.chain || "ethereum",
       project.link || null,
       project.coinGeckoId || null,
+      project.ticker || null,
       project.createdAt / 1000, // Convert to seconds
     ]);
     

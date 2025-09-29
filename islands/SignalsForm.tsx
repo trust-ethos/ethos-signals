@@ -120,24 +120,24 @@ export default function SignalsForm({ username }: Props) {
 
   return (
     <div class="mt-6">
-      {error && (<div class="text-red-600 text-sm mb-4">{error}</div>)}
+      {error && (<div class="text-red-400 text-sm mb-4 glass-subtle rounded-lg p-3 border border-red-500/30">{error}</div>)}
 
       {list.length === 0 ? (
-        <Card>
-          <CardContent class="p-8 text-center text-gray-600">
+        <Card class="glass-strong">
+          <CardContent class="p-8 text-center text-gray-400">
             No signals yet.
           </CardContent>
         </Card>
       ) : (
         <>
           {/* Asset Navigation Bar */}
-          <div class="sticky top-0 z-10 bg-white border border-gray-200 rounded-lg shadow-sm mb-6 p-4">
+          <div class="sticky top-20 z-10 glass-strong border border-white/10 rounded-2xl shadow-2xl shadow-black/20 mb-6 p-4">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2">
                 <span class="text-xl">📊</span>
-                <span class="font-semibold text-gray-900">Tracked Assets</span>
+                <span class="font-semibold text-white">Tracked Assets</span>
               </div>
-              <div class="text-sm text-gray-600">
+              <div class="text-sm text-gray-400">
                 {projectStats.length} {projectStats.length === 1 ? 'asset' : 'assets'} • {list.length} total {list.length === 1 ? 'signal' : 'signals'}
               </div>
             </div>
@@ -146,16 +146,16 @@ export default function SignalsForm({ username }: Props) {
                 <a
                   key={stat.projectKey}
                   href={`#asset-${stat.projectKey}`}
-                  class="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
+                  class="flex items-center gap-2 px-3 py-2 glass-subtle hover:glass border border-white/10 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20"
                 >
                   {stat.avatarUrl && (
                     <img src={stat.avatarUrl} class="w-6 h-6 rounded-full" alt={stat.displayName} />
                   )}
                   <div class="flex items-center gap-2">
-                    <span class="text-sm font-medium text-gray-900">{stat.displayName}</span>
+                    <span class="text-sm font-medium text-white">{stat.displayName}</span>
                     <div class="flex items-center gap-1">
-                      <span class="text-xs text-green-600">🚀{stat.bullishCount}</span>
-                      <span class="text-xs text-red-600">📉{stat.bearishCount}</span>
+                      <span class="text-xs text-green-400">🚀{stat.bullishCount}</span>
+                      <span class="text-xs text-red-400">📉{stat.bearishCount}</span>
                     </div>
                   </div>
                 </a>
@@ -172,27 +172,27 @@ export default function SignalsForm({ username }: Props) {
               <div 
                 key={projectKey} 
                 id={`asset-${projectKey}`}
-                class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm scroll-mt-6"
+                class="border border-white/10 rounded-2xl overflow-hidden glass-strong shadow-2xl shadow-black/20 scroll-mt-24"
               >
                 {/* Project Header */}
-                <div class="bg-gradient-to-r from-gray-50 to-white p-4 border-b border-gray-200">
+                <div class="bg-gradient-to-r from-white/5 to-white/10 p-4 border-b border-white/10">
                     <div class="flex items-center gap-3">
                       {project ? (
                         <>
-                          <img src={project.avatarUrl} class="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt={project.displayName} />
+                          <img src={project.avatarUrl} class="w-10 h-10 rounded-full border-2 border-blue-500/50 shadow-lg shadow-blue-500/30" alt={project.displayName} />
                           <div class="flex-1">
-                            <div class="font-semibold text-lg">{project.displayName}</div>
-                            <div class="text-sm text-gray-600">@{project.twitterUsername}</div>
+                            <div class="font-semibold text-lg text-white">{project.displayName}</div>
+                            <div class="text-sm text-gray-400">@{project.twitterUsername}</div>
                           </div>
                         </>
                       ) : (
                         <div class="flex-1">
-                          <div class="font-semibold text-lg">@{firstSignal.projectHandle}</div>
-                          <div class="text-sm text-gray-600">Unverified Project</div>
+                          <div class="font-semibold text-lg text-white">@{firstSignal.projectHandle}</div>
+                          <div class="text-sm text-gray-400">Unverified Project</div>
                         </div>
                       )}
                       <div class="text-right">
-                        <div class="text-sm font-medium text-gray-600 mb-1">{signals.length} {signals.length === 1 ? 'Signal' : 'Signals'}</div>
+                        <div class="text-sm font-medium text-gray-300 mb-1">{signals.length} {signals.length === 1 ? 'Signal' : 'Signals'}</div>
                         <div class="flex gap-1">
                           {signals.slice().reverse().map((sig, idx) => (
                             <div 
@@ -208,7 +208,7 @@ export default function SignalsForm({ username }: Props) {
                   
                   {/* Price Chart with Signal Markers */}
                   {project && signals.length > 0 && (
-                    <div class="p-4 bg-gray-50 border-b border-gray-200">
+                    <div class="p-4 bg-black/20 border-b border-white/10">
                       <PriceChart
                         coinGeckoId={project.coinGeckoId}
                         chain={project.chain}
@@ -225,26 +225,26 @@ export default function SignalsForm({ username }: Props) {
                   )}
                   
                   {/* Signals List */}
-                  <div class="divide-y divide-gray-100">
+                  <div class="divide-y divide-white/5">
                     {signals.map((s) => (
-              <div key={s.id} class="p-4 hover:bg-gray-50 transition-colors">
+              <div key={s.id} class="p-4 hover:bg-white/5 transition-all duration-300">
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-2">
                     <Badge variant={s.sentiment === "bullish" ? "success" : "destructive"} class="text-xs">
                       {s.sentiment === "bullish" ? "🐂 Bullish" : "🐻 Bearish"}
                     </Badge>
-                    <span class="text-sm text-gray-600">
+                    <span class="text-sm text-gray-400">
                       {s.tweetTimestamp ? new Date(s.tweetTimestamp).toLocaleDateString() : s.notedAt}
                     </span>
                   </div>
                   
                   {s.tweetContent && (
-                    <div class="text-sm text-gray-700 mb-2 p-3 bg-gray-50 rounded-md border-l-4 border-gray-300">
+                    <div class="text-sm text-gray-300 mb-2 p-3 glass-subtle rounded-xl border-l-4 border-blue-500/50">
                       "{s.tweetContent.length > 400 ? s.tweetContent.slice(0, 400) + '...' : s.tweetContent}"
                     </div>
                   )}
                   
-                  <a class="text-sm text-blue-600 hover:underline inline-flex items-center gap-1" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
+                  <a class="text-sm text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 transition-colors" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
                     View Tweet
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -353,7 +353,7 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
     })();
   }, [id, chain, address, notedAt, tweetTimestamp]);
 
-  if (!data) return <div class="text-xs text-gray-500 mt-2">Loading price…</div>;
+  if (!data) return <div class="text-xs text-gray-400 mt-2">Loading price…</div>;
   const fmt = (n?: number|null) => (n == null ? '—' : `$${n.toFixed(6)}`);
   const pct = (base?: number|null, next?: number|null) => {
     if (base == null || next == null) return null;
@@ -365,14 +365,14 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
     return Date.now() >= start + days * 24 * 3600 * 1000;
   };
   return (
-    <div class="text-xs text-gray-700 mt-2">
+    <div class="text-xs text-gray-300 mt-2">
       <div class="flex gap-4 flex-wrap">
         <span>Call: {fmt(data.call)}</span>
         <span>
           +1d: {reached(1) ? (
             <>
               {fmt(data.d1)}{' '}
-              {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+              {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
             </>
           ) : '—'}
         </span>
@@ -380,7 +380,7 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
           +7d: {reached(7) ? (
             <>
               {fmt(data.d7)}{' '}
-              {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+              {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
             </>
           ) : '—'}
         </span>
@@ -388,11 +388,11 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
           +28d: {reached(28) ? (
             <>
               {fmt(data.d28)}{' '}
-              {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+              {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
             </>
           ) : '—'}
         </span>
-        <span class="border-l border-gray-300 pl-4">
+        <span class="border-l border-white/20 pl-4">
           Current: {fmt(data.current)}{' '}
           {(() => { 
             const p = pct(data.call, data.current); 
@@ -405,7 +405,7 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
             
             return (
               <>
-                <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>
+                <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>
                 <span class="ml-2 text-xs" title={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} signal ${accuracyText.toLowerCase()}`}>
                   {accuracyIcon} {accuracyText}
                 </span>
@@ -458,7 +458,7 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
     })();
   }, [id, coinGeckoId, notedAt, tweetTimestamp]);
 
-  if (!data) return <div class="text-xs text-gray-500 mt-2">Loading price…</div>;
+  if (!data) return <div class="text-xs text-gray-400 mt-2">Loading price…</div>;
   const fmt = (n?: number|null) => (n == null ? '—' : `$${n.toFixed(6)}`);
   const pct = (base?: number|null, next?: number|null) => {
     if (base == null || next == null) return null;
@@ -475,11 +475,11 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
   const daysSinceSignal = Math.floor((Date.now() - signalDate.getTime()) / (24 * 60 * 60 * 1000));
   
   return (
-    <div class="text-xs text-gray-700 mt-2">
+    <div class="text-xs text-gray-300 mt-2">
       {allSame ? (
         <div class="flex gap-4 flex-wrap">
           <span>Current Price: {fmt(data.current)}</span>
-          <span class="text-gray-500 italic">
+          <span class="text-gray-400 italic">
             {daysSinceSignal > 30 ? 
               '(Historical data only available for recent 30 days)' : 
               '(Historical data not available)'}
@@ -492,7 +492,7 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             +1d: {reached(1) ? (
               <>
                 {fmt(data.d1)}{' '}
-                {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+                {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
               </>
             ) : '—'}
           </span>
@@ -500,7 +500,7 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             +7d: {reached(7) ? (
               <>
                 {fmt(data.d7)}{' '}
-                {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+                {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
               </>
             ) : '—'}
           </span>
@@ -508,11 +508,11 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             +28d: {reached(28) ? (
               <>
                 {fmt(data.d28)}{' '}
-                {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+                {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
               </>
             ) : '—'}
           </span>
-          <span class="border-l border-gray-300 pl-4">
+          <span class="border-l border-white/20 pl-4">
             Current: {fmt(data.current)}{' '}
             {(() => { 
               const p = pct(data.call, data.current); 
@@ -525,7 +525,7 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
               
               return (
                 <>
-                  <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>
+                  <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>
                   <span class="ml-2 text-xs" title={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} signal ${accuracyText.toLowerCase()}`}>
                     {accuracyIcon} {accuracyText}
                   </span>
@@ -573,7 +573,7 @@ function NFTFloorDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment 
     })();
   }, [id, chain, address, notedAt, tweetTimestamp]);
 
-  if (!data) return <div class="text-xs text-gray-500 mt-2">Loading floor price…</div>;
+  if (!data) return <div class="text-xs text-gray-400 mt-2">Loading floor price…</div>;
   const fmt = (n?: number|null) => (n == null ? '—' : `${n.toFixed(4)} ETH`);
   const pct = (base?: number|null, next?: number|null) => {
     if (base == null || next == null) return null;
@@ -593,11 +593,11 @@ function NFTFloorDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment 
   const daysSinceSignal = Math.floor((Date.now() - signalDate.getTime()) / (24 * 60 * 60 * 1000));
   
   return (
-    <div class="text-xs text-gray-700 mt-2">
+    <div class="text-xs text-gray-300 mt-2">
       {allSame ? (
         <div class="flex gap-4 flex-wrap">
           <span>Current Floor: {fmt(data.current)}</span>
-          <span class="text-gray-500 italic">
+          <span class="text-gray-400 italic">
             {daysSinceSignal > 30 ? 
               '(Historical data only available for recent 30 days)' : 
               '(Historical NFT data not available)'}
@@ -610,7 +610,7 @@ function NFTFloorDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment 
             +1d: {reached(1) ? (
               <>
                 {fmt(data.d1)}{' '}
-                {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+                {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
               </>
             ) : '—'}
           </span>
@@ -618,7 +618,7 @@ function NFTFloorDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment 
             +7d: {reached(7) ? (
               <>
                 {fmt(data.d7)}{' '}
-                {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+                {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
               </>
             ) : '—'}
           </span>
@@ -626,11 +626,11 @@ function NFTFloorDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment 
             +28d: {reached(28) ? (
               <>
                 {fmt(data.d28)}{' '}
-                {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>); })()}
+                {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
               </>
             ) : '—'}
           </span>
-          <span class="border-l border-gray-300 pl-4">
+          <span class="border-l border-white/20 pl-4">
             Current: {fmt(data.current)}{' '}
             {(() => { 
               const p = pct(data.call, data.current); 
@@ -643,7 +643,7 @@ function NFTFloorDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment 
               
               return (
                 <>
-                  <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-600' : 'text-red-600')}>{p.toFixed(2)}%</span>
+                  <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>
                   <span class="ml-2 text-xs" title={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} signal ${accuracyText.toLowerCase()}`}>
                     {accuracyIcon} {accuracyText}
                   </span>

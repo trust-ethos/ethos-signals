@@ -63,9 +63,9 @@ export default function VerifiedAdminPage({ data }: PageProps<Data>) {
       <Head>
         <title>Signals Admin - Verified Projects</title>
       </Head>
-      <div class="min-h-screen bg-gray-50">
+      <div class="min-h-screen gradient-mesh">
         <div class="max-w-5xl mx-auto px-4 py-8">
-          <h1 class="text-2xl font-bold mb-6">Verified Projects</h1>
+          <h1 class="text-3xl font-bold mb-6 text-white">Verified Projects</h1>
           <AdminVerified initialItems={data.items} />
         </div>
       </div>
