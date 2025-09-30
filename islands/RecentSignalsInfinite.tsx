@@ -25,6 +25,7 @@ interface Project {
   link?: string;
   coinGeckoId?: string;
   ticker?: string;
+  hasPriceTracking?: boolean;
 }
 
 interface EthosUser {
@@ -246,20 +247,26 @@ function SignalCard({ signal, project, ethosUser }: {
           </div>
         )}
         
-        {/* Performance */}
-        <SignalPerformance
-          signalId={signal.id}
-          projectHandle={signal.projectHandle}
-          sentiment={signal.sentiment}
-          notedAt={signal.notedAt}
-          tweetTimestamp={signal.tweetTimestamp}
-          project={project ? {
-            type: project.type,
-            chain: project.chain,
-            link: project.link,
-            coinGeckoId: project.coinGeckoId
-          } : undefined}
-        />
+        {/* Performance - only show if project has price tracking */}
+        {project && project.hasPriceTracking !== false ? (
+          <SignalPerformance
+            signalId={signal.id}
+            projectHandle={signal.projectHandle}
+            sentiment={signal.sentiment}
+            notedAt={signal.notedAt}
+            tweetTimestamp={signal.tweetTimestamp}
+            project={{
+              type: project.type,
+              chain: project.chain,
+              link: project.link,
+              coinGeckoId: project.coinGeckoId
+            }}
+          />
+        ) : (
+          <div class="glass-subtle rounded-xl p-3 border border-white/10 text-center">
+            <div class="text-xs text-gray-400">No price tracking available for this project</div>
+          </div>
+        )}
       </div>
     </div>
   );

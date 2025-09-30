@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { createChart, IChartApi, ISeriesApi, Time } from "lightweight-charts";
-import { getUserByTwitterUsername } from "../utils/ethos-api.ts";
 
 type Sentiment = "bullish" | "bearish";
 
@@ -30,32 +29,7 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
   const [dateRange, setDateRange] = useState<DateRange>("30d");
   const [timeInterval, setTimeInterval] = useState<TimeInterval>("1h");
   const [isLoading, setIsLoading] = useState(false);
-  const [userAvatars, setUserAvatars] = useState<Record<string, { displayName: string; avatarUrl: string }>>({});
 
-  // Fetch avatars for all unique users in signals
-  useEffect(() => {
-    const uniqueUsernames = [...new Set(signals.map(s => s.twitterUsername))];
-    
-    (async () => {
-      const avatarMap: Record<string, { displayName: string; avatarUrl: string }> = {};
-      
-      for (const username of uniqueUsernames) {
-        try {
-          const user = await getUserByTwitterUsername(username);
-          if (user && user.avatarUrl) {
-            avatarMap[username] = {
-              displayName: user.displayName || username,
-              avatarUrl: user.avatarUrl,
-            };
-          }
-        } catch (error) {
-          console.error(`Failed to fetch avatar for ${username}:`, error);
-        }
-      }
-      
-      setUserAvatars(avatarMap);
-    })();
-  }, [signals]);
 
   // Helper function to aggregate price data based on interval
   const aggregatePriceData = (
@@ -228,76 +202,21 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         if (priceData.length > 0) {
           areaSeries.setData(priceData);
           
-          // Add signal markers with bull/bear emojis
-          // Use custom marker text that shows both avatar emoji placeholder and bull/bear
+          // Show markers with bull/bear triangles
           const markers = signals.map(signal => {
             const timestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000) as Time;
-            const animalEmoji = signal.sentiment === "bullish" ? "🐂" : "🐻";
+            const isBullish = signal.sentiment === "bullish";
             
             return {
               time: timestamp,
-              position: signal.sentiment === "bullish" ? "belowBar" as const : "aboveBar" as const,
-              color: signal.sentiment === "bullish" ? "#22c55e" : "#ef4444",
-              shape: "circle" as const,
-              text: animalEmoji,
+              position: isBullish ? "belowBar" as const : "aboveBar" as const,
+              color: isBullish ? "#22c55e" : "#ef4444",
+              shape: isBullish ? "arrowUp" as const : "arrowDown" as const,
+              text: isBullish ? "Bull" : "Bear",
             };
           });
           
           areaSeries.setMarkers(markers);
-          
-          // Add custom HTML markers with avatar + emoji after chart renders
-          if (Object.keys(userAvatars).length > 0) {
-            setTimeout(() => {
-              const chartContainer = chartContainerRef.current;
-              if (!chartContainer) return;
-              
-              // Remove any existing custom markers
-              const existing = chartContainer.querySelectorAll('.custom-signal-marker');
-              existing.forEach(el => el.remove());
-              
-              signals.forEach((signal) => {
-                const userAvatar = userAvatars[signal.twitterUsername];
-                if (!userAvatar || !userAvatar.avatarUrl) return; // Skip if avatar not loaded
-                
-                const timestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000);
-                const animalEmoji = signal.sentiment === "bullish" ? "🐂" : "🐻";
-                const color = signal.sentiment === "bullish" ? "#22c55e" : "#ef4444";
-                
-                // Get coordinate for this time
-                const coordinate = areaSeries.priceToCoordinate(priceData.find(p => 
-                  Math.abs((p.time as number) - timestamp) < 86400
-                )?.value || priceData[0]?.value || 0);
-                
-                const timeCoordinate = chart.timeScale().timeToCoordinate(timestamp as Time);
-                
-                if (coordinate !== null && timeCoordinate !== null) {
-                  const markerDiv = document.createElement('div');
-                  markerDiv.className = 'custom-signal-marker';
-                  markerDiv.style.cssText = `
-                    position: absolute;
-                    left: ${timeCoordinate - 20}px;
-                    top: ${coordinate + (signal.sentiment === "bullish" ? 10 : -40)}px;
-                    display: flex;
-                    align-items: center;
-                    gap: 2px;
-                    pointer-events: none;
-                    z-index: 10;
-                  `;
-                  
-                  markerDiv.innerHTML = `
-                    <img
-                      src="${userAvatar.avatarUrl}"
-                      alt="${userAvatar.displayName}"
-                      style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid ${color}; background: white;"
-                    />
-                    <span style="font-size: 16px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));">${animalEmoji}</span>
-                  `;
-                  
-                  chartContainer.appendChild(markerDiv);
-                }
-              });
-            }, 100);
-          }
           
           // Fit content
           chart.timeScale().fitContent();
@@ -324,7 +243,7 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
       globalThis.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [coinGeckoId, chain, address, signals, userAvatars, dateRange, timeInterval]);
+  }, [coinGeckoId, chain, address, signals, dateRange, timeInterval]);
 
   return (
     <div class="mt-4">

@@ -36,6 +36,7 @@ export interface VerifiedProject {
   link?: string;
   coinGeckoId?: string; // For Layer 1 tokens without contracts
   ticker?: string; // Token ticker symbol (e.g., MKR, ETH, XPL)
+  hasPriceTracking?: boolean; // Whether to show price performance (default: true)
   createdAt: number;
 }
 
@@ -199,9 +200,9 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
     await client.queryObject(`
       INSERT INTO verified_projects (
         id, ethos_user_id, twitter_username, display_name, 
-        avatar_url, type, chain, link, coingecko_id, ticker, created_at
+        avatar_url, type, chain, link, coingecko_id, ticker, has_price_tracking, created_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, to_timestamp($11)
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, to_timestamp($12)
       )
       ON CONFLICT (ethos_user_id) DO UPDATE SET
         twitter_username = EXCLUDED.twitter_username,
@@ -211,7 +212,8 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
         chain = EXCLUDED.chain,
         link = EXCLUDED.link,
         coingecko_id = EXCLUDED.coingecko_id,
-        ticker = EXCLUDED.ticker
+        ticker = EXCLUDED.ticker,
+        has_price_tracking = EXCLUDED.has_price_tracking
     `, [
       project.id,
       project.ethosUserId,
@@ -223,6 +225,7 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
       project.link || null,
       project.coinGeckoId || null,
       project.ticker || null,
+      project.hasPriceTracking !== false, // Default to true
       project.createdAt / 1000, // Convert to seconds
     ]);
     
@@ -247,11 +250,13 @@ export async function listVerifiedProjects(): Promise<VerifiedProject[]> {
       chain: string;
       link: string | null;
       coingecko_id: string | null;
+      ticker: string | null;
+      has_price_tracking: boolean;
       created_at: Date;
     }>(`
       SELECT 
         id, ethos_user_id, twitter_username, display_name, 
-        avatar_url, type, chain, link, coingecko_id, created_at
+        avatar_url, type, chain, link, coingecko_id, ticker, has_price_tracking, created_at
       FROM verified_projects 
       ORDER BY created_at DESC
     `);
@@ -266,6 +271,8 @@ export async function listVerifiedProjects(): Promise<VerifiedProject[]> {
       chain: row.chain as "ethereum" | "base" | "solana",
       link: row.link || undefined,
       coinGeckoId: row.coingecko_id || undefined,
+      ticker: row.ticker || undefined,
+      hasPriceTracking: row.has_price_tracking,
       createdAt: row.created_at.getTime(), // Convert to epoch ms
     }));
   } catch (error) {
@@ -302,6 +309,9 @@ export async function getVerifiedByUsername(username: string): Promise<VerifiedP
       type: VerifiedProjectType;
       chain: string;
       link: string | null;
+      coingecko_id: string | null;
+      ticker: string | null;
+      has_price_tracking: boolean;
       created_at: Date;
     }>(`
       SELECT * FROM verified_projects 
@@ -321,6 +331,9 @@ export async function getVerifiedByUsername(username: string): Promise<VerifiedP
       type: row.type,
       chain: row.chain as "ethereum" | "base" | "solana",
       link: row.link || undefined,
+      coinGeckoId: row.coingecko_id || undefined,
+      ticker: row.ticker || undefined,
+      hasPriceTracking: row.has_price_tracking,
       createdAt: row.created_at.getTime(),
     };
   } catch (error) {
