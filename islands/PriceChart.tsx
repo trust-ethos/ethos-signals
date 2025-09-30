@@ -29,7 +29,47 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
   const [dateRange, setDateRange] = useState<DateRange>("30d");
   const [timeInterval, setTimeInterval] = useState<TimeInterval>("1h");
   const [isLoading, setIsLoading] = useState(false);
+  const [iconMarkers, setIconMarkers] = useState<Array<{
+    x: number;
+    y: number;
+    type: "bull" | "bear";
+  }>>([]);
 
+  // Update icon marker positions
+  const updateIconMarkers = () => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    
+    const markers: typeof iconMarkers = [];
+    const visibleRange = chart.timeScale().getVisibleRange();
+    if (!visibleRange) return;
+    
+    // Get the time scale to convert timestamps to x coordinates
+    signals.forEach(signal => {
+      const timestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000) as Time;
+      
+      // Check if in visible range
+      if (timestamp < visibleRange.from || timestamp > visibleRange.to) return;
+      
+      const x = chart.timeScale().timeToCoordinate(timestamp);
+      if (x === null) return;
+      
+      // Position based on sentiment: bulls below, bears above
+      // We'll use a fixed offset from the chart center for now
+      const chartHeight = chartContainerRef.current?.clientHeight || 400;
+      const y = signal.sentiment === "bullish" 
+        ? chartHeight - 40  // Near bottom for bulls
+        : 40;               // Near top for bears
+      
+      markers.push({
+        x,
+        y,
+        type: signal.sentiment === "bullish" ? "bull" : "bear",
+      });
+    });
+    
+    setIconMarkers(markers);
+  };
 
   // Helper function to aggregate price data based on interval
   const aggregatePriceData = (
@@ -202,21 +242,12 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         if (priceData.length > 0) {
           areaSeries.setData(priceData);
           
-          // Show markers with bull/bear triangles
-          const markers = signals.map(signal => {
-            const timestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000) as Time;
-            const isBullish = signal.sentiment === "bullish";
-            
-            return {
-              time: timestamp,
-              position: isBullish ? "belowBar" as const : "aboveBar" as const,
-              color: isBullish ? "#22c55e" : "#ef4444",
-              shape: isBullish ? "arrowUp" as const : "arrowDown" as const,
-              text: isBullish ? "Bull" : "Bear",
-            };
-          });
+          // No built-in markers - we'll use SVG overlay instead
           
-          areaSeries.setMarkers(markers);
+          // Update icon positions after chart renders
+          setTimeout(() => {
+            updateIconMarkers();
+          }, 100);
           
           // Fit content
           chart.timeScale().fitContent();
@@ -234,8 +265,15 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         chart.applyOptions({
           width: chartContainerRef.current.clientWidth,
         });
+        updateIconMarkers();
       }
     };
+
+    // Subscribe to visible range changes (pan/zoom)
+    const timeScale = chart.timeScale();
+    timeScale.subscribeVisibleLogicalRangeChange(() => {
+      updateIconMarkers();
+    });
 
     globalThis.addEventListener("resize", handleResize);
 
@@ -299,6 +337,43 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
       {/* Chart Container */}
       <div style={{ position: "relative" }}>
         <div ref={chartContainerRef} class="rounded-2xl border border-white/10 overflow-hidden glass-subtle" />
+        
+        {/* SVG Icon Overlay */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: "none",
+            overflow: "hidden",
+          }}
+        >
+          {iconMarkers.map((marker, idx) => (
+            <img
+              key={idx}
+              src={marker.type === "bull" ? "/bull.svg" : "/bear.svg"}
+              alt={marker.type}
+              style={{
+                position: "absolute",
+                left: `${marker.x - 12}px`,
+                top: `${marker.y - 12}px`,
+                width: "24px",
+                height: "24px",
+                pointerEvents: "auto",
+                cursor: "pointer",
+                transition: "transform 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.transform = "scale(1.3)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+              }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
