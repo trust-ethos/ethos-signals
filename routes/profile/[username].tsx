@@ -110,7 +110,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
             <CardContent class="p-8">
               <div class="flex flex-col lg:flex-row items-start gap-8">
                 {/* Avatar and Basic Info */}
-                <div class="flex flex-col items-center lg:items-start mt-4">
+                <div class="flex flex-col items-center lg:items-start">
                   <div class="relative">
                     <img
                       src={user.avatarUrl}
