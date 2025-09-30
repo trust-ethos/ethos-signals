@@ -252,7 +252,8 @@ class SignalsInjector {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
       z-index: 10000;
       display: flex;
       align-items: center;
@@ -262,88 +263,91 @@ class SignalsInjector {
     // Create modal content
     const modal = document.createElement('div');
     modal.style.cssText = `
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      max-width: 500px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      padding: 32px;
+      max-width: 540px;
       width: 90%;
       max-height: 80vh;
       overflow-y: auto;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     `;
 
     modal.innerHTML = `
-      <div style="margin-bottom: 20px;">
-        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #111827;">
+      <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #ffffff;">
           Save Trading Signal
         </h2>
-        <p style="color: #6B7280; font-size: 14px;">
+        <p style="color: #9ca3af; font-size: 14px;">
           Track this tweet as a bullish or bearish signal
         </p>
       </div>
 
-      <div style="margin-bottom: 20px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
-        <div style="font-weight: 600; margin-bottom: 8px; color: #111827; font-size: 16px;">@${tweetData.username || 'unknown'}</div>
-        <div style="font-size: 14px; color: #374151; line-height: 1.4;">
+      <div style="margin-bottom: 24px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
+        <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff; font-size: 16px;">@${tweetData.username || 'unknown'}</div>
+        <div style="font-size: 14px; color: #d1d5db; line-height: 1.5;">
           ${tweetData.text.slice(0, 300)}${tweetData.text.length > 300 ? '...' : ''}
         </div>
       </div>
 
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #374151;">
+      <div style="margin-bottom: 24px;">
+        <label style="display: block; font-weight: 500; margin-bottom: 10px; color: #e5e7eb; font-size: 14px;">
           Signal Type
         </label>
         <div style="display: flex; gap: 12px;">
           <button id="bullish-btn" style="
             flex: 1;
-            padding: 12px;
-            border: 2px solid #E5E7EB;
-            border-radius: 8px;
-            background: white;
-            color: #374151;
+            padding: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e5e7eb;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s;
+            font-size: 15px;
+            transition: all 0.3s;
           ">
-            🚀 Bullish
+            Bullish
           </button>
           <button id="bearish-btn" style="
             flex: 1;
-            padding: 12px;
-            border: 2px solid #E5E7EB;
-            border-radius: 8px;
-            background: white;
-            color: #374151;
+            padding: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e5e7eb;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s;
+            font-size: 15px;
+            transition: all 0.3s;
           ">
-            📉 Bearish
+            Bearish
           </button>
         </div>
       </div>
 
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #374151;">
+      <div style="margin-bottom: 28px;">
+        <label style="display: block; font-weight: 500; margin-bottom: 10px; color: #e5e7eb; font-size: 14px;">
           Project
         </label>
         <select id="project-select" style="
           width: 100%;
-          padding: 12px;
-          border: 1px solid #E5E7EB;
-          border-radius: 8px;
-          background: white;
-          color: #111827;
+          padding: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.05);
+          color: #ffffff;
           font-size: 14px;
           font-weight: 500;
+          backdrop-filter: blur(8px);
         ">
-          <option value="" style="color: #6B7280;">Select a verified project...</option>
+          <option value="" style="background: #1a1a1a; color: #9ca3af;">Select a verified project...</option>
           ${this.verifiedProjects.length === 0 ? 
-            '<option value="" disabled style="color: #EF4444;">No verified projects found</option>' :
+            '<option value="" disabled style="background: #1a1a1a; color: #ef4444;">No verified projects found</option>' :
             this.verifiedProjects.map(p => 
-              `<option value="${p.id}" data-username="${p.twitterUsername}" style="color: #111827;">
+              `<option value="${p.id}" data-username="${p.twitterUsername}" style="background: #1a1a1a; color: #ffffff;">
                 ${p.displayName} (@${p.twitterUsername}) - ${p.type.toUpperCase()}
               </option>`
             ).join('')}
@@ -353,26 +357,29 @@ class SignalsInjector {
       <div style="display: flex; gap: 12px; justify-content: flex-end;">
         <button id="cancel-btn" style="
           padding: 12px 24px;
-          border: 1px solid #E5E7EB;
-          border-radius: 8px;
-          background: white;
-          color: #374151;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.05);
+          color: #e5e7eb;
           cursor: pointer;
           font-weight: 500;
           font-size: 14px;
+          transition: all 0.3s;
         ">
           Cancel
         </button>
         <button id="save-signal-btn" style="
-          padding: 12px 24px;
+          padding: 12px 28px;
           border: none;
-          border-radius: 8px;
-          background: linear-gradient(135deg, #4F46E5, #7C3AED);
+          border-radius: 12px;
+          background: linear-gradient(135deg, #3b82f6, #6366f1);
           color: white;
           cursor: pointer;
           font-weight: 600;
           font-size: 14px;
           opacity: 0.5;
+          transition: all 0.3s;
+          box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
         " disabled>
           Save Signal
         </button>
@@ -398,12 +405,20 @@ class SignalsInjector {
     [bullishBtn, bearishBtn].forEach(btn => {
       btn.addEventListener('click', () => {
         [bullishBtn, bearishBtn].forEach(b => {
-          b.style.borderColor = '#E5E7EB';
-          b.style.background = 'white';
+          b.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          b.style.background = 'rgba(255, 255, 255, 0.05)';
+          b.style.color = '#e5e7eb';
         });
         
-        btn.style.borderColor = btn.id === 'bullish-btn' ? '#10B981' : '#EF4444';
-        btn.style.background = btn.id === 'bullish-btn' ? '#F0FDF4' : '#FEF2F2';
+        if (btn.id === 'bullish-btn') {
+          btn.style.borderColor = '#10b981';
+          btn.style.background = 'rgba(16, 185, 129, 0.15)';
+          btn.style.color = '#34d399';
+        } else {
+          btn.style.borderColor = '#ef4444';
+          btn.style.background = 'rgba(239, 68, 68, 0.15)';
+          btn.style.color = '#f87171';
+        }
         
         selectedSentiment = btn.id === 'bullish-btn' ? 'bullish' : 'bearish';
         this.updateSaveButtonState(saveBtn, selectedSentiment, projectSelect.value);

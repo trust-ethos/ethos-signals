@@ -12,12 +12,32 @@
 }
 
 .signals-modal-overlay {
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
 }
 
 /* Ensure our buttons don't interfere with X.com's layout */
 [data-testid="tweet"] .signals-save-btn {
   z-index: 1;
+}
+
+/* Modal button hover effects */
+#cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+#save-signal-btn:not(:disabled):hover {
+  transform: scale(1.02) !important;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
+}
+
+#save-signal-btn:not(:disabled) {
+  opacity: 1 !important;
+}
+
+#bullish-btn:hover, #bearish-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
 
