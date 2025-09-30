@@ -40,4 +40,34 @@
   background: rgba(255, 255, 255, 0.08) !important;
 }
 
+/* Project dropdown custom scrollbar */
+#project-dropdown {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+#project-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+#project-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#project-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+#project-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Project search input focus */
+#project-search:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
 

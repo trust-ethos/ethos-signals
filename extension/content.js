@@ -273,6 +273,7 @@ class SignalsInjector {
       max-height: 80vh;
       overflow-y: auto;
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     `;
 
     modal.innerHTML = `
@@ -328,30 +329,44 @@ class SignalsInjector {
         </div>
       </div>
 
-      <div style="margin-bottom: 28px;">
+      <div style="margin-bottom: 28px; position: relative;">
         <label style="display: block; font-weight: 500; margin-bottom: 10px; color: #e5e7eb; font-size: 14px;">
           Project
         </label>
-        <select id="project-select" style="
-          width: 100%;
-          padding: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+        <input 
+          type="text" 
+          id="project-search" 
+          placeholder="Search or select a project..."
+          autocomplete="off"
+          style="
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+          "
+        />
+        <div id="project-dropdown" style="
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          margin-top: 8px;
+          max-height: 300px;
+          overflow-y: auto;
+          background: rgba(10, 10, 10, 0.95);
+          backdrop-filter: blur(12px) saturate(200%);
+          border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 12px;
-          background: rgba(255, 255, 255, 0.05);
-          color: #ffffff;
-          font-size: 14px;
-          font-weight: 500;
-          backdrop-filter: blur(8px);
-        ">
-          <option value="" style="background: #1a1a1a; color: #9ca3af;">Select a verified project...</option>
-          ${this.verifiedProjects.length === 0 ? 
-            '<option value="" disabled style="background: #1a1a1a; color: #ef4444;">No verified projects found</option>' :
-            this.verifiedProjects.map(p => 
-              `<option value="${p.id}" data-username="${p.twitterUsername}" style="background: #1a1a1a; color: #ffffff;">
-                ${p.displayName} (@${p.twitterUsername}) - ${p.type.toUpperCase()}
-              </option>`
-            ).join('')}
-        </select>
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+          z-index: 100;
+        "></div>
       </div>
 
       <div style="display: flex; gap: 12px; justify-content: flex-end;">
@@ -392,14 +407,25 @@ class SignalsInjector {
     this.setupModalEventListeners(overlay, tweetData);
   }
 
-  setupModalEventListeners(overlay, tweetData) {
+  async setupModalEventListeners(overlay, tweetData) {
     const bullishBtn = overlay.querySelector('#bullish-btn');
     const bearishBtn = overlay.querySelector('#bearish-btn');
-    const projectSelect = overlay.querySelector('#project-select');
+    const projectSearch = overlay.querySelector('#project-search');
+    const projectDropdown = overlay.querySelector('#project-dropdown');
     const saveBtn = overlay.querySelector('#save-signal-btn');
     const cancelBtn = overlay.querySelector('#cancel-btn');
 
     let selectedSentiment = null;
+    let selectedProject = null;
+    let recentProjectIds = [];
+
+    // Load recently used projects
+    try {
+      const result = await chrome.storage.local.get(['recentProjects']);
+      recentProjectIds = result.recentProjects || [];
+    } catch (error) {
+      console.error('Failed to load recent projects:', error);
+    }
 
     // Sentiment selection
     [bullishBtn, bearishBtn].forEach(btn => {
@@ -421,21 +447,110 @@ class SignalsInjector {
         }
         
         selectedSentiment = btn.id === 'bullish-btn' ? 'bullish' : 'bearish';
-        this.updateSaveButtonState(saveBtn, selectedSentiment, projectSelect.value);
+        this.updateSaveButtonState(saveBtn, selectedSentiment, selectedProject);
       });
     });
 
-    // Project selection
-    projectSelect.addEventListener('change', () => {
-      this.updateSaveButtonState(saveBtn, selectedSentiment, projectSelect.value);
+    // Render projects dropdown
+    const renderProjectDropdown = (searchTerm = '') => {
+      const term = searchTerm.toLowerCase();
+      
+      // Filter projects
+      const filtered = this.verifiedProjects.filter(p => 
+        p.displayName.toLowerCase().includes(term) ||
+        p.twitterUsername.toLowerCase().includes(term)
+      );
+
+      // Separate into recent and others
+      const recentProjects = filtered.filter(p => recentProjectIds.includes(p.id));
+      const otherProjects = filtered.filter(p => !recentProjectIds.includes(p.id));
+
+      let html = '';
+      
+      if (recentProjects.length > 0) {
+        html += '<div style="padding: 8px 12px; color: #9ca3af; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Recently Used</div>';
+        recentProjects.forEach(p => {
+          html += `
+            <div class="project-item" data-project-id="${p.id}" style="
+              padding: 12px 16px;
+              cursor: pointer;
+              transition: all 0.2s;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            ">
+              <div style="font-weight: 600; color: #ffffff; margin-bottom: 4px;">${p.displayName}</div>
+              <div style="font-size: 12px; color: #9ca3af;">@${p.twitterUsername} · ${p.type.toUpperCase()}</div>
+            </div>
+          `;
+        });
+      }
+
+      if (otherProjects.length > 0) {
+        if (recentProjects.length > 0) {
+          html += '<div style="padding: 8px 12px; color: #9ca3af; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px;">All Projects</div>';
+        }
+        otherProjects.forEach(p => {
+          html += `
+            <div class="project-item" data-project-id="${p.id}" style="
+              padding: 12px 16px;
+              cursor: pointer;
+              transition: all 0.2s;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            ">
+              <div style="font-weight: 600; color: #ffffff; margin-bottom: 4px;">${p.displayName}</div>
+              <div style="font-size: 12px; color: #9ca3af;">@${p.twitterUsername} · ${p.type.toUpperCase()}</div>
+            </div>
+          `;
+        });
+      }
+
+      if (filtered.length === 0) {
+        html = '<div style="padding: 20px; text-align: center; color: #9ca3af;">No projects found</div>';
+      }
+
+      projectDropdown.innerHTML = html;
+
+      // Add hover effects and click handlers
+      projectDropdown.querySelectorAll('.project-item').forEach(item => {
+        item.addEventListener('mouseenter', () => {
+          item.style.background = 'rgba(255, 255, 255, 0.08)';
+        });
+        item.addEventListener('mouseleave', () => {
+          item.style.background = 'transparent';
+        });
+        item.addEventListener('click', () => {
+          const projectId = item.getAttribute('data-project-id');
+          selectedProject = this.verifiedProjects.find(p => p.id === projectId);
+          projectSearch.value = selectedProject.displayName;
+          projectDropdown.style.display = 'none';
+          this.updateSaveButtonState(saveBtn, selectedSentiment, selectedProject);
+        });
+      });
+    };
+
+    // Show dropdown on focus
+    projectSearch.addEventListener('focus', () => {
+      renderProjectDropdown(projectSearch.value);
+      projectDropdown.style.display = 'block';
+    });
+
+    // Filter on input
+    projectSearch.addEventListener('input', () => {
+      selectedProject = null;
+      renderProjectDropdown(projectSearch.value);
+      projectDropdown.style.display = 'block';
+      this.updateSaveButtonState(saveBtn, selectedSentiment, selectedProject);
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!projectSearch.contains(e.target) && !projectDropdown.contains(e.target)) {
+        projectDropdown.style.display = 'none';
+      }
     });
 
     // Save signal
     saveBtn.addEventListener('click', async () => {
-      if (!selectedSentiment || !projectSelect.value) return;
-      
-      const selectedProject = this.verifiedProjects.find(p => p.id === projectSelect.value);
-      if (!selectedProject) return;
+      if (!selectedSentiment || !selectedProject) return;
 
       saveBtn.textContent = 'Saving...';
       saveBtn.disabled = true;
@@ -448,7 +563,7 @@ class SignalsInjector {
           tweetContent: tweetData.text,
           projectHandle: selectedProject.twitterUsername,
           notedAt: new Date(tweetData.timestamp).toISOString().slice(0, 10),
-          tweetTimestamp: tweetData.timestamp, // full ISO datetime
+          tweetTimestamp: tweetData.timestamp,
           projectUserId: selectedProject.ethosUserId,
           projectDisplayName: selectedProject.displayName,
           projectAvatarUrl: selectedProject.avatarUrl,
@@ -461,6 +576,10 @@ class SignalsInjector {
           tweetUrl: tweetData.tweetUrl,
           projectHandle: selectedProject.twitterUsername,
         });
+
+        // Save to recently used
+        const updatedRecent = [selectedProject.id, ...recentProjectIds.filter(id => id !== selectedProject.id)].slice(0, 5);
+        await chrome.storage.local.set({ recentProjects: updatedRecent });
         
         // Show success with profile link
         const profileUrl = `${SIGNALS_API_BASE}/profile/${tweetData.username}`;
@@ -481,8 +600,8 @@ class SignalsInjector {
     });
   }
 
-  updateSaveButtonState(saveBtn, sentiment, projectId) {
-    const isValid = sentiment && projectId;
+  updateSaveButtonState(saveBtn, sentiment, project) {
+    const isValid = sentiment && project;
     saveBtn.disabled = !isValid;
     saveBtn.style.opacity = isValid ? '1' : '0.5';
   }
