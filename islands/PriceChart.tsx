@@ -38,21 +38,35 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
   // Update icon marker positions
   const updateIconMarkers = () => {
     const chart = chartRef.current;
-    if (!chart) return;
+    if (!chart) {
+      console.log('No chart ref');
+      return;
+    }
     
     const markers: typeof iconMarkers = [];
     const visibleRange = chart.timeScale().getVisibleRange();
-    if (!visibleRange) return;
+    if (!visibleRange) {
+      console.log('No visible range');
+      return;
+    }
+    
+    console.log(`Updating icon markers for ${signals.length} signals`);
     
     // Get the time scale to convert timestamps to x coordinates
-    signals.forEach(signal => {
+    signals.forEach((signal, idx) => {
       const timestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000) as Time;
       
       // Check if in visible range
-      if (timestamp < visibleRange.from || timestamp > visibleRange.to) return;
+      if (timestamp < visibleRange.from || timestamp > visibleRange.to) {
+        if (idx === 0) console.log(`Signal ${idx} not in visible range`);
+        return;
+      }
       
       const x = chart.timeScale().timeToCoordinate(timestamp);
-      if (x === null) return;
+      if (x === null) {
+        if (idx === 0) console.log(`Signal ${idx} x coordinate is null`);
+        return;
+      }
       
       // Position based on sentiment: bulls below, bears above
       // We'll use a fixed offset from the chart center for now
@@ -68,6 +82,7 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
       });
     });
     
+    console.log(`Setting ${markers.length} icon markers`);
     setIconMarkers(markers);
   };
 
@@ -350,6 +365,7 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
             overflow: "hidden",
           }}
         >
+          {console.log(`Rendering ${iconMarkers.length} icon markers in JSX`)}
           {iconMarkers.map((marker, idx) => (
             <img
               key={idx}
