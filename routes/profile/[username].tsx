@@ -108,7 +108,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
           {/* Profile Header Card */}
           <Card class="mb-8 glass-strong hover-glow">
             <CardContent class="p-8">
-              <div class="flex flex-col lg:flex-row items-start gap-8">
+              <div class="flex flex-col lg:flex-row items-start gap-8 py-4">
                 {/* Avatar and Basic Info */}
                 <div class="flex flex-col items-center lg:items-start">
                   <div class="relative">
