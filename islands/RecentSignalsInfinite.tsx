@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { Badge } from "../components/ui/Badge.tsx";
 import SignalPerformance from "./SignalPerformance.tsx";
 import RelativeTime from "./RelativeTime.tsx";
+import { getScoreColor } from "../utils/ethos-score.ts";
 
 interface Signal {
   id: string;
@@ -173,7 +174,8 @@ function SignalCard({ signal, project, ethosUser }: {
             <img 
               src={avatarUrl} 
               alt={displayName}
-              class="w-16 h-16 rounded-full object-cover border-2 border-blue-500/50 shadow-lg shadow-blue-500/20"
+              class="w-16 h-16 rounded-full object-cover border-4 shadow-lg"
+              style={ethosUser ? `border-color: ${getScoreColor(ethosUser.score)}; box-shadow: 0 0 16px ${getScoreColor(ethosUser.score)}40, 0 10px 25px rgba(0,0,0,0.3);` : "border-color: #6B7280; box-shadow: 0 10px 25px rgba(0,0,0,0.3);"}
             />
           </a>
           <div class="flex-1 min-w-0">
@@ -186,7 +188,7 @@ function SignalCard({ signal, project, ethosUser }: {
             {ethosUser && (
               <div class="mt-1">
                 <span class="text-xs text-gray-400">
-                  Score: <span class="font-semibold text-blue-400">{ethosUser.score}</span>
+                  Score: <span class="font-semibold" style={`color: ${getScoreColor(ethosUser.score)};`}>{ethosUser.score}</span>
                 </span>
               </div>
             )}
