@@ -110,7 +110,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
             <CardContent class="p-8">
               <div class="flex flex-col lg:flex-row items-start gap-8">
                 {/* Avatar and Basic Info */}
-                <div class="flex flex-col items-center lg:items-start">
+                <div class="flex flex-col items-center lg:items-start mt-4">
                   <div class="relative">
                     <img
                       src={user.avatarUrl}
@@ -123,9 +123,9 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                     )}
                   </div>
                   
-                  <div class="mt-6 flex gap-3">
+                  <div class="mt-6 flex flex-col gap-3 w-full">
                     <Button variant="outline" size="sm" onClick={() => { globalThis.open(user.links.profile, '_blank'); }}>
-                      <div class="flex items-center">
+                      <div class="flex items-center justify-center w-full">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
@@ -134,7 +134,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                     </Button>
                     {user.username && (
                       <Button variant="outline" size="sm" onClick={() => { globalThis.open(`https://twitter.com/${user.username}`, '_blank'); }}>
-                        <div class="flex items-center">
+                        <div class="flex items-center justify-center w-full">
                           <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                           </svg>
