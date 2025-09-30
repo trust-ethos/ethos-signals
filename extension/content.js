@@ -270,8 +270,8 @@ class SignalsInjector {
       padding: 32px;
       max-width: 540px;
       width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
+      max-height: 90vh;
+      overflow: visible;
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     `;
