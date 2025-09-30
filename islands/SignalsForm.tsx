@@ -134,7 +134,6 @@ export default function SignalsForm({ username }: Props) {
           <div class="sticky top-20 z-10 glass-strong border border-white/10 rounded-2xl shadow-2xl shadow-black/20 mb-6 p-4">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2">
-                <span class="text-xl">📊</span>
                 <span class="font-semibold text-white">Tracked Assets</span>
               </div>
               <div class="text-sm text-gray-400">
@@ -153,9 +152,10 @@ export default function SignalsForm({ username }: Props) {
                   )}
                   <div class="flex items-center gap-2">
                     <span class="text-sm font-medium text-white">{stat.displayName}</span>
-                    <div class="flex items-center gap-1">
-                      <span class="text-xs text-green-400">🚀{stat.bullishCount}</span>
-                      <span class="text-xs text-red-400">📉{stat.bearishCount}</span>
+                    <div class="flex items-center gap-1 text-xs">
+                      <span class="text-green-400">{stat.bullishCount}↑</span>
+                      <span class="text-gray-500">•</span>
+                      <span class="text-red-400">{stat.bearishCount}↓</span>
                     </div>
                   </div>
                 </a>

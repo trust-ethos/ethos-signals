@@ -6,10 +6,12 @@ import { Badge } from "../../components/ui/Badge.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import SignalsForm from "../../islands/SignalsForm.tsx";
 import { getScoreLevelName, getScoreColor, getScoreBadgeVariant } from "../../utils/ethos-score.ts";
+import { listTestSignals } from "../../utils/database.ts";
 
 interface ProfileData {
   user: EthosUser;
   scoreDetails: { score?: number; level: string };
+  totalSignals: number;
 }
 
 export const handler: Handlers<ProfileData | null> = {
@@ -26,8 +28,15 @@ export const handler: Handlers<ProfileData | null> = {
       // Get additional score details using the best available userkey
       const userkey = user.profileId ? `profileId:${user.profileId}` : user.userkeys[0];
       const scoreDetails = await getUserScore(userkey);
+      
+      // Get user signals to calculate stats
+      const signals = await listTestSignals(username);
 
-      return ctx.render({ user, scoreDetails });
+      return ctx.render({ 
+        user, 
+        scoreDetails,
+        totalSignals: signals.length
+      });
     } catch (error) {
       console.error("Error fetching user profile:", error);
       return ctx.renderNotFound();
@@ -64,7 +73,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
     );
   }
 
-  const { user, scoreDetails } = data;
+  const { user, scoreDetails, totalSignals } = data;
 
   return (
     <>
@@ -157,7 +166,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                   )}
 
                   {/* Stats Grid */}
-                  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div class="rounded-xl p-4 border backdrop-blur-sm" style={`background: linear-gradient(135deg, ${getScoreColor(user.score)}20, ${getScoreColor(user.score)}10); border-color: ${getScoreColor(user.score)}30;`}>
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center" style={`background-color: ${getScoreColor(user.score)};`}>
@@ -171,46 +180,17 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                       <div class="text-xs mt-1" style={`color: ${getScoreColor(user.score)};`}>{getScoreLevelName(user.score)}</div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl p-4 border border-green-500/30 backdrop-blur-sm">
+                    <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30 backdrop-blur-sm">
                       <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                           </svg>
                         </div>
-                        <span class="text-sm font-medium text-green-300">Positive Reviews</span>
+                        <span class="text-sm font-medium text-blue-300">Total Signals</span>
                       </div>
-                      <div class="text-3xl font-bold text-green-100">{user.stats.review.received.positive}</div>
-                      <div class="text-xs text-green-300">
-                        {user.stats.review.received.neutral} neutral
-                      </div>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-xl p-4 border border-red-500/30 backdrop-blur-sm">
-                      <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-                          </svg>
-                        </div>
-                        <span class="text-sm font-medium text-red-300">Negative Reviews</span>
-                      </div>
-                      <div class="text-3xl font-bold text-red-100">{user.stats.review.received.negative}</div>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl p-4 border border-orange-500/30 backdrop-blur-sm">
-                      <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                        </div>
-                        <span class="text-sm font-medium text-orange-300">Vouches</span>
-                      </div>
-                      <div class="text-3xl font-bold text-orange-100">{user.stats.vouch.received.count}</div>
-                      <div class="text-xs text-orange-300">
-                        {(parseFloat(user.stats.vouch.received.amountWeiTotal.toString()) / 1e18).toFixed(2)} ETH
-                      </div>
+                      <div class="text-3xl font-bold text-blue-100">{totalSignals}</div>
+                      <div class="text-xs text-blue-300">Tracked signals</div>
                     </div>
                   </div>
                 </div>
