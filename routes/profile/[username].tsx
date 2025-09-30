@@ -283,25 +283,62 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                       <div class="text-xs text-blue-300">Tracked signals</div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30 backdrop-blur-sm">
-                      <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <span class="text-sm font-medium text-purple-300">Signal Accuracy</span>
-                      </div>
-                      <div class="text-3xl font-bold text-purple-100">
-                        {signalAccuracy.correct + signalAccuracy.incorrect > 0 
-                          ? `${Math.round((signalAccuracy.correct / (signalAccuracy.correct + signalAccuracy.incorrect)) * 100)}%`
-                          : '—'
+                    {(() => {
+                      const totalEvaluated = signalAccuracy.correct + signalAccuracy.incorrect;
+                      const accuracyPercent = totalEvaluated > 0 
+                        ? Math.round((signalAccuracy.correct / totalEvaluated) * 100)
+                        : null;
+                      
+                      let label = '—';
+                      let bgGradient = 'from-gray-500/20 to-gray-600/20';
+                      let borderColor = 'border-gray-500/30';
+                      let iconBg = 'bg-gray-500';
+                      let textColor = 'text-gray-300';
+                      
+                      if (accuracyPercent !== null) {
+                        if (accuracyPercent >= 70) {
+                          label = 'HIGH';
+                          bgGradient = 'from-green-500/20 to-green-600/20';
+                          borderColor = 'border-green-500/30';
+                          iconBg = 'bg-green-500';
+                          textColor = 'text-green-300';
+                        } else if (accuracyPercent >= 40) {
+                          label = 'MEDIUM';
+                          bgGradient = 'from-yellow-500/20 to-orange-500/20';
+                          borderColor = 'border-yellow-500/30';
+                          iconBg = 'bg-yellow-500';
+                          textColor = 'text-yellow-300';
+                        } else {
+                          label = 'LOW';
+                          bgGradient = 'from-red-500/20 to-red-600/20';
+                          borderColor = 'border-red-500/30';
+                          iconBg = 'bg-red-500';
+                          textColor = 'text-red-300';
                         }
-                      </div>
-                      <div class="text-xs text-purple-300">
-                        <span class="text-green-400">{signalAccuracy.correct} correct</span> • <span class="text-red-400">{signalAccuracy.incorrect} incorrect</span>
-                      </div>
-                    </div>
+                      }
+                      
+                      return (
+                        <div class={`bg-gradient-to-br ${bgGradient} rounded-xl p-4 border ${borderColor} backdrop-blur-sm`}>
+                          <div class="flex items-center gap-2 mb-2">
+                            <div class={`w-8 h-8 ${iconBg} rounded-lg flex items-center justify-center`}>
+                              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <span class={`text-sm font-medium ${textColor}`}>Signal Accuracy</span>
+                          </div>
+                          <div class="flex items-baseline gap-2">
+                            <span class={`text-2xl font-bold ${textColor}`}>{label}</span>
+                            {accuracyPercent !== null && (
+                              <span class="text-3xl font-bold text-white">{accuracyPercent}%</span>
+                            )}
+                          </div>
+                          <div class={`text-xs ${textColor} mt-1`}>
+                            <span class="text-green-400">{signalAccuracy.correct} correct</span> • <span class="text-red-400">{signalAccuracy.incorrect} incorrect</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
