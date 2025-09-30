@@ -256,8 +256,9 @@ class SignalsInjector {
       backdrop-filter: blur(8px);
       z-index: 10000;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      padding-top: 80px;
     `;
 
     // Create modal content
