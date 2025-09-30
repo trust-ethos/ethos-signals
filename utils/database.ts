@@ -132,7 +132,7 @@ export async function listTestSignals(username: string): Promise<TestSignal[]> {
   }
 }
 
-export async function listAllRecentSignals(limit = 15): Promise<TestSignal[]> {
+export async function listAllRecentSignals(limit = 15, offset = 0): Promise<TestSignal[]> {
   try {
     const client = await getDbClient();
     const result = await client.queryObject<{
@@ -152,8 +152,8 @@ export async function listAllRecentSignals(limit = 15): Promise<TestSignal[]> {
     }>(`
       SELECT * FROM signals 
       ORDER BY created_at DESC
-      LIMIT $1
-    `, [limit]);
+      LIMIT $1 OFFSET $2
+    `, [limit, offset]);
     
     return result.rows.map(row => ({
       id: row.id,
