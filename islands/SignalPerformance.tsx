@@ -38,8 +38,8 @@ export default function SignalPerformance({ signalId, projectHandle, sentiment, 
         let isNFTType = false;
 
         if (proj.type === 'token') {
+          // Try contract address first if available
           if (proj.link) {
-            // Contract address-based token
             const chain = proj.chain || 'ethereum';
             const callResponse = await fetch(
               tweetTimestamp 
@@ -53,8 +53,10 @@ export default function SignalPerformance({ signalId, projectHandle, sentiment, 
             
             fetchedCallPrice = callData.price;
             fetchedCurrentPrice = currentData.price;
-          } else if (proj.coinGeckoId) {
-            // CoinGecko ID-based token (Layer 1s)
+          }
+          
+          // Fallback to CoinGecko if contract address didn't return data or isn't available
+          if ((!fetchedCallPrice || !fetchedCurrentPrice) && proj.coinGeckoId) {
             const callResponse = await fetch(
               tweetTimestamp
                 ? `/api/price/coingecko?id=${proj.coinGeckoId}&timestamp=${tweetTimestamp}`
