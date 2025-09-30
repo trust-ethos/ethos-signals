@@ -120,19 +120,28 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         // Calculate date range based on user selection
         const now = Date.now();
         let startTime: number;
+        let displayStartTime: number; // For initial view
         
         switch (dateRange) {
           case "30d":
-            startTime = now - (30 * 24 * 60 * 60 * 1000);
-            break;
-          case "90d":
+            displayStartTime = now - (30 * 24 * 60 * 60 * 1000);
+            // Fetch 90 days so zooming out reveals more data
             startTime = now - (90 * 24 * 60 * 60 * 1000);
             break;
-          case "180d":
+          case "90d":
+            displayStartTime = now - (90 * 24 * 60 * 60 * 1000);
+            // Fetch 180 days so zooming out reveals more data
             startTime = now - (180 * 24 * 60 * 60 * 1000);
             break;
-          case "1y":
+          case "180d":
+            displayStartTime = now - (180 * 24 * 60 * 60 * 1000);
+            // Fetch 1 year so zooming out reveals more data
             startTime = now - (365 * 24 * 60 * 60 * 1000);
+            break;
+          case "1y":
+            displayStartTime = now - (365 * 24 * 60 * 60 * 1000);
+            // Fetch 2 years so zooming out reveals more data
+            startTime = now - (2 * 365 * 24 * 60 * 60 * 1000);
             break;
           case "all":
           default: {
@@ -142,9 +151,11 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
               const earliestSignal = Math.min(...timestamps);
               // Add 60 days of context before the earliest signal
               startTime = earliestSignal - (60 * 24 * 60 * 60 * 1000);
+              displayStartTime = startTime; // Show all in "All" mode
             } else {
               // Default to 2 years of data if no signals
               startTime = now - (2 * 365 * 24 * 60 * 60 * 1000);
+              displayStartTime = startTime;
             }
             break;
           }
@@ -224,8 +235,16 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
           
           areaSeries.setMarkers(markers);
           
-          // Fit content
-          chart.timeScale().fitContent();
+          // Set initial visible range based on selected date range
+          // This allows zooming out to reveal the extra fetched data
+          if (dateRange !== "all") {
+            const displayFrom = Math.floor(displayStartTime / 1000) as Time;
+            const displayTo = Math.floor(now / 1000) as Time;
+            chart.timeScale().setVisibleRange({ from: displayFrom, to: displayTo });
+          } else {
+            // For "All" mode, fit all content
+            chart.timeScale().fitContent();
+          }
         }
       } catch (error) {
         console.error("Failed to fetch price data for chart:", error);
