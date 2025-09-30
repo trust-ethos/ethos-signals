@@ -358,14 +358,14 @@ class SignalsInjector {
           left: 0;
           right: 0;
           margin-top: 8px;
-          max-height: 300px;
+          max-height: 400px;
           overflow-y: auto;
           background: rgba(10, 10, 10, 0.95);
           backdrop-filter: blur(12px) saturate(200%);
           border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 12px;
           box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-          z-index: 100;
+          z-index: 1000;
         "></div>
       </div>
 
@@ -626,34 +626,58 @@ class SignalsInjector {
 
   showToast(message, type = 'info', linkUrl = null) {
     const toast = document.createElement('div');
+    
+    // Determine colors based on type
+    const colors = {
+      success: { border: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', glow: 'rgba(16, 185, 129, 0.3)' },
+      error: { border: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', glow: 'rgba(239, 68, 68, 0.3)' },
+      info: { border: 'rgba(255, 255, 255, 0.2)', bg: 'rgba(255, 255, 255, 0.08)', glow: 'rgba(255, 255, 255, 0.1)' }
+    };
+    
+    const color = colors[type] || colors.info;
+    
     toast.style.cssText = `
       position: fixed;
       top: 20px;
       right: 20px;
-      padding: 16px 20px;
-      border-radius: 8px;
-      color: white;
-      font-weight: 500;
+      padding: 18px 22px;
+      border-radius: 16px;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       z-index: 10001;
       opacity: 0;
-      transition: all 0.3s;
-      background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#6B7280'};
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid ${color.border};
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px ${color.bg}, 0 4px 20px ${color.glow};
       cursor: ${linkUrl ? 'pointer' : 'default'};
-      min-width: 280px;
+      min-width: 300px;
+      transform: translateY(-10px);
     `;
     
     if (linkUrl) {
       toast.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
           <span>${message}</span>
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-left: 8px;">
-            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" style="margin-left: 12px; opacity: 0.8;">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" fill="none" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
           </svg>
         </div>
-        <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">Click to view profile</div>
+        <div style="font-size: 13px; color: #d1d5db; font-weight: 500;">Click to view profile</div>
       `;
       toast.addEventListener('click', () => {
         window.open(linkUrl, '_blank');
+      });
+      toast.addEventListener('mouseenter', () => {
+        toast.style.transform = 'translateY(-10px) scale(1.02)';
+        toast.style.boxShadow = `0 12px 40px 0 rgba(0, 0, 0, 0.6), 0 0 0 1px ${color.bg}, 0 6px 24px ${color.glow}`;
+      });
+      toast.addEventListener('mouseleave', () => {
+        toast.style.transform = 'translateY(-10px) scale(1)';
+        toast.style.boxShadow = `0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px ${color.bg}, 0 4px 20px ${color.glow}`;
       });
     } else {
       toast.textContent = message;
@@ -662,13 +686,17 @@ class SignalsInjector {
     document.body.appendChild(toast);
     
     // Animate in
-    setTimeout(() => toast.style.opacity = '1', 10);
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    }, 10);
     
     // Remove after 5 seconds (longer for success with link)
-    const delay = linkUrl ? 5000 : 3000;
+    const delay = linkUrl ? 6000 : 3500;
     setTimeout(() => {
       toast.style.opacity = '0';
-      setTimeout(() => toast.remove(), 300);
+      toast.style.transform = 'translateY(-10px)';
+      setTimeout(() => toast.remove(), 400);
     }, delay);
   }
 
