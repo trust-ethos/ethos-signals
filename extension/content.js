@@ -1,7 +1,7 @@
 // Signals Chrome Extension - Content Script
 // Injects save buttons on X.com tweets
 
-const SIGNALS_API_BASE = 'http://localhost:8000'; // TODO: change to production URL
+const SIGNALS_API_BASE = 'https://signals.deno.dev';
 
 class SignalsInjector {
   constructor() {
