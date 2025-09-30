@@ -40,5 +40,5 @@ export function CardDescription({ children, class: className = "", ...props }: C
 }
 
 export function CardContent({ children, class: className = "", ...props }: CardProps) {
-  return <div class={`p-6 pt-0 ${className}`} {...props}>{children}</div>;
+  return <div class={`p-6 ${className}`} {...props}>{children}</div>;
 }

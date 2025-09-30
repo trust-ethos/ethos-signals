@@ -6,16 +6,21 @@ import { Badge } from "../../components/ui/Badge.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import SignalsForm from "../../islands/SignalsForm.tsx";
 import { getScoreLevelName, getScoreColor, getScoreBadgeVariant } from "../../utils/ethos-score.ts";
-import { listTestSignals } from "../../utils/database.ts";
+import { listTestSignals, listVerifiedProjects } from "../../utils/database.ts";
 
 interface ProfileData {
   user: EthosUser;
   scoreDetails: { score?: number; level: string };
   totalSignals: number;
+  signalAccuracy: {
+    correct: number;
+    incorrect: number;
+    pending: number;
+  };
 }
 
 export const handler: Handlers<ProfileData | null> = {
-  async GET(_req, ctx) {
+  async GET(req, ctx) {
     const { username } = ctx.params;
     
     try {
@@ -29,13 +34,94 @@ export const handler: Handlers<ProfileData | null> = {
       const userkey = user.profileId ? `profileId:${user.profileId}` : user.userkeys[0];
       const scoreDetails = await getUserScore(userkey);
       
-      // Get user signals to calculate stats
-      const signals = await listTestSignals(username);
+      // Get user signals and verified projects to calculate stats
+      const [signals, verifiedProjects] = await Promise.all([
+        listTestSignals(username),
+        listVerifiedProjects()
+      ]);
+      
+      // Calculate signal accuracy
+      let correct = 0;
+      let incorrect = 0;
+      let pending = 0;
+      
+      // Create a map of verified projects by username for quick lookup
+      const projectsByUsername: Record<string, typeof verifiedProjects[0]> = {};
+      for (const proj of verifiedProjects) {
+        projectsByUsername[proj.twitterUsername.toLowerCase()] = proj;
+      }
+      
+      // Check accuracy for each signal
+      await Promise.all(signals.map(async (signal) => {
+        const project = projectsByUsername[signal.projectHandle.toLowerCase()];
+        
+        // Skip if no project or no price tracking
+        if (!project || project.hasPriceTracking === false) {
+          pending++;
+          return;
+        }
+        
+        try {
+          const baseTime = signal.tweetTimestamp ? new Date(signal.tweetTimestamp) : new Date(signal.notedAt + 'T00:00:00Z');
+          const baseUrl = new URL(req.url).origin;
+          
+          let callPrice: number | null = null;
+          let currentPrice: number | null = null;
+          
+          // Fetch prices based on project type
+          if (project.type === 'token') {
+            if (project.coinGeckoId) {
+              // Use CoinGecko for tokens with coinGeckoId
+              const [callRes, currentRes] = await Promise.all([
+                fetch(`${baseUrl}/api/price/coingecko?id=${project.coinGeckoId}&timestamp=${baseTime.toISOString()}`),
+                fetch(`${baseUrl}/api/price/coingecko?id=${project.coinGeckoId}`)
+              ]);
+              const callData = await callRes.json();
+              const currentData = await currentRes.json();
+              callPrice = callData.price;
+              currentPrice = currentData.price;
+            } else if (project.chain && project.link) {
+              // Use DefiLlama for tokens with contract address
+              const [callRes, currentRes] = await Promise.all([
+                fetch(`${baseUrl}/api/price/token?chain=${project.chain}&address=${project.link}&timestamp=${baseTime.toISOString()}`),
+                fetch(`${baseUrl}/api/price/token?chain=${project.chain}&address=${project.link}`)
+              ]);
+              const callData = await callRes.json();
+              const currentData = await currentRes.json();
+              callPrice = callData.price;
+              currentPrice = currentData.price;
+            }
+          }
+          
+          // Determine if signal is correct
+          if (callPrice !== null && currentPrice !== null && callPrice > 0) {
+            const priceChange = ((currentPrice - callPrice) / callPrice) * 100;
+            const isCorrect = (signal.sentiment === 'bullish' && priceChange >= 0) || 
+                             (signal.sentiment === 'bearish' && priceChange < 0);
+            
+            if (isCorrect) {
+              correct++;
+            } else {
+              incorrect++;
+            }
+          } else {
+            pending++;
+          }
+        } catch (error) {
+          console.error(`Error calculating accuracy for signal ${signal.id}:`, error);
+          pending++;
+        }
+      }));
 
       return ctx.render({ 
         user, 
         scoreDetails,
-        totalSignals: signals.length
+        totalSignals: signals.length,
+        signalAccuracy: {
+          correct,
+          incorrect,
+          pending
+        }
       });
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -73,7 +159,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
     );
   }
 
-  const { user, scoreDetails, totalSignals } = data;
+  const { user, scoreDetails, totalSignals, signalAccuracy } = data;
 
   return (
     <>
@@ -124,23 +210,27 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                   </div>
                   
                   <div class="mt-6 flex flex-col gap-3 w-full">
-                    <Button variant="outline" size="sm" onClick={() => { globalThis.open(user.links.profile, '_blank'); }}>
-                      <div class="flex items-center justify-center w-full">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        <span>View on Ethos</span>
-                      </div>
-                    </Button>
-                    {user.username && (
-                      <Button variant="outline" size="sm" onClick={() => { globalThis.open(`https://twitter.com/${user.username}`, '_blank'); }}>
+                    <a href={`https://app.ethos.network/profile/x/${user.username || user.displayName.toLowerCase().replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" class="w-full">
+                      <Button variant="outline" size="sm" class="w-full">
                         <div class="flex items-center justify-center w-full">
-                          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
-                          <span>View on Twitter</span>
+                          <span>View on Ethos</span>
                         </div>
                       </Button>
+                    </a>
+                    {user.username && (
+                      <a href={`https://x.com/${user.username}`} target="_blank" rel="noopener noreferrer" class="w-full">
+                        <Button variant="outline" size="sm" class="w-full">
+                          <div class="flex items-center justify-center w-full">
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            <span>View on Twitter</span>
+                          </div>
+                        </Button>
+                      </a>
                     )}
                   </div>
                 </div>
@@ -166,7 +256,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                   )}
 
                   {/* Stats Grid */}
-                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="rounded-xl p-4 border backdrop-blur-sm" style={`background: linear-gradient(135deg, ${getScoreColor(user.score)}20, ${getScoreColor(user.score)}10); border-color: ${getScoreColor(user.score)}30;`}>
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center" style={`background-color: ${getScoreColor(user.score)};`}>
@@ -191,6 +281,26 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                       </div>
                       <div class="text-3xl font-bold text-blue-100">{totalSignals}</div>
                       <div class="text-xs text-blue-300">Tracked signals</div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30 backdrop-blur-sm">
+                      <div class="flex items-center gap-2 mb-2">
+                        <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <span class="text-sm font-medium text-purple-300">Signal Accuracy</span>
+                      </div>
+                      <div class="text-3xl font-bold text-purple-100">
+                        {signalAccuracy.correct + signalAccuracy.incorrect > 0 
+                          ? `${Math.round((signalAccuracy.correct / (signalAccuracy.correct + signalAccuracy.incorrect)) * 100)}%`
+                          : '—'
+                        }
+                      </div>
+                      <div class="text-xs text-purple-300">
+                        <span class="text-green-400">{signalAccuracy.correct} correct</span> • <span class="text-red-400">{signalAccuracy.incorrect} incorrect</span>
+                      </div>
                     </div>
                   </div>
                 </div>
