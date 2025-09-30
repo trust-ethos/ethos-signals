@@ -29,82 +29,7 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
   const [dateRange, setDateRange] = useState<DateRange>("30d");
   const [timeInterval, setTimeInterval] = useState<TimeInterval>("1h");
   const [isLoading, setIsLoading] = useState(false);
-  const [iconMarkers, setIconMarkers] = useState<Array<{
-    x: number;
-    y: number;
-    type: "bull" | "bear";
-  }>>([]);
 
-  // Update icon marker positions
-  const updateIconMarkers = () => {
-    const chart = chartRef.current;
-    const series = areaSeriesRef.current;
-    if (!chart || !series) {
-      console.log('No chart or series ref');
-      return;
-    }
-    
-    const markers: typeof iconMarkers = [];
-    const visibleRange = chart.timeScale().getVisibleRange();
-    if (!visibleRange) {
-      console.log('No visible range');
-      return;
-    }
-    
-    // Get actual data points from the series
-    const seriesData = priceData;
-    if (seriesData.length === 0) {
-      console.log('No price data available');
-      return;
-    }
-    
-    console.log(`Updating icon markers for ${signals.length} signals, ${seriesData.length} price points`);
-    
-    // For each signal, find the nearest price data point
-    signals.forEach((signal, idx) => {
-      const signalTimestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000);
-      
-      // Check if in visible range
-      if (signalTimestamp < visibleRange.from || signalTimestamp > visibleRange.to) {
-        return;
-      }
-      
-      // Find the nearest price data point
-      let nearestPoint = seriesData[0];
-      let minDiff = Math.abs(Number(seriesData[0].time) - signalTimestamp);
-      
-      for (const point of seriesData) {
-        const diff = Math.abs(Number(point.time) - signalTimestamp);
-        if (diff < minDiff) {
-          minDiff = diff;
-          nearestPoint = point;
-        }
-      }
-      
-      // Use the nearest point's timestamp for positioning
-      const x = chart.timeScale().timeToCoordinate(nearestPoint.time);
-      if (x === null) {
-        console.log(`Signal ${idx}: Could not get coordinate for nearest point`);
-        return;
-      }
-      
-      // Get the price coordinate (y position)
-      const y = series.priceToCoordinate(nearestPoint.value);
-      if (y === null) {
-        console.log(`Signal ${idx}: Could not get price coordinate`);
-        return;
-      }
-      
-      markers.push({
-        x,
-        y: y - (signal.sentiment === "bullish" ? 30 : -30), // Offset above/below the actual price
-        type: signal.sentiment === "bullish" ? "bull" : "bear",
-      });
-    });
-    
-    console.log(`Setting ${markers.length} icon markers`);
-    setIconMarkers(markers);
-  };
 
   // Helper function to aggregate price data based on interval
   const aggregatePriceData = (
@@ -211,10 +136,16 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
             break;
           case "all":
           default: {
-            // Use earliest signal or 1 year, whichever is earlier
-            const timestamps = signals.map(s => new Date(s.timestamp).getTime());
-            const earliestSignal = signals.length > 0 ? Math.min(...timestamps) : now - (365 * 24 * 60 * 60 * 1000);
-            startTime = Math.min(earliestSignal, now - (365 * 24 * 60 * 60 * 1000));
+            // Show data from 60 days before earliest signal, or 2 years if no signals
+            if (signals.length > 0) {
+              const timestamps = signals.map(s => new Date(s.timestamp).getTime());
+              const earliestSignal = Math.min(...timestamps);
+              // Add 60 days of context before the earliest signal
+              startTime = earliestSignal - (60 * 24 * 60 * 60 * 1000);
+            } else {
+              // Default to 2 years of data if no signals
+              startTime = now - (2 * 365 * 24 * 60 * 60 * 1000);
+            }
             break;
           }
         }
@@ -277,12 +208,21 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         if (priceData.length > 0) {
           areaSeries.setData(priceData);
           
-          // No built-in markers - we'll use SVG overlay instead
+          // Show markers with bull/bear arrows and text
+          const markers = signals.map(signal => {
+            const timestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000) as Time;
+            const isBullish = signal.sentiment === "bullish";
+            
+            return {
+              time: timestamp,
+              position: isBullish ? "belowBar" as const : "aboveBar" as const,
+              color: isBullish ? "#22c55e" : "#ef4444",
+              shape: isBullish ? "arrowUp" as const : "arrowDown" as const,
+              text: isBullish ? "Bull" : "Bear",
+            };
+          });
           
-          // Update icon positions after chart renders
-          setTimeout(() => {
-            updateIconMarkers();
-          }, 100);
+          areaSeries.setMarkers(markers);
           
           // Fit content
           chart.timeScale().fitContent();
@@ -300,15 +240,8 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         chart.applyOptions({
           width: chartContainerRef.current.clientWidth,
         });
-        updateIconMarkers();
       }
     };
-
-    // Subscribe to visible range changes (pan/zoom)
-    const timeScale = chart.timeScale();
-    timeScale.subscribeVisibleLogicalRangeChange(() => {
-      updateIconMarkers();
-    });
 
     globalThis.addEventListener("resize", handleResize);
 
@@ -372,44 +305,6 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
       {/* Chart Container */}
       <div style={{ position: "relative" }}>
         <div ref={chartContainerRef} class="rounded-2xl border border-white/10 overflow-hidden glass-subtle" />
-        
-        {/* SVG Icon Overlay */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            pointerEvents: "none",
-            overflow: "hidden",
-          }}
-        >
-          {console.log(`Rendering ${iconMarkers.length} icon markers in JSX`)}
-          {iconMarkers.map((marker, idx) => (
-            <img
-              key={idx}
-              src={marker.type === "bull" ? "/bull.svg" : "/bear.svg"}
-              alt={marker.type}
-              style={{
-                position: "absolute",
-                left: `${marker.x - 12}px`,
-                top: `${marker.y - 12}px`,
-                width: "24px",
-                height: "24px",
-                pointerEvents: "auto",
-                cursor: "pointer",
-                transition: "transform 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = "scale(1.3)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = "scale(1)";
-              }}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );
