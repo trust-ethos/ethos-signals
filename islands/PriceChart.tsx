@@ -38,8 +38,9 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
   // Update icon marker positions
   const updateIconMarkers = () => {
     const chart = chartRef.current;
-    if (!chart) {
-      console.log('No chart ref');
+    const series = areaSeriesRef.current;
+    if (!chart || !series) {
+      console.log('No chart or series ref');
       return;
     }
     
@@ -50,34 +51,53 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
       return;
     }
     
-    console.log(`Updating icon markers for ${signals.length} signals`);
+    // Get actual data points from the series
+    const seriesData = priceData;
+    if (seriesData.length === 0) {
+      console.log('No price data available');
+      return;
+    }
     
-    // Get the time scale to convert timestamps to x coordinates
+    console.log(`Updating icon markers for ${signals.length} signals, ${seriesData.length} price points`);
+    
+    // For each signal, find the nearest price data point
     signals.forEach((signal, idx) => {
-      const timestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000) as Time;
+      const signalTimestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000);
       
       // Check if in visible range
-      if (timestamp < visibleRange.from || timestamp > visibleRange.to) {
-        if (idx === 0) console.log(`Signal ${idx} not in visible range`);
+      if (signalTimestamp < visibleRange.from || signalTimestamp > visibleRange.to) {
         return;
       }
       
-      const x = chart.timeScale().timeToCoordinate(timestamp);
+      // Find the nearest price data point
+      let nearestPoint = seriesData[0];
+      let minDiff = Math.abs(Number(seriesData[0].time) - signalTimestamp);
+      
+      for (const point of seriesData) {
+        const diff = Math.abs(Number(point.time) - signalTimestamp);
+        if (diff < minDiff) {
+          minDiff = diff;
+          nearestPoint = point;
+        }
+      }
+      
+      // Use the nearest point's timestamp for positioning
+      const x = chart.timeScale().timeToCoordinate(nearestPoint.time);
       if (x === null) {
-        if (idx === 0) console.log(`Signal ${idx} x coordinate is null`);
+        console.log(`Signal ${idx}: Could not get coordinate for nearest point`);
         return;
       }
       
-      // Position based on sentiment: bulls below, bears above
-      // We'll use a fixed offset from the chart center for now
-      const chartHeight = chartContainerRef.current?.clientHeight || 400;
-      const y = signal.sentiment === "bullish" 
-        ? chartHeight - 40  // Near bottom for bulls
-        : 40;               // Near top for bears
+      // Get the price coordinate (y position)
+      const y = series.priceToCoordinate(nearestPoint.value);
+      if (y === null) {
+        console.log(`Signal ${idx}: Could not get price coordinate`);
+        return;
+      }
       
       markers.push({
         x,
-        y,
+        y: y - (signal.sentiment === "bullish" ? 30 : -30), // Offset above/below the actual price
         type: signal.sentiment === "bullish" ? "bull" : "bear",
       });
     });
