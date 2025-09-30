@@ -47,12 +47,8 @@ export const handler: Handlers = {
       },
     });
   },
-  async GET(req) {
-    // Check authentication for GET (listing projects)
-    if (!checkAuth(req)) {
-      return unauthorizedResponse();
-    }
-    
+  async GET(_req) {
+    // GET is public - no authentication required (used to display verified projects)
     const items = await listVerifiedProjects();
     return new Response(JSON.stringify({ values: items }), { 
       headers: { 
