@@ -277,16 +277,13 @@ class SignalsInjector {
     `;
 
     modal.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #ffffff;">
+      <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 24px; font-weight: 700; color: #ffffff;">
           Save Trading Signal
         </h2>
-        <p style="color: #9ca3af; font-size: 14px;">
-          Track this tweet as a bullish or bearish signal
-        </p>
       </div>
 
-      <div style="margin-bottom: 24px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
+      <div style="margin-bottom: 20px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
         <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff; font-size: 16px;">@${tweetData.username || 'unknown'}</div>
         <div style="font-size: 14px; color: #d1d5db; line-height: 1.5;">
           ${tweetData.text.slice(0, 300)}${tweetData.text.length > 300 ? '...' : ''}
