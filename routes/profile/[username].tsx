@@ -328,9 +328,9 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                             <span class={`text-sm font-medium ${textColor}`}>Signal Accuracy</span>
                           </div>
                           <div class="flex items-baseline gap-2">
-                            <span class={`text-2xl font-bold ${textColor}`}>{label}</span>
+                            <span class={`text-3xl font-bold ${textColor}`}>{label}</span>
                             {accuracyPercent !== null && (
-                              <span class="text-3xl font-bold text-white">{accuracyPercent}%</span>
+                              <span class="text-xl font-bold text-white">{accuracyPercent}%</span>
                             )}
                           </div>
                           <div class={`text-xs ${textColor} mt-1`}>
