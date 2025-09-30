@@ -3,6 +3,7 @@ import { EthosUser, searchUsersByTwitter } from "../utils/ethos-api.ts";
 import { Input } from "../components/ui/Input.tsx";
 import { Card, CardContent } from "../components/ui/Card.tsx";
 import { Badge } from "../components/ui/Badge.tsx";
+import { getScoreLevelName, getScoreColor, getScoreBadgeVariant } from "../utils/ethos-score.ts";
 
 export default function SearchForm() {
   const [query, setQuery] = useState("");
@@ -60,22 +61,6 @@ export default function SearchForm() {
     }
   };
 
-  const getScoreBadgeVariant = (score: number) => {
-    if (score >= 2000) return "success";
-    if (score >= 1600) return "default";
-    if (score >= 1200) return "secondary";
-    if (score >= 800) return "warning";
-    return "destructive";
-  };
-
-  const getScoreLevel = (score: number) => {
-    if (score >= 2000) return "Exemplary";
-    if (score >= 1600) return "Reputable";
-    if (score >= 1200) return "Neutral";
-    if (score >= 800) return "Questionable";
-    return "Untrusted";
-  };
-
   return (
     <div class="w-full max-w-2xl mx-auto relative">
       {/* Search Form */}
@@ -123,7 +108,8 @@ export default function SearchForm() {
                     <img
                       src={user.avatarUrl}
                       alt={user.displayName}
-                      class="w-12 h-12 rounded-full ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20"
+                      class="w-12 h-12 rounded-full ring-4 shadow-lg"
+                      style={`border-color: ${getScoreColor(user.score)}; box-shadow: 0 0 12px ${getScoreColor(user.score)}40, 0 10px 25px rgba(0,0,0,0.3);`}
                     />
                     {user.status === "ACTIVE" && (
                       <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black shadow-lg shadow-green-500/50"></div>
@@ -139,13 +125,13 @@ export default function SearchForm() {
                         )}
                       </div>
                       <Badge variant={getScoreBadgeVariant(user.score)} class="text-xs">
-                        {getScoreLevel(user.score)}
+                        {getScoreLevelName(user.score)}
                       </Badge>
                     </div>
                     
                     <div class="flex items-center gap-4 mt-2">
                       <span class="text-xs text-gray-400">
-                        Score: <span class="font-semibold text-blue-400">{user.score}</span>
+                        Score: <span class="font-semibold" style={`color: ${getScoreColor(user.score)};`}>{user.score}</span>
                       </span>
                       <span class="text-xs text-gray-400">
                         XP: <span class="font-semibold text-white">{user.xpTotal.toLocaleString()}</span>

@@ -5,6 +5,7 @@ import { Card, CardContent } from "../../components/ui/Card.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import SignalsForm from "../../islands/SignalsForm.tsx";
+import { getScoreLevelName, getScoreColor, getScoreBadgeVariant } from "../../utils/ethos-score.ts";
 
 interface ProfileData {
   user: EthosUser;
@@ -65,22 +66,6 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
 
   const { user, scoreDetails } = data;
 
-  const getScoreBadgeVariant = (score: number) => {
-    if (score >= 2000) return "success";
-    if (score >= 1600) return "default";
-    if (score >= 1200) return "secondary";
-    if (score >= 800) return "warning";
-    return "destructive";
-  };
-
-  const getScoreLevel = (score: number) => {
-    if (score >= 2000) return "Exemplary";
-    if (score >= 1600) return "Reputable";
-    if (score >= 1200) return "Neutral";
-    if (score >= 800) return "Questionable";
-    return "Untrusted";
-  };
-
   return (
     <>
       <Head>
@@ -121,7 +106,8 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                     <img
                       src={user.avatarUrl}
                       alt={user.displayName}
-                      class="w-32 h-32 rounded-full ring-4 ring-blue-500/50 shadow-2xl shadow-blue-500/30"
+                      class="w-32 h-32 rounded-full ring-4 shadow-2xl"
+                      style={`border-color: ${getScoreColor(user.score)}; box-shadow: 0 0 20px ${getScoreColor(user.score)}50, 0 20px 40px rgba(0,0,0,0.4);`}
                     />
                     {user.status === "ACTIVE" && (
                       <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-black shadow-lg shadow-green-500/50"></div>
@@ -161,7 +147,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                         <p class="text-xl text-gray-400 mb-3">@{user.username}</p>
                       )}
                       <Badge variant={getScoreBadgeVariant(user.score)} class="text-sm">
-                        {`${getScoreLevel(user.score)} • ${scoreDetails.level}`}
+                        {`${getScoreLevelName(user.score)} • ${scoreDetails.level}`}
                       </Badge>
                     </div>
                   </div>
@@ -172,16 +158,17 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
 
                   {/* Stats Grid */}
                   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30 backdrop-blur-sm">
+                    <div class="rounded-xl p-4 border backdrop-blur-sm" style={`background: linear-gradient(135deg, ${getScoreColor(user.score)}20, ${getScoreColor(user.score)}10); border-color: ${getScoreColor(user.score)}30;`}>
                       <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style={`background-color: ${getScoreColor(user.score)};`}>
                           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                           </svg>
                         </div>
-                        <span class="text-sm font-medium text-blue-300">Ethos Score</span>
+                        <span class="text-sm font-medium" style={`color: ${getScoreColor(user.score)};`}>Ethos Score</span>
                       </div>
-                      <div class="text-3xl font-bold text-blue-100">{user.score}</div>
+                      <div class="text-3xl font-bold text-white">{user.score}</div>
+                      <div class="text-xs mt-1" style={`color: ${getScoreColor(user.score)};`}>{getScoreLevelName(user.score)}</div>
                     </div>
 
                     <div class="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl p-4 border border-green-500/30 backdrop-blur-sm">
