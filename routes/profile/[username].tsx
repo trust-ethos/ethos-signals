@@ -149,7 +149,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                 <div class="flex-1 w-full">
                   <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6">
                     <div>
-                      <h1 class="text-4xl font-bold text-white mb-3 leading-tight -mt-1">
+                      <h1 class="text-4xl font-bold text-white mb-3">
                         {user.displayName}
                       </h1>
                       {user.username && (
