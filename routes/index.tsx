@@ -94,6 +94,12 @@ export default function Home({ data }: PageProps<PageData>) {
               </div>
               <div class="flex items-center space-x-4">
                 <a 
+                  href="/projects" 
+                  class="text-gray-400 hover:text-white transition-all duration-300 px-4 py-2 rounded-lg hover:bg-white/10"
+                >
+                  Verified Projects
+                </a>
+                <a 
                   href="/admin/verified" 
                   class="text-gray-400 hover:text-white transition-all duration-300 px-4 py-2 rounded-lg hover:bg-white/10"
                 >

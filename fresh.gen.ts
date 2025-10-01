@@ -19,6 +19,7 @@ import * as $index from "./routes/index.tsx";
 import * as $nft_handle_ from "./routes/nft/[handle].tsx";
 import * as $pre_tge_handle_ from "./routes/pre-tge/[handle].tsx";
 import * as $profile_username_ from "./routes/profile/[username].tsx";
+import * as $projects from "./routes/projects.tsx";
 import * as $token_handle_ from "./routes/token/[handle].tsx";
 import * as $AdminVerified from "./islands/AdminVerified.tsx";
 import * as $NFTPageIsland from "./islands/NFTPageIsland.tsx";
@@ -53,6 +54,7 @@ const manifest = {
     "./routes/nft/[handle].tsx": $nft_handle_,
     "./routes/pre-tge/[handle].tsx": $pre_tge_handle_,
     "./routes/profile/[username].tsx": $profile_username_,
+    "./routes/projects.tsx": $projects,
     "./routes/token/[handle].tsx": $token_handle_,
   },
   islands: {

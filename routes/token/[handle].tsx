@@ -92,7 +92,28 @@ export default function TokenPage({ data }: PageProps<TokenPageData>) {
       </Head>
       
       <div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-900">
-        <div class="container mx-auto px-4 py-8">
+        {/* Navigation */}
+        <nav class="glass-nav fixed top-0 left-0 right-0 z-50">
+          <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+              <div class="flex items-center">
+                <a href="/" class="flex items-center group">
+                  <span class="text-xl font-bold text-white">Signals</span>
+                </a>
+              </div>
+              <div class="flex items-center space-x-4">
+                <a 
+                  href="/projects" 
+                  class="text-gray-400 hover:text-white transition-all duration-300 px-4 py-2 rounded-lg hover:bg-white/10"
+                >
+                  Verified Projects
+                </a>
+              </div>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="container mx-auto px-4 py-8 pt-24">
           {/* Project Header */}
           <div class="mb-8">
             <a href="/" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-6">
