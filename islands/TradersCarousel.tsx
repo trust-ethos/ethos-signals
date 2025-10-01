@@ -1,5 +1,5 @@
 import { useState, useEffect } from "preact/hooks";
-import { getScoreColor } from "../utils/ethos-score.ts";
+import { getScoreColor, getScoreLevelName } from "../utils/ethos-score.ts";
 
 interface EthosUser {
   displayName: string;
@@ -95,8 +95,9 @@ export default function TradersCarousel({ traders }: Props) {
           class="flex gap-4 transition-transform duration-500 ease-out"
           style={`transform: translateX(-${scrollPosition}px)`}
         >
-          {traders.map(({ username, user, signalCount, bullishCount, bearishCount }) => {
+          {traders.map(({ username, user, signalCount }) => {
             const scoreColor = getScoreColor(user.score);
+            const credibilityLevel = getScoreLevelName(user.score);
             
             return (
               <a 
@@ -120,18 +121,13 @@ export default function TradersCarousel({ traders }: Props) {
                     @{username}
                   </div>
                   
-                  {/* Signal Stats */}
-                  <div class="w-full rounded-xl p-3 border backdrop-blur-sm mb-2" style={`background: linear-gradient(135deg, ${scoreColor}20, ${scoreColor}10); border-color: ${scoreColor}30;`}>
-                    <div class="flex items-center justify-center gap-3">
-                      <div class="flex items-center gap-1">
-                        <span class="text-2xl font-bold text-green-400">{bullishCount}</span>
-                        <span class="text-xs text-gray-400">🐂</span>
-                      </div>
-                      <div class="text-gray-600">|</div>
-                      <div class="flex items-center gap-1">
-                        <span class="text-2xl font-bold text-red-400">{bearishCount}</span>
-                        <span class="text-xs text-gray-400">🐻</span>
-                      </div>
+                  {/* Ethos Score */}
+                  <div class="flex flex-col items-center mb-2">
+                    <div class="text-3xl font-bold" style={`color: ${scoreColor}`}>
+                      {user.score.toLocaleString()}
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1">
+                      {credibilityLevel}
                     </div>
                   </div>
                   
