@@ -44,6 +44,7 @@ export default function SignalsForm({ username }: Props) {
   const [list, setList] = useState<SignalItem[]>([]);
   const [verifiedByUsername, setVerifiedByUsername] = useState<Record<string, VerifiedItem>>({});
   const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
+  const [assetPerformance, setAssetPerformance] = useState<Record<string, { shortTerm: number | null; longTerm: number | null }>>({});
   // local snapshots cache could be added later if needed
 
   async function refresh() {
@@ -54,6 +55,19 @@ export default function SignalsForm({ username }: Props) {
 
   useEffect(() => {
     refresh();
+    
+    // Fetch performance data
+    (async () => {
+      try {
+        const res = await fetch(`/api/performance/${username}`);
+        const data = await res.json();
+        if (data.byAsset) {
+          setAssetPerformance(data.byAsset);
+        }
+      } catch (err) {
+        console.error("Failed to fetch performance:", err);
+      }
+    })();
   }, [username]);
 
   useEffect(() => {
@@ -108,11 +122,6 @@ export default function SignalsForm({ username }: Props) {
     const bullishCount = signals.filter(s => s.sentiment === 'bullish').length;
     const bearishCount = signals.filter(s => s.sentiment === 'bearish').length;
     
-    // Calculate accuracy (placeholder - you can integrate with actual performance data)
-    // For now, we'll use a simple heuristic: ~60% accuracy as baseline
-    const correctSignals = signals.filter(_s => Math.random() > 0.4).length;
-    const accuracy = signals.length > 0 ? Math.round((correctSignals / signals.length) * 100) : 0;
-    
     return {
       projectKey,
       project,
@@ -121,7 +130,6 @@ export default function SignalsForm({ username }: Props) {
       signalCount: signals.length,
       bullishCount,
       bearishCount,
-      accuracy,
     };
   });
 
@@ -167,8 +175,22 @@ export default function SignalsForm({ username }: Props) {
                       <span class="text-red-400">{stat.bearishCount}↓</span>
                     </div>
                   </div>
-                  <div class={`text-lg font-bold ${stat.accuracy >= 50 ? 'text-green-400' : 'text-red-400'}`}>
-                    {stat.accuracy}%
+                  <div class="flex flex-col items-end gap-1">
+                    {(() => {
+                      const perf = assetPerformance[stat.projectKey];
+                      const shortTerm = perf?.shortTerm;
+                      const longTerm = perf?.longTerm;
+                      return (
+                        <>
+                          <div class={`text-sm font-bold ${shortTerm !== null && shortTerm !== undefined ? (shortTerm >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
+                            {shortTerm !== null && shortTerm !== undefined ? `${shortTerm.toFixed(0)}%` : '--'}
+                          </div>
+                          <div class={`text-xs font-medium ${longTerm !== null && longTerm !== undefined ? (longTerm >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
+                            {longTerm !== null && longTerm !== undefined ? `${longTerm.toFixed(0)}%` : '--'}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </a>
                 ))}
@@ -379,10 +401,22 @@ export default function SignalsForm({ username }: Props) {
                         <span class="text-red-400">{stat.bearishCount}↓</span>
                       </div>
                     </div>
-                    <div class="flex-shrink-0 text-right">
-                      <div class={`text-2xl font-bold ${stat.accuracy >= 50 ? 'text-green-400' : 'text-red-400'}`}>
-                        {stat.accuracy}%
-                      </div>
+                    <div class="flex-shrink-0 flex flex-col items-end gap-1">
+                      {(() => {
+                        const perf = assetPerformance[stat.projectKey];
+                        const shortTerm = perf?.shortTerm;
+                        const longTerm = perf?.longTerm;
+                        return (
+                          <>
+                            <div class={`text-xl font-bold ${shortTerm !== null && shortTerm !== undefined ? (shortTerm >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
+                              {shortTerm !== null && shortTerm !== undefined ? `${shortTerm.toFixed(0)}%` : '--'}
+                            </div>
+                            <div class={`text-sm font-medium ${longTerm !== null && longTerm !== undefined ? (longTerm >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
+                              {longTerm !== null && longTerm !== undefined ? `${longTerm.toFixed(0)}%` : '--'}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </a>
                 ))}

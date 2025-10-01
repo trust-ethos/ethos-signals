@@ -14,15 +14,16 @@ interface Signal {
   sentiment: "bullish" | "bearish";
 }
 
-interface TraderWithPerformance {
+interface TraderWithStats {
   username: string;
   user: EthosUser;
   signalCount: number;
-  performance: number; // percentage
+  bullishCount: number;
+  bearishCount: number;
 }
 
 interface Props {
-  traders: TraderWithPerformance[];
+  traders: TraderWithStats[];
 }
 
 export default function TradersCarousel({ traders }: Props) {
@@ -94,7 +95,7 @@ export default function TradersCarousel({ traders }: Props) {
           class="flex gap-4 transition-transform duration-500 ease-out"
           style={`transform: translateX(-${scrollPosition}px)`}
         >
-          {traders.map(({ username, user, signalCount, performance }) => {
+          {traders.map(({ username, user, signalCount, bullishCount, bearishCount }) => {
             const scoreColor = getScoreColor(user.score);
             
             return (
@@ -119,13 +120,18 @@ export default function TradersCarousel({ traders }: Props) {
                     @{username}
                   </div>
                   
-                  {/* Performance Badge */}
+                  {/* Signal Stats */}
                   <div class="w-full rounded-xl p-3 border backdrop-blur-sm mb-2" style={`background: linear-gradient(135deg, ${scoreColor}20, ${scoreColor}10); border-color: ${scoreColor}30;`}>
-                    <div class="text-xs text-gray-400 mb-1">Performance</div>
-                    <div class="flex items-baseline justify-center gap-1">
-                      <span class={`text-2xl font-bold ${performance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {performance >= 0 ? '+' : ''}{performance.toFixed(0)}%
-                      </span>
+                    <div class="flex items-center justify-center gap-3">
+                      <div class="flex items-center gap-1">
+                        <span class="text-2xl font-bold text-green-400">{bullishCount}</span>
+                        <span class="text-xs text-gray-400">🐂</span>
+                      </div>
+                      <div class="text-gray-600">|</div>
+                      <div class="flex items-center gap-1">
+                        <span class="text-2xl font-bold text-red-400">{bearishCount}</span>
+                        <span class="text-xs text-gray-400">🐻</span>
+                      </div>
                     </div>
                   </div>
                   

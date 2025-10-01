@@ -6,6 +6,7 @@ import * as $_app from "./routes/_app.tsx";
 import * as $admin_verified from "./routes/admin/verified.tsx";
 import * as $api_cache_stats from "./routes/api/cache/stats.ts";
 import * as $api_coins_search from "./routes/api/coins/search.ts";
+import * as $api_performance_username_ from "./routes/api/performance/[username].ts";
 import * as $api_price_chart from "./routes/api/price/chart.ts";
 import * as $api_price_coingecko from "./routes/api/price/coingecko.ts";
 import * as $api_price_nft from "./routes/api/price/nft.ts";
@@ -17,6 +18,7 @@ import * as $api_verified_index from "./routes/api/verified/index.ts";
 import * as $index from "./routes/index.tsx";
 import * as $profile_username_ from "./routes/profile/[username].tsx";
 import * as $AdminVerified from "./islands/AdminVerified.tsx";
+import * as $PerformanceMetrics from "./islands/PerformanceMetrics.tsx";
 import * as $PriceChart from "./islands/PriceChart.tsx";
 import * as $RecentSignalsInfinite from "./islands/RecentSignalsInfinite.tsx";
 import * as $RelativeTime from "./islands/RelativeTime.tsx";
@@ -32,6 +34,7 @@ const manifest = {
     "./routes/admin/verified.tsx": $admin_verified,
     "./routes/api/cache/stats.ts": $api_cache_stats,
     "./routes/api/coins/search.ts": $api_coins_search,
+    "./routes/api/performance/[username].ts": $api_performance_username_,
     "./routes/api/price/chart.ts": $api_price_chart,
     "./routes/api/price/coingecko.ts": $api_price_coingecko,
     "./routes/api/price/nft.ts": $api_price_nft,
@@ -45,6 +48,7 @@ const manifest = {
   },
   islands: {
     "./islands/AdminVerified.tsx": $AdminVerified,
+    "./islands/PerformanceMetrics.tsx": $PerformanceMetrics,
     "./islands/PriceChart.tsx": $PriceChart,
     "./islands/RecentSignalsInfinite.tsx": $RecentSignalsInfinite,
     "./islands/RelativeTime.tsx": $RelativeTime,

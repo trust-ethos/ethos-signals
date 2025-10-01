@@ -5,6 +5,7 @@ import { Card, CardContent } from "../../components/ui/Card.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import SignalsForm from "../../islands/SignalsForm.tsx";
+import PerformanceMetrics from "../../islands/PerformanceMetrics.tsx";
 import { getScoreLevelName, getScoreColor, getScoreBadgeVariant } from "../../utils/ethos-score.ts";
 import { listTestSignals, listVerifiedProjects } from "../../utils/database.ts";
 
@@ -153,7 +154,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
     );
   }
 
-  const { user, totalSignals, signalAccuracy } = data;
+  const { user, totalSignals, signalAccuracy: _signalAccuracy } = data;
 
   return (
     <>
@@ -246,8 +247,9 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                     <p class="text-gray-300 mb-6 text-lg leading-relaxed">{user.description}</p>
                   )}
 
-                  {/* Stats Grid */}
-                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Stats Section - All in one row */}
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Total Signals */}
                     <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30 backdrop-blur-sm">
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -261,62 +263,8 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                       <div class="text-xs text-blue-300">Tracked signals</div>
                     </div>
 
-                    {(() => {
-                      const totalEvaluated = signalAccuracy.correct + signalAccuracy.incorrect;
-                      const accuracyPercent = totalEvaluated > 0 
-                        ? Math.round((signalAccuracy.correct / totalEvaluated) * 100)
-                        : null;
-                      
-                      let label = '—';
-                      let bgGradient = 'from-gray-500/20 to-gray-600/20';
-                      let borderColor = 'border-gray-500/30';
-                      let iconBg = 'bg-gray-500';
-                      let textColor = 'text-gray-300';
-                      
-                      if (accuracyPercent !== null) {
-                        if (accuracyPercent >= 70) {
-                          label = 'HIGH';
-                          bgGradient = 'from-green-500/20 to-green-600/20';
-                          borderColor = 'border-green-500/30';
-                          iconBg = 'bg-green-500';
-                          textColor = 'text-green-300';
-                        } else if (accuracyPercent >= 40) {
-                          label = 'MEDIUM';
-                          bgGradient = 'from-yellow-500/20 to-orange-500/20';
-                          borderColor = 'border-yellow-500/30';
-                          iconBg = 'bg-yellow-500';
-                          textColor = 'text-yellow-300';
-                        } else {
-                          label = 'LOW';
-                          bgGradient = 'from-red-500/20 to-red-600/20';
-                          borderColor = 'border-red-500/30';
-                          iconBg = 'bg-red-500';
-                          textColor = 'text-red-300';
-                        }
-                      }
-                      
-                      return (
-                        <div class={`bg-gradient-to-br ${bgGradient} rounded-xl p-4 border ${borderColor} backdrop-blur-sm`}>
-                          <div class="flex items-center gap-2 mb-2">
-                            <div class={`w-8 h-8 ${iconBg} rounded-lg flex items-center justify-center`}>
-                              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
-                            <span class={`text-sm font-medium ${textColor}`}>Signal Accuracy</span>
-                          </div>
-                          <div class="flex items-baseline gap-2">
-                            <span class={`text-3xl font-bold ${textColor}`}>{label}</span>
-                            {accuracyPercent !== null && (
-                              <span class="text-xl font-bold text-white">{accuracyPercent}%</span>
-                            )}
-                          </div>
-                          <div class={`text-xs ${textColor} mt-1`}>
-                            <span class="text-green-400">{signalAccuracy.correct} correct</span> • <span class="text-red-400">{signalAccuracy.incorrect} incorrect</span>
-                          </div>
-                        </div>
-                      );
-                    })()}
+                    {/* Performance Metrics */}
+                    <PerformanceMetrics username={user.username || user.displayName} inline />
                   </div>
                 </div>
               </div>

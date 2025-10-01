@@ -6,18 +6,19 @@ import TradersCarousel from "../islands/TradersCarousel.tsx";
 import { listAllRecentSignals, listVerifiedProjects, TestSignal, VerifiedProject } from "../utils/database.ts";
 import { getUserByTwitterUsername, EthosUser } from "../utils/ethos-api.ts";
 
-interface TraderWithPerformance {
+interface TraderWithStats {
   username: string;
   user: EthosUser;
   signalCount: number;
-  performance: number;
+  bullishCount: number;
+  bearishCount: number;
 }
 
 interface PageData {
   signals: TestSignal[];
   verifiedProjects: VerifiedProject[];
   ethosUsers: Record<string, EthosUser>;
-  featuredTraders: TraderWithPerformance[];
+  featuredTraders: TraderWithStats[];
 }
 
 export const handler: Handlers<PageData> = {
@@ -43,31 +44,24 @@ export const handler: Handlers<PageData> = {
       }
     }
     
-    // Calculate performance for featured traders
+    // Calculate stats for featured traders
     const traderStats = uniqueUsernames.map(username => {
       const user = ethosUsers[username];
       if (!user) return null;
       
       const userSignals = signals.filter(s => s.twitterUsername === username);
       const signalCount = userSignals.length;
-      
-      // Calculate performance % (simplified: bullish signals as correct assumption)
-      // In reality, you'd check actual price movements
-      const correctSignals = userSignals.filter(_s => {
-        // For now, we'll use a placeholder calculation
-        // You can integrate with your actual performance tracking later
-        return Math.random() > 0.4; // Placeholder: ~60% accuracy
-      }).length;
-      
-      const performance = signalCount > 0 ? ((correctSignals / signalCount) * 100) - 50 : 0;
+      const bullishCount = userSignals.filter(s => s.sentiment === 'bullish').length;
+      const bearishCount = userSignals.filter(s => s.sentiment === 'bearish').length;
       
       return {
         username,
         user,
         signalCount,
-        performance
+        bullishCount,
+        bearishCount
       };
-    }).filter(Boolean) as TraderWithPerformance[];
+    }).filter(Boolean) as TraderWithStats[];
     
     // Sort by signal count and take top 15
     const featuredTraders = traderStats
