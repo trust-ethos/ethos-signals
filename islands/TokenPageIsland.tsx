@@ -1,7 +1,6 @@
 import { useState, useEffect } from "preact/hooks";
 import PriceChart from "./PriceChart.tsx";
 import { Badge } from "../components/ui/Badge.tsx";
-import SignalPerformance from "./SignalPerformance.tsx";
 
 interface Signal {
   id: string;
@@ -48,6 +47,231 @@ interface LeaderboardEntry {
 interface Props {
   project: Project;
   initialSignals: Signal[];
+}
+
+// Helper component for token price deltas
+function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: { 
+  id: string; 
+  chain: string; 
+  address: string; 
+  notedAt: string; 
+  tweetTimestamp?: string; 
+  sentiment: "bullish" | "bearish" 
+}) {
+  const [data, setData] = useState<{ call?: number|null; d1?: number|null; d7?: number|null; d28?: number|null; current?: number|null } | null>(null);
+  
+  useEffect(() => {
+    (async () => {
+      const baseTime = tweetTimestamp ? new Date(tweetTimestamp) : new Date(notedAt + 'T00:00:00Z');
+      const dayMS = 24 * 3600 * 1000;
+      
+      const fetchAtTime = async (offsetDays: number) => {
+        const targetTime = new Date(baseTime.getTime() + offsetDays * dayMS);
+        if (offsetDays === 0 && tweetTimestamp) {
+          return (await fetch(`/api/price/token?chain=${chain}&address=${address}&timestamp=${tweetTimestamp}`)).json();
+        } else {
+          const dateISO = targetTime.toISOString().slice(0, 10);
+          return (await fetch(`/api/price/token?chain=${chain}&address=${address}&date=${dateISO}`)).json();
+        }
+      };
+      
+      const fetchCurrent = async () => {
+        return (await fetch(`/api/price/token?chain=${chain}&address=${address}`)).json();
+      };
+      
+      const [p0, p1, p7, p28, pCurrent] = await Promise.all([
+        fetchAtTime(0),
+        fetchAtTime(1),
+        fetchAtTime(7),
+        fetchAtTime(28),
+        fetchCurrent(),
+      ]);
+      setData({ 
+        call: p0.price ?? null, 
+        d1: p1.price ?? null, 
+        d7: p7.price ?? null, 
+        d28: p28.price ?? null,
+        current: pCurrent.price ?? null
+      });
+    })();
+  }, [id, chain, address, notedAt, tweetTimestamp]);
+
+  if (!data) return <div class="text-xs text-gray-400 mt-2">Loading price…</div>;
+  
+  const fmt = (n?: number|null) => (n == null ? '—' : `$${n.toFixed(6)}`);
+  const pct = (base?: number|null, next?: number|null) => {
+    if (base == null || next == null) return null;
+    if (base === 0) return null;
+    return ((next - base) / base) * 100;
+  };
+  const reached = (days: number) => {
+    const start = new Date(notedAt + 'T00:00:00Z').getTime();
+    return Date.now() >= start + days * 24 * 3600 * 1000;
+  };
+  
+  return (
+    <div class="text-xs text-gray-300 mt-2">
+      <div class="flex gap-4 flex-wrap">
+        <span>Call: {fmt(data.call)}</span>
+        <span>
+          +1d: {reached(1) ? (
+            <>
+              {fmt(data.d1)}{' '}
+              {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
+            </>
+          ) : '—'}
+        </span>
+        <span>
+          +7d: {reached(7) ? (
+            <>
+              {fmt(data.d7)}{' '}
+              {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
+            </>
+          ) : '—'}
+        </span>
+        <span>
+          +28d: {reached(28) ? (
+            <>
+              {fmt(data.d28)}{' '}
+              {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
+            </>
+          ) : '—'}
+        </span>
+        <span class="border-l border-white/20 pl-4">
+          Current: {fmt(data.current)}{' '}
+          {(() => { 
+            const p = pct(data.call, data.current); 
+            if (p == null) return '';
+            
+            const isCorrect = (sentiment === 'bullish' && p >= 0) || (sentiment === 'bearish' && p < 0);
+            const accuracyIcon = isCorrect ? '✅' : '❌';
+            const accuracyText = isCorrect ? 'Correct' : 'Wrong';
+            
+            return (
+              <>
+                <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>
+                <span class="ml-2 text-xs" title={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} signal ${accuracyText.toLowerCase()}`}>
+                  {accuracyIcon} {accuracyText}
+                </span>
+              </>
+            ); 
+          })()}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Helper component for CoinGecko price deltas
+function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentiment }: { 
+  id: string; 
+  coinGeckoId: string; 
+  notedAt: string; 
+  tweetTimestamp?: string; 
+  sentiment: "bullish" | "bearish" 
+}) {
+  const [data, setData] = useState<{ call?: number|null; d1?: number|null; d7?: number|null; d28?: number|null; current?: number|null } | null>(null);
+  
+  useEffect(() => {
+    (async () => {
+      const baseTime = tweetTimestamp ? new Date(tweetTimestamp) : new Date(notedAt + 'T00:00:00Z');
+      const dayMS = 24 * 3600 * 1000;
+      
+      const fetchAtTime = async (offsetDays: number) => {
+        const targetTime = new Date(baseTime.getTime() + offsetDays * dayMS);
+        if (offsetDays === 0 && tweetTimestamp) {
+          return (await fetch(`/api/price/coingecko?id=${coinGeckoId}&timestamp=${tweetTimestamp}`)).json();
+        } else {
+          const dateISO = targetTime.toISOString().slice(0, 10);
+          return (await fetch(`/api/price/coingecko?id=${coinGeckoId}&date=${dateISO}`)).json();
+        }
+      };
+      
+      const fetchCurrent = async () => {
+        return (await fetch(`/api/price/coingecko?id=${coinGeckoId}`)).json();
+      };
+      
+      const [p0, p1, p7, p28, pCurrent] = await Promise.all([
+        fetchAtTime(0),
+        fetchAtTime(1),
+        fetchAtTime(7),
+        fetchAtTime(28),
+        fetchCurrent(),
+      ]);
+      setData({ 
+        call: p0.price ?? null, 
+        d1: p1.price ?? null, 
+        d7: p7.price ?? null, 
+        d28: p28.price ?? null,
+        current: pCurrent.price ?? null
+      });
+    })();
+  }, [id, coinGeckoId, notedAt, tweetTimestamp]);
+
+  if (!data) return <div class="text-xs text-gray-400 mt-2">Loading price…</div>;
+  
+  const fmt = (n?: number|null) => (n == null ? '—' : `$${n.toFixed(6)}`);
+  const pct = (base?: number|null, next?: number|null) => {
+    if (base == null || next == null) return null;
+    if (base === 0) return null;
+    return ((next - base) / base) * 100;
+  };
+  const reached = (days: number) => {
+    const start = new Date(notedAt + 'T00:00:00Z').getTime();
+    return Date.now() >= start + days * 24 * 3600 * 1000;
+  };
+  
+  return (
+    <div class="text-xs text-gray-300 mt-2">
+      <div class="flex gap-4 flex-wrap">
+        <span>Call: {fmt(data.call)}</span>
+        <span>
+          +1d: {reached(1) ? (
+            <>
+              {fmt(data.d1)}{' '}
+              {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
+            </>
+          ) : '—'}
+        </span>
+        <span>
+          +7d: {reached(7) ? (
+            <>
+              {fmt(data.d7)}{' '}
+              {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
+            </>
+          ) : '—'}
+        </span>
+        <span>
+          +28d: {reached(28) ? (
+            <>
+              {fmt(data.d28)}{' '}
+              {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
+            </>
+          ) : '—'}
+        </span>
+        <span class="border-l border-white/20 pl-4">
+          Current: {fmt(data.current)}{' '}
+          {(() => { 
+            const p = pct(data.call, data.current); 
+            if (p == null) return '';
+            
+            const isCorrect = (sentiment === 'bullish' && p >= 0) || (sentiment === 'bearish' && p < 0);
+            const accuracyIcon = isCorrect ? '✅' : '❌';
+            const accuracyText = isCorrect ? 'Correct' : 'Wrong';
+            
+            return (
+              <>
+                <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>
+                <span class="ml-2 text-xs" title={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} signal ${accuracyText.toLowerCase()}`}>
+                  {accuracyIcon} {accuracyText}
+                </span>
+              </>
+            ); 
+          })()}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export default function TokenPageIsland({ project, initialSignals }: Props) {
@@ -264,25 +488,30 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                         href={signal.tweetUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-sm text-blue-400 hover:text-blue-300 inline-block mb-3"
+                        class="text-sm text-blue-400 hover:text-blue-300"
                       >
                         View Tweet →
                       </a>
                       
                       {/* Signal Performance */}
-                      <SignalPerformance
-                        signalId={signal.id}
-                        projectHandle={signal.projectHandle}
-                        sentiment={signal.sentiment}
-                        notedAt={signal.notedAt}
-                        tweetTimestamp={signal.tweetTimestamp}
-                        project={{
-                          type: project.type,
-                          chain: project.chain as "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid" | undefined,
-                          link: project.link,
-                          coinGeckoId: project.coinGeckoId,
-                        }}
-                      />
+                      {project.coinGeckoId ? (
+                        <CoinGeckoPriceDelta
+                          id={signal.id}
+                          coinGeckoId={project.coinGeckoId}
+                          notedAt={signal.notedAt}
+                          tweetTimestamp={signal.tweetTimestamp}
+                          sentiment={signal.sentiment}
+                        />
+                      ) : project.chain && project.link ? (
+                        <PriceDelta
+                          id={signal.id}
+                          chain={project.chain}
+                          address={project.link}
+                          notedAt={signal.notedAt}
+                          tweetTimestamp={signal.tweetTimestamp}
+                          sentiment={signal.sentiment}
+                        />
+                      ) : null}
                     </div>
                   </div>
                 </div>
