@@ -205,12 +205,19 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
           const res = await fetch(`/api/performance/${username}`);
           const perfData = await res.json();
           
-          // Try different key formats
+          // Get the actual projectHandle from signals
+          const signalProjectHandles = [...new Set(signals.map(s => s.projectHandle))];
+          
+          // Try different key formats including the actual projectHandle
           const possibleKeys = [
+            ...signalProjectHandles.map(h => h.toLowerCase()),
+            ...signalProjectHandles.map(h => h.toLowerCase().replace('@', '')),
             project.twitterUsername.toLowerCase(),
             `@${project.twitterUsername.toLowerCase()}`,
             project.twitterUsername,
             `@${project.twitterUsername}`,
+            'plasmafdn', // Historical plasma username
+            '@plasmafdn',
           ];
           
           let projectPerf = null;

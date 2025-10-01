@@ -332,12 +332,16 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
             const signalProjectHandles = [...new Set(signals.map(s => s.projectHandle))];
             
             // Try different key formats including the actual projectHandle
+            // Also try common historical variations (e.g. plasmafdn -> plasma)
             const possibleKeys = [
               ...signalProjectHandles.map(h => h.toLowerCase()),
+              ...signalProjectHandles.map(h => h.toLowerCase().replace('@', '')),
               project.twitterUsername.toLowerCase(),
               `@${project.twitterUsername.toLowerCase()}`,
               project.twitterUsername,
               `@${project.twitterUsername}`,
+              'plasmafdn', // Historical plasma username
+              '@plasmafdn',
             ];
             
             let projectPerf = null;
