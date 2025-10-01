@@ -16,10 +16,12 @@ import * as $api_signals_username_ from "./routes/api/signals/[username].ts";
 import * as $api_signals_recent from "./routes/api/signals/recent.ts";
 import * as $api_verified_index from "./routes/api/verified/index.ts";
 import * as $index from "./routes/index.tsx";
+import * as $nft_handle_ from "./routes/nft/[handle].tsx";
 import * as $pre_tge_handle_ from "./routes/pre-tge/[handle].tsx";
 import * as $profile_username_ from "./routes/profile/[username].tsx";
 import * as $token_handle_ from "./routes/token/[handle].tsx";
 import * as $AdminVerified from "./islands/AdminVerified.tsx";
+import * as $NFTPageIsland from "./islands/NFTPageIsland.tsx";
 import * as $PerformanceMetrics from "./islands/PerformanceMetrics.tsx";
 import * as $PreTGEPageIsland from "./islands/PreTGEPageIsland.tsx";
 import * as $PriceChart from "./islands/PriceChart.tsx";
@@ -48,12 +50,14 @@ const manifest = {
     "./routes/api/signals/recent.ts": $api_signals_recent,
     "./routes/api/verified/index.ts": $api_verified_index,
     "./routes/index.tsx": $index,
+    "./routes/nft/[handle].tsx": $nft_handle_,
     "./routes/pre-tge/[handle].tsx": $pre_tge_handle_,
     "./routes/profile/[username].tsx": $profile_username_,
     "./routes/token/[handle].tsx": $token_handle_,
   },
   islands: {
     "./islands/AdminVerified.tsx": $AdminVerified,
+    "./islands/NFTPageIsland.tsx": $NFTPageIsland,
     "./islands/PerformanceMetrics.tsx": $PerformanceMetrics,
     "./islands/PreTGEPageIsland.tsx": $PreTGEPageIsland,
     "./islands/PriceChart.tsx": $PriceChart,
