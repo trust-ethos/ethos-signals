@@ -328,30 +328,37 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
             // Log all available asset keys to debug
             console.log(`Available assets for ${entry.username}:`, Object.keys(data.byAsset || {}));
             
-            // Get the actual projectHandle from signals (they should all be the same)
+            // Get the actual projectHandle from signals (use the exact key the API uses)
             const signalProjectHandles = [...new Set(signals.map(s => s.projectHandle))];
+            const primaryHandle = signalProjectHandles[0]?.toLowerCase(); // Use first signal's handle
             
-            // Try different key formats including the actual projectHandle
-            // Also try common historical variations (e.g. plasmafdn -> plasma)
-            const possibleKeys = [
-              ...signalProjectHandles.map(h => h.toLowerCase()),
-              ...signalProjectHandles.map(h => h.toLowerCase().replace('@', '')),
-              project.twitterUsername.toLowerCase(),
-              `@${project.twitterUsername.toLowerCase()}`,
-              project.twitterUsername,
-              `@${project.twitterUsername}`,
-              'plasmafdn', // Historical plasma username
-              '@plasmafdn',
-            ];
+            console.log(`Checking for ${entry.username} - Primary handle: "${primaryHandle}"`);
             
+            // Try the primary handle first (this is what the performance API uses)
             let projectPerf = null;
             let matchedKey = null;
             
-            for (const key of possibleKeys) {
-              if (data.byAsset?.[key]) {
-                projectPerf = data.byAsset[key];
-                matchedKey = key;
-                break;
+            if (primaryHandle && data.byAsset?.[primaryHandle]) {
+              projectPerf = data.byAsset[primaryHandle];
+              matchedKey = primaryHandle;
+              console.log(`✓ Matched on primary handle: "${primaryHandle}"`);
+            } else {
+              // Fallback: try other variations only if primary doesn't work
+              const fallbackKeys = [
+                ...signalProjectHandles.map(h => h.toLowerCase().replace('@', '')),
+                project.twitterUsername.toLowerCase(),
+                `@${project.twitterUsername.toLowerCase()}`,
+                'plasmafdn', // Historical
+                '@plasmafdn',
+              ];
+              
+              for (const key of fallbackKeys) {
+                if (data.byAsset?.[key]) {
+                  projectPerf = data.byAsset[key];
+                  matchedKey = key;
+                  console.log(`✓ Matched on fallback key: "${key}"`);
+                  break;
+                }
               }
             }
             
@@ -375,8 +382,8 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                 overall: entry.performance
               });
             } else {
-              console.log(`No performance data found for ${entry.username} on ${project.twitterUsername}`, {
-                triedKeys: possibleKeys,
+              console.log(`✗ No match found for ${entry.username}`, {
+                primaryHandle,
                 availableKeys: Object.keys(data.byAsset || {})
               });
             }
