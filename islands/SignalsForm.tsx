@@ -20,6 +20,8 @@ interface SignalItem {
   projectUserId?: number;
   projectDisplayName?: string;
   projectAvatarUrl?: string;
+  onchainTxHash?: string;
+  onchainSignalId?: number;
 }
 
 type Chain = "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid";
@@ -294,12 +296,28 @@ export default function SignalsForm({ username }: Props) {
                     </div>
                   )}
                   
-                  <a class="text-sm text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 transition-colors" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
-                    View Tweet
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
+                  <div class="flex items-center gap-3">
+                    <a class="text-sm text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 transition-colors" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
+                      View Tweet
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                    {s.onchainTxHash && (
+                      <a 
+                        class="text-sm text-green-400 hover:text-green-300 hover:underline inline-flex items-center gap-1 transition-colors" 
+                        href={`https://basescan.org/tx/${s.onchainTxHash}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        title="View on BaseScan"
+                      >
+                        View Onchain
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
                   
                   {/* Price snapshots for verified projects */}
                   {s.projectHandle && verifiedByUsername[s.projectHandle.toLowerCase()] && (

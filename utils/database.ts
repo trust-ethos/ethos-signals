@@ -21,6 +21,8 @@ export interface TestSignal {
   notedAt: string; // yyyy-mm-dd
   tweetTimestamp?: string; // ISO datetime
   createdAt: number; // epoch ms
+  onchainTxHash?: string; // Base blockchain transaction hash
+  onchainSignalId?: number; // ID in SignalsAttestation contract
 }
 
 export type VerifiedProjectType = "token" | "nft" | "pre_tge";
@@ -49,9 +51,10 @@ export async function saveTestSignal(signal: TestSignal): Promise<boolean> {
       INSERT INTO signals (
         id, twitter_username, project_handle, project_user_id, 
         project_display_name, project_avatar_url, verified_project_id,
-        tweet_url, tweet_content, sentiment, noted_at, tweet_timestamp, created_at
+        tweet_url, tweet_content, sentiment, noted_at, tweet_timestamp, created_at,
+        onchain_tx_hash, onchain_signal_id
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_timestamp($13)
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_timestamp($13), $14, $15
       )
       ON CONFLICT (id) DO UPDATE SET
         twitter_username = EXCLUDED.twitter_username,
@@ -64,7 +67,9 @@ export async function saveTestSignal(signal: TestSignal): Promise<boolean> {
         tweet_content = EXCLUDED.tweet_content,
         sentiment = EXCLUDED.sentiment,
         noted_at = EXCLUDED.noted_at,
-        tweet_timestamp = EXCLUDED.tweet_timestamp
+        tweet_timestamp = EXCLUDED.tweet_timestamp,
+        onchain_tx_hash = COALESCE(EXCLUDED.onchain_tx_hash, signals.onchain_tx_hash),
+        onchain_signal_id = COALESCE(EXCLUDED.onchain_signal_id, signals.onchain_signal_id)
     `, [
       signal.id,
       signal.twitterUsername,
@@ -79,6 +84,8 @@ export async function saveTestSignal(signal: TestSignal): Promise<boolean> {
       signal.notedAt,
       signal.tweetTimestamp || null,
       signal.createdAt / 1000, // Convert to seconds for PostgreSQL
+      signal.onchainTxHash || null,
+      signal.onchainSignalId || null,
     ]);
     
     return true;
@@ -105,6 +112,8 @@ export async function listTestSignals(username: string): Promise<TestSignal[]> {
       noted_at: Date;
       tweet_timestamp: Date | null;
       created_at: Date;
+      onchain_tx_hash: string | null;
+      onchain_signal_id: number | null;
     }>(`
       SELECT * FROM signals 
       WHERE twitter_username = $1 
@@ -125,6 +134,8 @@ export async function listTestSignals(username: string): Promise<TestSignal[]> {
       notedAt: row.noted_at.toISOString().slice(0, 10), // Convert to yyyy-mm-dd
       tweetTimestamp: row.tweet_timestamp?.toISOString(),
       createdAt: row.created_at.getTime(), // Convert to epoch ms
+      onchainTxHash: row.onchain_tx_hash || undefined,
+      onchainSignalId: row.onchain_signal_id || undefined,
     }));
   } catch (error) {
     console.error("Failed to list signals:", error);
@@ -149,6 +160,8 @@ export async function listAllRecentSignals(limit = 15, offset = 0): Promise<Test
       noted_at: Date;
       tweet_timestamp: Date | null;
       created_at: Date;
+      onchain_tx_hash: string | null;
+      onchain_signal_id: number | null;
     }>(`
       SELECT * FROM signals 
       ORDER BY created_at DESC
@@ -169,6 +182,8 @@ export async function listAllRecentSignals(limit = 15, offset = 0): Promise<Test
       notedAt: row.noted_at.toISOString().slice(0, 10), // Convert to yyyy-mm-dd
       tweetTimestamp: row.tweet_timestamp?.toISOString(),
       createdAt: row.created_at.getTime(), // Convert to epoch ms
+      onchainTxHash: row.onchain_tx_hash || undefined,
+      onchainSignalId: row.onchain_signal_id || undefined,
     }));
   } catch (error) {
     console.error("Failed to list all recent signals:", error);
@@ -209,6 +224,8 @@ export async function getSignalsByProject(projectHandle: string): Promise<TestSi
       project_display_name: string | null;
       project_avatar_url: string | null;
       created_at: Date;
+      onchain_tx_hash: string | null;
+      onchain_signal_id: number | null;
     }>(`
       SELECT * FROM signals 
       WHERE LOWER(project_handle) = LOWER($1)
@@ -228,6 +245,8 @@ export async function getSignalsByProject(projectHandle: string): Promise<TestSi
       projectDisplayName: row.project_display_name || undefined,
       projectAvatarUrl: row.project_avatar_url || undefined,
       createdAt: row.created_at.getTime(),
+      onchainTxHash: row.onchain_tx_hash || undefined,
+      onchainSignalId: row.onchain_signal_id || undefined,
     }));
   } catch (error) {
     console.error("Failed to get signals by project:", error);

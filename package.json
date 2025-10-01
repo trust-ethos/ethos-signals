@@ -1,0 +1,29 @@
+{
+  "name": "signals",
+  "version": "1.0.0",
+  "description": "A web application for tracking bull/bear signals from Twitter users on the Ethos Network.",
+  "main": "hardhat.config.js",
+  "dependencies": {
+    "autoprefixer": "^10.4.17",
+    "cssnano": "^6.0.3",
+    "ethers": "^6.9.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trust-ethos/ethos-signals.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/trust-ethos/ethos-signals/issues"
+  },
+  "homepage": "https://github.com/trust-ethos/ethos-signals#readme"
+}

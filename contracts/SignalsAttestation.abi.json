@@ -1,0 +1,510 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "signalId",
+        "type": "uint256"
+      }
+    ],
+    "name": "archiveSignal",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "subject",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tweetUrl",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tweetContent",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "isBullish",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "metadata",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "account",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "service",
+        "type": "string"
+      }
+    ],
+    "name": "createSignal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "signalId",
+        "type": "uint256"
+      }
+    ],
+    "name": "restoreSignal",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "signalId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      }
+    ],
+    "name": "SignalArchived",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "signalId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "subject",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isBullish",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "tweetUrl",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "SignalCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "signalId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      }
+    ],
+    "name": "SignalRestored",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "authorSignals",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "subject",
+        "type": "string"
+      }
+    ],
+    "name": "getProjectSentiment",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "bullishCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "bearishCount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "signalId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSignal",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "author",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "subject",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "tweetUrl",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "tweetContent",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isBullish",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "metadata",
+            "type": "string"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "account",
+                "type": "string"
+              },
+              {
+                "internalType": "string",
+                "name": "service",
+                "type": "string"
+              }
+            ],
+            "internalType": "struct SignalsAttestation.AttestationDetails",
+            "name": "attestationDetails",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "archived",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct SignalsAttestation.Signal",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      }
+    ],
+    "name": "getSignalsByAuthor",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "subject",
+        "type": "string"
+      }
+    ],
+    "name": "getSignalsByProject",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "signalIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getSignalsBatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "author",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "subject",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "tweetUrl",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "tweetContent",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isBullish",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "metadata",
+            "type": "string"
+          },
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "account",
+                "type": "string"
+              },
+              {
+                "internalType": "string",
+                "name": "service",
+                "type": "string"
+              }
+            ],
+            "internalType": "struct SignalsAttestation.AttestationDetails",
+            "name": "attestationDetails",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "archived",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct SignalsAttestation.Signal[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "projectSignals",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "signalCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "signals",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "subject",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tweetUrl",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "tweetContent",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "isBullish",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "metadata",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "account",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "service",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct SignalsAttestation.AttestationDetails",
+        "name": "attestationDetails",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "archived",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
+
+

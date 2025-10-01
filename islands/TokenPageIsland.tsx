@@ -11,6 +11,8 @@ interface Signal {
   projectHandle: string;
   notedAt: string;
   tweetTimestamp?: string;
+  onchainTxHash?: string;
+  onchainSignalId?: number;
   user?: {
     displayName: string;
     username?: string | null;
@@ -513,14 +515,27 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                         </span>
                       </div>
                       <p class="text-gray-300 mb-2">{signal.tweetContent}</p>
-                      <a 
-                        href={signal.tweetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-sm text-blue-400 hover:text-blue-300"
-                      >
-                        View Tweet →
-                      </a>
+                      <div class="flex items-center gap-3">
+                        <a 
+                          href={signal.tweetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+                        >
+                          View Tweet →
+                        </a>
+                        {signal.onchainTxHash && (
+                          <a 
+                            href={`https://basescan.org/tx/${signal.onchainTxHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="text-sm text-green-400 hover:text-green-300 inline-flex items-center gap-1"
+                            title="View on BaseScan"
+                          >
+                            View Onchain →
+                          </a>
+                        )}
+                      </div>
                       
                       {/* Signal Performance */}
                       {project.coinGeckoId ? (

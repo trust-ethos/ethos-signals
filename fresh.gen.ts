@@ -13,6 +13,7 @@ import * as $api_price_nft from "./routes/api/price/nft.ts";
 import * as $api_price_token from "./routes/api/price/token.ts";
 import * as $api_search from "./routes/api/search.ts";
 import * as $api_signals_username_ from "./routes/api/signals/[username].ts";
+import * as $api_signals_onchain from "./routes/api/signals/onchain.ts";
 import * as $api_signals_recent from "./routes/api/signals/recent.ts";
 import * as $api_verified_index from "./routes/api/verified/index.ts";
 import * as $index from "./routes/index.tsx";
@@ -48,6 +49,7 @@ const manifest = {
     "./routes/api/price/token.ts": $api_price_token,
     "./routes/api/search.ts": $api_search,
     "./routes/api/signals/[username].ts": $api_signals_username_,
+    "./routes/api/signals/onchain.ts": $api_signals_onchain,
     "./routes/api/signals/recent.ts": $api_signals_recent,
     "./routes/api/verified/index.ts": $api_verified_index,
     "./routes/index.tsx": $index,
