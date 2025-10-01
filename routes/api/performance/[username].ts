@@ -51,8 +51,8 @@ export const handler: Handlers = {
         // Get verified project info
         const project = await getVerifiedByUsername(signal.projectHandle);
         
-        if (!project || !project.link) {
-          continue; // Skip unverified projects or those without contract addresses
+        if (!project || (!project.link && !project.coinGeckoId)) {
+          continue; // Skip unverified projects without price tracking (need either contract address or CoinGecko ID)
         }
         
         const timestamp = signal.tweetTimestamp || `${signal.notedAt}T12:00:00Z`;

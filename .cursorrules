@@ -1,0 +1,13 @@
+# Cursor Rules for Ethos Signals
+
+## Git Commit Policy
+- **NEVER commit or push to git automatically**
+- **NEVER run `git commit` or `git push` commands without explicit user instruction**
+- Only commit when the user explicitly says "commit" or "push" or similar
+- This is a production application - all commits must be intentional
+
+## Development Guidelines
+- Always test changes locally before suggesting commits
+- Ask user before making database changes
+- Be careful with production data
+

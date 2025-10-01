@@ -281,11 +281,6 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
 
   useEffect(() => {
     async function calculateLeaderboard() {
-      // Debug: Check what projectHandles exist in the signals
-      const projectHandles = new Set(signals.map(s => s.projectHandle));
-      console.log('Project handles in signals:', Array.from(projectHandles));
-      console.log('Looking for project:', project.twitterUsername);
-      
       // Calculate leaderboard from signals
       const userMap = new Map<string, LeaderboardEntry>();
       
@@ -325,23 +320,15 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
             const res = await fetch(`/api/performance/${entry.username}`);
             const data = await res.json();
             
-            // Log all available asset keys to debug
-            console.log(`Available assets for ${entry.username}:`, Object.keys(data.byAsset || {}));
-            
             // Get the actual projectHandle from signals (use the exact key the API uses)
             const signalProjectHandles = [...new Set(signals.map(s => s.projectHandle))];
             const primaryHandle = signalProjectHandles[0]?.toLowerCase(); // Use first signal's handle
             
-            console.log(`Checking for ${entry.username} - Primary handle: "${primaryHandle}"`);
-            
             // Try the primary handle first (this is what the performance API uses)
             let projectPerf = null;
-            let matchedKey = null;
             
             if (primaryHandle && data.byAsset?.[primaryHandle]) {
               projectPerf = data.byAsset[primaryHandle];
-              matchedKey = primaryHandle;
-              console.log(`✓ Matched on primary handle: "${primaryHandle}"`);
             } else {
               // Fallback: try other variations only if primary doesn't work
               const fallbackKeys = [
@@ -355,8 +342,6 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
               for (const key of fallbackKeys) {
                 if (data.byAsset?.[key]) {
                   projectPerf = data.byAsset[key];
-                  matchedKey = key;
-                  console.log(`✓ Matched on fallback key: "${key}"`);
                   break;
                 }
               }
@@ -375,17 +360,6 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
               if (entry.performance !== null) {
                 hasPerformanceData = true;
               }
-              
-              console.log(`Performance for ${entry.username} on ${matchedKey}:`, {
-                shortTerm: entry.shortTerm,
-                longTerm: entry.longTerm,
-                overall: entry.performance
-              });
-            } else {
-              console.log(`✗ No match found for ${entry.username}`, {
-                primaryHandle,
-                availableKeys: Object.keys(data.byAsset || {})
-              });
             }
           } catch (error) {
             console.error(`Failed to fetch performance for ${entry.username}:`, error);
