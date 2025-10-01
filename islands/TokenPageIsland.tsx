@@ -281,6 +281,11 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
 
   useEffect(() => {
     async function calculateLeaderboard() {
+      // Debug: Check what projectHandles exist in the signals
+      const projectHandles = new Set(signals.map(s => s.projectHandle));
+      console.log('Project handles in signals:', Array.from(projectHandles));
+      console.log('Looking for project:', project.twitterUsername);
+      
       // Calculate leaderboard from signals
       const userMap = new Map<string, LeaderboardEntry>();
       
@@ -323,8 +328,12 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
             // Log all available asset keys to debug
             console.log(`Available assets for ${entry.username}:`, Object.keys(data.byAsset || {}));
             
-            // Try different key formats
+            // Get the actual projectHandle from signals (they should all be the same)
+            const signalProjectHandles = [...new Set(signals.map(s => s.projectHandle))];
+            
+            // Try different key formats including the actual projectHandle
             const possibleKeys = [
+              ...signalProjectHandles.map(h => h.toLowerCase()),
               project.twitterUsername.toLowerCase(),
               `@${project.twitterUsername.toLowerCase()}`,
               project.twitterUsername,
