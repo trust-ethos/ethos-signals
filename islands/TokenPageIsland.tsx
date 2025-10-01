@@ -1,6 +1,7 @@
 import { useState, useEffect } from "preact/hooks";
 import PriceChart from "./PriceChart.tsx";
 import { Badge } from "../components/ui/Badge.tsx";
+import SignalPerformance from "./SignalPerformance.tsx";
 
 interface Signal {
   id: string;
@@ -263,10 +264,25 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                         href={signal.tweetUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-sm text-blue-400 hover:text-blue-300"
+                        class="text-sm text-blue-400 hover:text-blue-300 inline-block mb-3"
                       >
                         View Tweet →
                       </a>
+                      
+                      {/* Signal Performance */}
+                      <SignalPerformance
+                        signalId={signal.id}
+                        projectHandle={signal.projectHandle}
+                        sentiment={signal.sentiment}
+                        notedAt={signal.notedAt}
+                        tweetTimestamp={signal.tweetTimestamp}
+                        project={{
+                          type: project.type,
+                          chain: project.chain as "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid" | undefined,
+                          link: project.link,
+                          coinGeckoId: project.coinGeckoId,
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
