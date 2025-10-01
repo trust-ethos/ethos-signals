@@ -23,6 +23,7 @@ import * as $RelativeTime from "./islands/RelativeTime.tsx";
 import * as $SearchForm from "./islands/SearchForm.tsx";
 import * as $SignalPerformance from "./islands/SignalPerformance.tsx";
 import * as $SignalsForm from "./islands/SignalsForm.tsx";
+import * as $TradersCarousel from "./islands/TradersCarousel.tsx";
 import { type Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -50,6 +51,7 @@ const manifest = {
     "./islands/SearchForm.tsx": $SearchForm,
     "./islands/SignalPerformance.tsx": $SignalPerformance,
     "./islands/SignalsForm.tsx": $SignalsForm,
+    "./islands/TradersCarousel.tsx": $TradersCarousel,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

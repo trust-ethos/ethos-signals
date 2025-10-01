@@ -1,6 +1,6 @@
 import { Head } from "$fresh/runtime.ts";
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { EthosUser, getUserByTwitterUsername, getUserScore } from "../../utils/ethos-api.ts";
+import { EthosUser, getUserByTwitterUsername } from "../../utils/ethos-api.ts";
 import { Card, CardContent } from "../../components/ui/Card.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { Button } from "../../components/ui/Button.tsx";
@@ -10,7 +10,6 @@ import { listTestSignals, listVerifiedProjects } from "../../utils/database.ts";
 
 interface ProfileData {
   user: EthosUser;
-  scoreDetails: { score?: number; level: string };
   totalSignals: number;
   signalAccuracy: {
     correct: number;
@@ -30,10 +29,6 @@ export const handler: Handlers<ProfileData | null> = {
         return ctx.renderNotFound();
       }
 
-      // Get additional score details using the best available userkey
-      const userkey = user.profileId ? `profileId:${user.profileId}` : user.userkeys[0];
-      const scoreDetails = await getUserScore(userkey);
-      
       // Get user signals and verified projects to calculate stats
       const [signals, verifiedProjects] = await Promise.all([
         listTestSignals(username),
@@ -115,7 +110,6 @@ export const handler: Handlers<ProfileData | null> = {
 
       return ctx.render({ 
         user, 
-        scoreDetails,
         totalSignals: signals.length,
         signalAccuracy: {
           correct,
@@ -159,7 +153,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
     );
   }
 
-  const { user, scoreDetails, totalSignals, signalAccuracy } = data;
+  const { user, totalSignals, signalAccuracy } = data;
 
   return (
     <>
@@ -204,9 +198,6 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                       class="w-32 h-32 rounded-full ring-4 shadow-2xl"
                       style={`border-color: ${getScoreColor(user.score)}; box-shadow: 0 0 20px ${getScoreColor(user.score)}50, 0 20px 40px rgba(0,0,0,0.4);`}
                     />
-                    {user.status === "ACTIVE" && (
-                      <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-black shadow-lg shadow-green-500/50"></div>
-                    )}
                   </div>
                   
                   <div class="mt-6 flex flex-col gap-3 w-full">
@@ -246,7 +237,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                         <p class="text-xl text-gray-400 mb-3">@{user.username}</p>
                       )}
                       <Badge variant={getScoreBadgeVariant(user.score)} class="text-sm">
-                        {`${getScoreLevelName(user.score)} • ${scoreDetails.level}`}
+                        {`${user.score} - ${getScoreLevelName(user.score)}`}
                       </Badge>
                     </div>
                   </div>
@@ -256,20 +247,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                   )}
 
                   {/* Stats Grid */}
-                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div class="rounded-xl p-4 border backdrop-blur-sm" style={`background: linear-gradient(135deg, ${getScoreColor(user.score)}20, ${getScoreColor(user.score)}10); border-color: ${getScoreColor(user.score)}30;`}>
-                      <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style={`background-color: ${getScoreColor(user.score)};`}>
-                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                          </svg>
-                        </div>
-                        <span class="text-sm font-medium" style={`color: ${getScoreColor(user.score)};`}>Ethos Score</span>
-                      </div>
-                      <div class="text-3xl font-bold text-white">{user.score}</div>
-                      <div class="text-xs mt-1" style={`color: ${getScoreColor(user.score)};`}>{getScoreLevelName(user.score)}</div>
-                    </div>
-
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30 backdrop-blur-sm">
                       <div class="flex items-center gap-2 mb-2">
                         <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">

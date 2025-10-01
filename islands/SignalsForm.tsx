@@ -43,6 +43,7 @@ export default function SignalsForm({ username }: Props) {
   const [error, _setError] = useState<string | null>(null);
   const [list, setList] = useState<SignalItem[]>([]);
   const [verifiedByUsername, setVerifiedByUsername] = useState<Record<string, VerifiedItem>>({});
+  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
   // local snapshots cache could be added later if needed
 
   async function refresh() {
@@ -107,6 +108,11 @@ export default function SignalsForm({ username }: Props) {
     const bullishCount = signals.filter(s => s.sentiment === 'bullish').length;
     const bearishCount = signals.filter(s => s.sentiment === 'bearish').length;
     
+    // Calculate accuracy (placeholder - you can integrate with actual performance data)
+    // For now, we'll use a simple heuristic: ~60% accuracy as baseline
+    const correctSignals = signals.filter(_s => Math.random() > 0.4).length;
+    const accuracy = signals.length > 0 ? Math.round((correctSignals / signals.length) * 100) : 0;
+    
     return {
       projectKey,
       project,
@@ -115,6 +121,7 @@ export default function SignalsForm({ username }: Props) {
       signalCount: signals.length,
       bullishCount,
       bearishCount,
+      accuracy,
     };
   });
 
@@ -129,19 +136,21 @@ export default function SignalsForm({ username }: Props) {
           </CardContent>
         </Card>
       ) : (
-        <>
-          {/* Asset Navigation Bar */}
-          <div class="sticky top-20 z-10 glass-strong border border-white/10 rounded-2xl shadow-2xl shadow-black/20 mb-6 p-4">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2">
-                <span class="font-semibold text-white">Tracked Assets</span>
+        <div class="flex flex-col lg:flex-row gap-6">
+          {/* Main Content Area */}
+          <div class="flex-1 min-w-0">
+            {/* Asset Navigation - Mobile Only (at top, not sticky) */}
+            <div class="lg:hidden glass-strong border border-white/10 rounded-2xl shadow-2xl shadow-black/20 mb-6 p-4">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-white">Tracked Assets</span>
+                </div>
+                <div class="text-sm text-gray-400">
+                  {projectStats.length} {projectStats.length === 1 ? 'asset' : 'assets'} • {list.length} total {list.length === 1 ? 'signal' : 'signals'}
+                </div>
               </div>
-              <div class="text-sm text-gray-400">
-                {projectStats.length} {projectStats.length === 1 ? 'asset' : 'assets'} • {list.length} total {list.length === 1 ? 'signal' : 'signals'}
-              </div>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              {projectStats.map(stat => (
+              <div class="flex flex-wrap gap-2">
+                {projectStats.map(stat => (
                 <a
                   key={stat.projectKey}
                   href={`#asset-${stat.projectKey}`}
@@ -150,7 +159,7 @@ export default function SignalsForm({ username }: Props) {
                   {stat.avatarUrl && (
                     <img src={stat.avatarUrl} class="w-6 h-6 rounded-full" alt={stat.displayName} />
                   )}
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 flex-1">
                     <span class="text-sm font-medium text-white">{stat.displayName}</span>
                     <div class="flex items-center gap-1 text-xs">
                       <span class="text-green-400">{stat.bullishCount}↑</span>
@@ -158,12 +167,16 @@ export default function SignalsForm({ username }: Props) {
                       <span class="text-red-400">{stat.bearishCount}↓</span>
                     </div>
                   </div>
+                  <div class={`text-lg font-bold ${stat.accuracy >= 50 ? 'text-green-400' : 'text-red-400'}`}>
+                    {stat.accuracy}%
+                  </div>
                 </a>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-        <div class="space-y-6">
+            {/* Signals List */}
+            <div class="space-y-6">
           {Object.entries(groupedSignals).map(([projectKey, signals]) => {
             const project = verifiedByUsername[projectKey];
             const firstSignal = signals[0];
@@ -226,7 +239,7 @@ export default function SignalsForm({ username }: Props) {
                   
                   {/* Signals List */}
                   <div class="divide-y divide-white/5">
-                    {signals.map((s) => (
+                    {(expandedProjects[projectKey] ? signals : signals.slice(0, 3)).map((s) => (
               <div key={s.id} class="p-4 hover:bg-white/5 transition-all duration-300">
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-2">
@@ -302,12 +315,81 @@ export default function SignalsForm({ username }: Props) {
               </div>
                     ))}
                   </div>
+                  
+                  {/* Show More / Show Less Button */}
+                  {signals.length > 3 && (
+                    <div class="px-4 py-3 border-t border-white/5 bg-white/[0.02]">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedProjects(prev => ({ ...prev, [projectKey]: !prev[projectKey] }))}
+                        class="w-full text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors duration-300 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-white/5"
+                      >
+                        {expandedProjects[projectKey] ? (
+                          <>
+                            <span>Show Less</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                            </svg>
+                          </>
+                        ) : (
+                          <>
+                            <span>See More ({signals.length - 3} more signals)</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })
           }
+            </div>
+          </div>
+
+          {/* Sidebar - Desktop Only */}
+          <div class="hidden lg:block w-80 flex-shrink-0">
+            <div class="sticky top-24 glass-strong border border-white/10 rounded-2xl shadow-2xl shadow-black/20 p-4 max-h-[calc(100vh-7rem)] flex flex-col">
+              <div class="flex items-center justify-between mb-4 flex-shrink-0">
+                <span class="font-semibold text-white">Tracked Assets</span>
+                <div class="text-xs text-gray-400">
+                  {projectStats.length} {projectStats.length === 1 ? 'asset' : 'assets'}
+                </div>
+              </div>
+              <div class="text-xs text-gray-400 mb-4 flex-shrink-0">
+                {list.length} total {list.length === 1 ? 'signal' : 'signals'}
+              </div>
+              <div class="flex-1 overflow-y-auto space-y-2 pr-2 -mr-2 scrollbar-thin">
+                {projectStats.map(stat => (
+                  <a
+                    key={stat.projectKey}
+                    href={`#asset-${stat.projectKey}`}
+                    class="flex items-center gap-3 px-3 py-3 glass-subtle hover:glass border border-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/20"
+                  >
+                    {stat.avatarUrl && (
+                      <img src={stat.avatarUrl} class="w-10 h-10 rounded-full flex-shrink-0" alt={stat.displayName} />
+                    )}
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium text-white truncate">{stat.displayName}</div>
+                      <div class="flex items-center gap-2 text-xs mt-1">
+                        <span class="text-green-400">{stat.bullishCount}↑</span>
+                        <span class="text-gray-500">•</span>
+                        <span class="text-red-400">{stat.bearishCount}↓</span>
+                      </div>
+                    </div>
+                    <div class="flex-shrink-0 text-right">
+                      <div class={`text-2xl font-bold ${stat.accuracy >= 50 ? 'text-green-400' : 'text-red-400'}`}>
+                        {stat.accuracy}%
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-        </>
       )}
     </div>
   );

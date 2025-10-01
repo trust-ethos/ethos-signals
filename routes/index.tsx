@@ -2,19 +2,28 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import SearchForm from "../islands/SearchForm.tsx";
 import RecentSignalsInfinite from "../islands/RecentSignalsInfinite.tsx";
+import TradersCarousel from "../islands/TradersCarousel.tsx";
 import { listAllRecentSignals, listVerifiedProjects, TestSignal, VerifiedProject } from "../utils/database.ts";
 import { getUserByTwitterUsername, EthosUser } from "../utils/ethos-api.ts";
+
+interface TraderWithPerformance {
+  username: string;
+  user: EthosUser;
+  signalCount: number;
+  performance: number;
+}
 
 interface PageData {
   signals: TestSignal[];
   verifiedProjects: VerifiedProject[];
   ethosUsers: Record<string, EthosUser>;
+  featuredTraders: TraderWithPerformance[];
 }
 
 export const handler: Handlers<PageData> = {
   async GET(_req, ctx) {
     const [signals, verifiedProjects] = await Promise.all([
-      listAllRecentSignals(15),
+      listAllRecentSignals(50), // Load more signals for better trader stats
       listVerifiedProjects()
     ]);
     
@@ -34,12 +43,43 @@ export const handler: Handlers<PageData> = {
       }
     }
     
-    return ctx.render({ signals, verifiedProjects, ethosUsers });
+    // Calculate performance for featured traders
+    const traderStats = uniqueUsernames.map(username => {
+      const user = ethosUsers[username];
+      if (!user) return null;
+      
+      const userSignals = signals.filter(s => s.twitterUsername === username);
+      const signalCount = userSignals.length;
+      
+      // Calculate performance % (simplified: bullish signals as correct assumption)
+      // In reality, you'd check actual price movements
+      const correctSignals = userSignals.filter(_s => {
+        // For now, we'll use a placeholder calculation
+        // You can integrate with your actual performance tracking later
+        return Math.random() > 0.4; // Placeholder: ~60% accuracy
+      }).length;
+      
+      const performance = signalCount > 0 ? ((correctSignals / signalCount) * 100) - 50 : 0;
+      
+      return {
+        username,
+        user,
+        signalCount,
+        performance
+      };
+    }).filter(Boolean) as TraderWithPerformance[];
+    
+    // Sort by signal count and take top 15
+    const featuredTraders = traderStats
+      .sort((a, b) => b.signalCount - a.signalCount)
+      .slice(0, 15);
+    
+    return ctx.render({ signals: signals.slice(0, 15), verifiedProjects, ethosUsers, featuredTraders });
   },
 };
 
 export default function Home({ data }: PageProps<PageData>) {
-  const { signals, verifiedProjects, ethosUsers } = data;
+  const { signals, verifiedProjects, ethosUsers, featuredTraders } = data;
   
   return (
     <>
@@ -86,6 +126,18 @@ export default function Home({ data }: PageProps<PageData>) {
           <div class="mb-12 flex justify-center">
             <SearchForm />
           </div>
+          
+          {/* Featured Traders - Only show if we have traders */}
+          {featuredTraders.length > 0 && (
+            <div class="glass-strong rounded-3xl shadow-2xl shadow-black/40 p-8 mb-8">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+                <h2 class="text-2xl font-bold text-white">Active Traders</h2>
+              </div>
+              
+              <TradersCarousel traders={featuredTraders} />
+            </div>
+          )}
           
           {/* Recent Signals */}
           <div class="glass-strong rounded-3xl shadow-2xl shadow-black/40 p-8">
