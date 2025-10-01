@@ -122,11 +122,14 @@ export default function TradersCarousel({ traders }: Props) {
                   </div>
                   
                   {/* Ethos Score */}
-                  <div class="flex flex-col items-center mb-2">
+                  <div class="flex flex-col items-center gap-2 mb-2">
                     <div class="text-3xl font-bold" style={`color: ${scoreColor}`}>
-                      {user.score.toLocaleString()}
+                      {user.score}
                     </div>
-                    <div class="text-xs text-gray-400 mt-1">
+                    <div 
+                      class="px-3 py-1 rounded-full text-xs font-semibold"
+                      style={`background-color: ${scoreColor}20; color: ${scoreColor}; border: 1px solid ${scoreColor}50;`}
+                    >
                       {credibilityLevel}
                     </div>
                   </div>
