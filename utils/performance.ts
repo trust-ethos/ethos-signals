@@ -82,6 +82,12 @@ export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMet
   for (const signal of signals) {
     const callPrice = signal.priceAtCall;
     
+    // Calculate signal age
+    const timestamp = signal.tweetTimestamp || `${signal.notedAt}T12:00:00Z`;
+    const signalDate = new Date(timestamp);
+    const now = new Date();
+    const daysSinceSignal = (now.getTime() - signalDate.getTime()) / (1000 * 60 * 60 * 24);
+    
     // 1 day performance
     if (callPrice && signal.priceAt1d !== null && signal.priceAt1d !== undefined) {
       count1d++;
@@ -112,8 +118,8 @@ export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMet
       }
     }
     
-    // All-time performance (current price)
-    if (callPrice && signal.currentPrice !== null && signal.currentPrice !== undefined) {
+    // All-time performance (current price) - only for signals 28+ days old
+    if (callPrice && signal.currentPrice !== null && signal.currentPrice !== undefined && daysSinceSignal >= 28) {
       countAllTime++;
       const priceChange = ((signal.currentPrice - callPrice) / callPrice) * 100;
       sumAllTime += priceChange;
