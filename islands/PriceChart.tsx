@@ -186,7 +186,9 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         } else if (chain && address) {
           // DefiLlama only provides daily data
           // Ignore interval selection for DefiLlama (always daily)
+          console.log(`Fetching DefiLlama data for ${chain}:${address}`);
           const days = Math.ceil((now - startTime) / (24 * 60 * 60 * 1000));
+          console.log(`Fetching ${days} days of historical data`);
           
           const dailyPrices: Array<{ time: Time; value: number }> = [];
           
@@ -198,19 +200,29 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
             promises.push(
               fetch(`/api/price/token?chain=${chain}&address=${address}&date=${dateStr}`)
                 .then(res => res.json())
-                .then(data => ({ date, price: data.price }))
-                .catch(() => ({ date, price: null }))
+                .then(data => ({ date, dateStr, price: data.price }))
+                .catch(err => {
+                  console.error(`Failed to fetch price for ${dateStr}:`, err);
+                  return { date, dateStr, price: null };
+                })
             );
           }
           
           const results = await Promise.all(promises);
-          for (const { date, price } of results) {
+          let successCount = 0;
+          for (const { date, dateStr, price } of results) {
             if (price) {
               dailyPrices.push({
                 time: Math.floor(date.getTime() / 1000) as Time,
                 value: price,
               });
+              successCount++;
             }
+          }
+          
+          console.log(`Successfully fetched ${successCount}/${days} daily prices`);
+          if (successCount === 0) {
+            console.warn(`No price data available for ${chain}:${address}. DefiLlama may not support this token.`);
           }
           
           priceData = dailyPrices;
