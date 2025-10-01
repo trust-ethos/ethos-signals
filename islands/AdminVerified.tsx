@@ -67,8 +67,8 @@ export default function AdminVerified({ initialItems }: Props) {
   async function save() {
     if (!selected) return alert("Select a project via search first.");
     
-    // Validate that we have either a contract address or CoinGecko ID
-    if (!link && !coinGeckoId) {
+    // Validate that we have either a contract address or CoinGecko ID (except for pre_tge)
+    if (type !== "pre_tge" && !link && !coinGeckoId) {
       return alert("Please provide either a contract address or CoinGecko ID for price tracking.");
     }
     
@@ -81,7 +81,7 @@ export default function AdminVerified({ initialItems }: Props) {
       link: link || undefined,
       coinGeckoId: coinGeckoId || undefined,
       ticker: ticker || undefined,
-      chain,
+      ...(type !== "pre_tge" && { chain }),
     };
     const res = await fetch('/api/verified', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     if (res.ok) {
@@ -120,16 +120,22 @@ export default function AdminVerified({ initialItems }: Props) {
           <option value="pre_tge">Pre-TGE</option>
           <option value="nft">NFT</option>
         </select>
-        <select class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" value={chain} onInput={(e) => setChain((e.target as HTMLSelectElement).value as "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid")}>
-          <option value="ethereum">Ethereum</option>
-          <option value="base">Base</option>
-          <option value="solana">Solana</option>
-          <option value="bsc">BSC</option>
-          <option value="plasma">Plasma</option>
-          <option value="hyperliquid">Hyperliquid</option>
-        </select>
-        <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="Contract address (optional)" value={link} onInput={(e) => setLink((e.target as HTMLInputElement).value)} />
-        <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="CoinGecko ID (for Layer 1 tokens)" value={coinGeckoId} onInput={(e) => setCoinGeckoId((e.target as HTMLInputElement).value)} />
+        {type !== "pre_tge" && (
+          <select class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" value={chain} onInput={(e) => setChain((e.target as HTMLSelectElement).value as "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid")}>
+            <option value="ethereum">Ethereum</option>
+            <option value="base">Base</option>
+            <option value="solana">Solana</option>
+            <option value="bsc">BSC</option>
+            <option value="plasma">Plasma</option>
+            <option value="hyperliquid">Hyperliquid</option>
+          </select>
+        )}
+        {type !== "pre_tge" && (
+          <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="Contract address (optional)" value={link} onInput={(e) => setLink((e.target as HTMLInputElement).value)} />
+        )}
+        {type !== "pre_tge" && (
+          <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="CoinGecko ID (for Layer 1 tokens)" value={coinGeckoId} onInput={(e) => setCoinGeckoId((e.target as HTMLInputElement).value)} />
+        )}
         <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="Ticker symbol (e.g., MKR, XPL)" value={ticker} onInput={(e) => setTicker((e.target as HTMLInputElement).value)} />
         <div class="md:col-span-2 flex gap-2">
           <button class="flex-1 inline-flex items-center justify-center h-12 px-6 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105" type="button" onClick={save}>Save</button>
