@@ -192,6 +192,49 @@ export async function deleteTestSignal(username: string, id: string): Promise<bo
   }
 }
 
+export async function getSignalsByProject(projectHandle: string): Promise<TestSignal[]> {
+  const client = await getDbClient();
+  
+  try {
+    const result = await client.queryObject<{
+      id: string;
+      twitter_username: string;
+      sentiment: "bullish" | "bearish";
+      tweet_url: string;
+      tweet_content: string;
+      project_handle: string;
+      noted_at: Date;
+      tweet_timestamp: Date | null;
+      project_user_id: number | null;
+      project_display_name: string | null;
+      project_avatar_url: string | null;
+      created_at: Date;
+    }>(`
+      SELECT * FROM signals 
+      WHERE LOWER(project_handle) = LOWER($1)
+      ORDER BY COALESCE(tweet_timestamp, noted_at::timestamp) DESC
+    `, [projectHandle]);
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      twitterUsername: row.twitter_username,
+      sentiment: row.sentiment,
+      tweetUrl: row.tweet_url,
+      tweetContent: row.tweet_content || undefined,
+      projectHandle: row.project_handle,
+      notedAt: row.noted_at.toISOString().slice(0, 10),
+      tweetTimestamp: row.tweet_timestamp?.toISOString(),
+      projectUserId: row.project_user_id || undefined,
+      projectDisplayName: row.project_display_name || undefined,
+      projectAvatarUrl: row.project_avatar_url || undefined,
+      createdAt: row.created_at.getTime(),
+    }));
+  } catch (error) {
+    console.error("Failed to get signals by project:", error);
+    return [];
+  }
+}
+
 // Verified projects functions
 export async function saveVerifiedProject(project: VerifiedProject): Promise<boolean> {
   const client = await getDbClient();

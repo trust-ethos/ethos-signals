@@ -161,7 +161,7 @@ export default function SignalsForm({ username }: Props) {
                 {projectStats.map(stat => (
                 <a
                   key={stat.projectKey}
-                  href={`#asset-${stat.projectKey}`}
+                  href={stat.project ? `/${stat.project.type}/${stat.project.twitterUsername}` : `#asset-${stat.projectKey}`}
                   class="flex items-center gap-2 px-3 py-2 glass-subtle hover:glass border border-white/10 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20"
                 >
                   {stat.avatarUrl && (
@@ -214,11 +214,16 @@ export default function SignalsForm({ username }: Props) {
                     <div class="flex items-center gap-3">
                       {project ? (
                         <>
-                          <img src={project.avatarUrl} class="w-10 h-10 rounded-full border-2 border-blue-500/50 shadow-lg shadow-blue-500/30" alt={project.displayName} />
-                          <div class="flex-1">
-                            <div class="font-semibold text-lg text-white">{project.displayName}</div>
-                            <div class="text-sm text-gray-400">@{project.twitterUsername}</div>
-                          </div>
+                          <a 
+                            href={`/${project.type}/${project.twitterUsername}`}
+                            class="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity group"
+                          >
+                            <img src={project.avatarUrl} class="w-10 h-10 rounded-full border-2 border-blue-500/50 shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform" alt={project.displayName} />
+                            <div class="flex-1">
+                              <div class="font-semibold text-lg text-white group-hover:text-blue-400 transition-colors">{project.displayName}</div>
+                              <div class="text-sm text-gray-400">@{project.twitterUsername}</div>
+                            </div>
+                          </a>
                         </>
                       ) : (
                         <div class="flex-1">
@@ -397,7 +402,7 @@ export default function SignalsForm({ username }: Props) {
                 {projectStats.map(stat => (
                   <a
                     key={stat.projectKey}
-                    href={`#asset-${stat.projectKey}`}
+                    href={stat.project ? `/${stat.project.type}/${stat.project.twitterUsername}` : `#asset-${stat.projectKey}`}
                     class="flex items-center gap-3 px-3 py-3 glass-subtle hover:glass border border-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/20"
                   >
                     {stat.avatarUrl && (

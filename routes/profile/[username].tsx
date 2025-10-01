@@ -181,6 +181,14 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                 </a>
                 <span class="text-xl font-bold text-white">Signals</span>
               </div>
+              <div class="flex items-center space-x-4">
+                <a 
+                  href="/projects" 
+                  class="text-gray-400 hover:text-white transition-all duration-300 px-4 py-2 rounded-lg hover:bg-white/10"
+                >
+                  Verified Projects
+                </a>
+              </div>
             </div>
           </div>
         </nav>

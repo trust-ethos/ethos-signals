@@ -16,15 +16,22 @@ import * as $api_signals_username_ from "./routes/api/signals/[username].ts";
 import * as $api_signals_recent from "./routes/api/signals/recent.ts";
 import * as $api_verified_index from "./routes/api/verified/index.ts";
 import * as $index from "./routes/index.tsx";
+import * as $nft_handle_ from "./routes/nft/[handle].tsx";
+import * as $pre_tge_handle_ from "./routes/pre-tge/[handle].tsx";
 import * as $profile_username_ from "./routes/profile/[username].tsx";
+import * as $projects from "./routes/projects.tsx";
+import * as $token_handle_ from "./routes/token/[handle].tsx";
 import * as $AdminVerified from "./islands/AdminVerified.tsx";
+import * as $NFTPageIsland from "./islands/NFTPageIsland.tsx";
 import * as $PerformanceMetrics from "./islands/PerformanceMetrics.tsx";
+import * as $PreTGEPageIsland from "./islands/PreTGEPageIsland.tsx";
 import * as $PriceChart from "./islands/PriceChart.tsx";
 import * as $RecentSignalsInfinite from "./islands/RecentSignalsInfinite.tsx";
 import * as $RelativeTime from "./islands/RelativeTime.tsx";
 import * as $SearchForm from "./islands/SearchForm.tsx";
 import * as $SignalPerformance from "./islands/SignalPerformance.tsx";
 import * as $SignalsForm from "./islands/SignalsForm.tsx";
+import * as $TokenPageIsland from "./islands/TokenPageIsland.tsx";
 import * as $TradersCarousel from "./islands/TradersCarousel.tsx";
 import { type Manifest } from "$fresh/server.ts";
 
@@ -44,17 +51,24 @@ const manifest = {
     "./routes/api/signals/recent.ts": $api_signals_recent,
     "./routes/api/verified/index.ts": $api_verified_index,
     "./routes/index.tsx": $index,
+    "./routes/nft/[handle].tsx": $nft_handle_,
+    "./routes/pre-tge/[handle].tsx": $pre_tge_handle_,
     "./routes/profile/[username].tsx": $profile_username_,
+    "./routes/projects.tsx": $projects,
+    "./routes/token/[handle].tsx": $token_handle_,
   },
   islands: {
     "./islands/AdminVerified.tsx": $AdminVerified,
+    "./islands/NFTPageIsland.tsx": $NFTPageIsland,
     "./islands/PerformanceMetrics.tsx": $PerformanceMetrics,
+    "./islands/PreTGEPageIsland.tsx": $PreTGEPageIsland,
     "./islands/PriceChart.tsx": $PriceChart,
     "./islands/RecentSignalsInfinite.tsx": $RecentSignalsInfinite,
     "./islands/RelativeTime.tsx": $RelativeTime,
     "./islands/SearchForm.tsx": $SearchForm,
     "./islands/SignalPerformance.tsx": $SignalPerformance,
     "./islands/SignalsForm.tsx": $SignalsForm,
+    "./islands/TokenPageIsland.tsx": $TokenPageIsland,
     "./islands/TradersCarousel.tsx": $TradersCarousel,
   },
   baseUrl: import.meta.url,

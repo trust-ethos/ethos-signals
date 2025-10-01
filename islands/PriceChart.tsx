@@ -219,7 +219,7 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         if (priceData.length > 0) {
           areaSeries.setData(priceData);
           
-          // Show markers with bull/bear arrows and text
+          // Show markers with usernames
           const markers = signals.map(signal => {
             const timestamp = Math.floor(new Date(signal.timestamp).getTime() / 1000) as Time;
             const isBullish = signal.sentiment === "bullish";
@@ -229,7 +229,7 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
               position: isBullish ? "belowBar" as const : "aboveBar" as const,
               color: isBullish ? "#22c55e" : "#ef4444",
               shape: isBullish ? "arrowUp" as const : "arrowDown" as const,
-              text: isBullish ? "Bull" : "Bear",
+              text: signal.twitterUsername,
             };
           });
           
