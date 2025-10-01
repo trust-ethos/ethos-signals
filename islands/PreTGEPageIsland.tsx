@@ -45,7 +45,6 @@ interface Props {
 export default function PreTGEPageIsland({ initialSignals }: Props) {
   const [signals] = useState<Signal[]>(initialSignals);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [activeTab, setActiveTab] = useState<"leaderboard" | "signals">("leaderboard");
 
   useEffect(() => {
     // Calculate leaderboard from signals
@@ -83,7 +82,7 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
   return (
     <div class="space-y-6">
       {/* Launch Status */}
-      <div class="glass-strong rounded-2xl p-6 border border-purple-500/30 bg-purple-500/10">
+      <div class="glass-strong rounded-2xl p-6 border border-white/10">
         <div class="flex items-center justify-center gap-4">
           <div class="text-4xl">🚀</div>
           <div>
@@ -93,39 +92,12 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div class="flex gap-2 bg-black/20 p-2 rounded-xl border border-white/10">
-        <button
-          type="button"
-          onClick={() => setActiveTab("leaderboard")}
-          class={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-            activeTab === "leaderboard"
-              ? "bg-purple-600 text-white shadow-lg"
-              : "text-gray-400 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          🏆 Leaderboard
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("signals")}
-          class={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-            activeTab === "signals"
-              ? "bg-purple-600 text-white shadow-lg"
-              : "text-gray-400 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          📢 All Signals
-        </button>
-      </div>
-
-      {/* Leaderboard Tab */}
-      {activeTab === "leaderboard" && (
-        <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
-          <div class="p-6">
-            <h2 class="text-2xl font-bold text-white mb-6">Early Supporters</h2>
+      {/* Top Performers - Short List */}
+      <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold text-white mb-6">🏆 Early Supporters</h2>
             <div class="space-y-3">
-              {leaderboard.map((entry, index) => (
+              {leaderboard.slice(0, 5).map((entry, index) => (
                 <a
                   key={entry.username}
                   href={`/profile/${entry.username}`}
@@ -140,10 +112,10 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
                   <img 
                     src={entry.avatarUrl} 
                     alt={entry.displayName}
-                    class="w-12 h-12 rounded-full border-2 border-purple-500/50"
+                    class="w-12 h-12 rounded-full border-2 border-blue-500/50"
                   />
                   <div class="flex-1">
-                    <div class="font-semibold text-white group-hover:text-purple-400 transition-colors">
+                    <div class="font-semibold text-white group-hover:text-blue-400 transition-colors">
                       {entry.displayName}
                     </div>
                     <div class="text-sm text-gray-400">
@@ -175,15 +147,13 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
                 </div>
               )}
             </div>
-          </div>
         </div>
-      )}
+      </div>
 
-      {/* Signals Tab */}
-      {activeTab === "signals" && (
-        <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
-          <div class="p-6">
-            <h2 class="text-2xl font-bold text-white mb-6">All Signals</h2>
+      {/* All Signals */}
+      <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold text-white mb-6">📢 All Signals</h2>
             <div class="space-y-4">
               {signals.map(signal => (
                 <div key={signal.id} class="p-4 rounded-xl bg-white/5 border border-white/10">
@@ -193,7 +163,7 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
                         <img 
                           src={signal.user.avatarUrl} 
                           alt={signal.user.displayName}
-                          class="w-12 h-12 rounded-full border-2 border-purple-500/50 hover:scale-110 transition-transform"
+                          class="w-12 h-12 rounded-full border-2 border-blue-500/50 hover:scale-110 transition-transform"
                         />
                       </a>
                     )}
@@ -202,7 +172,7 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
                         {signal.user && (
                           <a 
                             href={`/profile/${signal.user.username || signal.twitterUsername}`}
-                            class="font-semibold text-white hover:text-purple-400"
+                            class="font-semibold text-white hover:text-blue-400"
                           >
                             {signal.user.displayName}
                           </a>
@@ -219,7 +189,7 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
                         href={signal.tweetUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-sm text-purple-400 hover:text-purple-300"
+                        class="text-sm text-blue-400 hover:text-blue-300"
                       >
                         View Tweet →
                       </a>
@@ -234,9 +204,8 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
                 </div>
               )}
             </div>
-          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

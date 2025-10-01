@@ -50,7 +50,6 @@ interface Props {
 export default function TokenPageIsland({ project, initialSignals }: Props) {
   const [signals] = useState<Signal[]>(initialSignals);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [activeTab, setActiveTab] = useState<"chart" | "leaderboard" | "signals">("chart");
 
   useEffect(() => {
     // Calculate leaderboard from signals
@@ -88,71 +87,12 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
 
   return (
     <div class="space-y-6">
-      {/* Tab Navigation */}
-      <div class="flex gap-2 bg-black/20 p-2 rounded-xl border border-white/10">
-        <button
-          type="button"
-          onClick={() => setActiveTab("chart")}
-          class={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-            activeTab === "chart"
-              ? "bg-blue-600 text-white shadow-lg"
-              : "text-gray-400 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          📊 Price Chart
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("leaderboard")}
-          class={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-            activeTab === "leaderboard"
-              ? "bg-blue-600 text-white shadow-lg"
-              : "text-gray-400 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          🏆 Leaderboard
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("signals")}
-          class={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-            activeTab === "signals"
-              ? "bg-blue-600 text-white shadow-lg"
-              : "text-gray-400 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          📢 All Signals
-        </button>
-      </div>
-
-      {/* Chart Tab */}
-      {activeTab === "chart" && (
-        <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
-          <div class="p-6">
-            <h2 class="text-2xl font-bold text-white mb-4">Price History</h2>
-            <PriceChart
-              coinGeckoId={project.coinGeckoId}
-              chain={project.chain}
-              address={project.link}
-              signals={signals.map(s => ({
-                timestamp: s.tweetTimestamp || s.notedAt,
-                sentiment: s.sentiment,
-                tweetContent: s.tweetContent,
-                twitterUsername: s.twitterUsername,
-              }))}
-              projectName={project.displayName}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Leaderboard Tab */}
-      {activeTab === "leaderboard" && (
-        <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
-          <div class="p-6">
-            <h2 class="text-2xl font-bold text-white mb-6">Top Performers</h2>
-            <div class="space-y-3">
-              {leaderboard.map((entry, index) => (
+      {/* Top Performers - Short List */}
+      <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold text-white mb-6">🏆 Top Performers</h2>
+          <div class="space-y-3">
+            {leaderboard.slice(0, 5).map((entry, index) => (
                 <a
                   key={entry.username}
                   href={`/profile/${entry.username}`}
@@ -204,13 +144,30 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
             </div>
           </div>
         </div>
-      )}
+      
+      {/* Price History Chart */}
+      <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold text-white mb-4">📊 Price History</h2>
+          <PriceChart
+            coinGeckoId={project.coinGeckoId}
+            chain={project.chain}
+            address={project.link}
+            signals={signals.map(s => ({
+              timestamp: s.tweetTimestamp || s.notedAt,
+              sentiment: s.sentiment,
+              tweetContent: s.tweetContent,
+              twitterUsername: s.twitterUsername,
+            }))}
+            projectName={project.displayName}
+          />
+        </div>
+      </div>
 
-      {/* Signals Tab */}
-      {activeTab === "signals" && (
-        <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
-          <div class="p-6">
-            <h2 class="text-2xl font-bold text-white mb-6">All Signals</h2>
+      {/* All Signals */}
+      <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold text-white mb-6">📢 All Signals</h2>
             <div class="space-y-4">
               {signals.map(signal => (
                 <div key={signal.id} class="p-4 rounded-xl bg-white/5 border border-white/10">
@@ -261,9 +218,8 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                 </div>
               )}
             </div>
-          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

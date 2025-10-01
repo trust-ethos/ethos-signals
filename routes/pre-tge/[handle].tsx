@@ -84,11 +84,11 @@ export default function PreTGEPage({ data }: PageProps<PreTGEPageData>) {
         <meta name="description" content={`View all trading signals for ${data.project.displayName} (Pre-TGE)`} />
       </Head>
       
-      <div class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+      <div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
         <div class="container mx-auto px-4 py-8">
           {/* Project Header */}
           <div class="mb-8">
-            <a href="/" class="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 mb-6">
+            <a href="/" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-6">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
@@ -100,12 +100,12 @@ export default function PreTGEPage({ data }: PageProps<PreTGEPageData>) {
                 <img 
                   src={data.project.avatarUrl} 
                   alt={data.project.displayName}
-                  class="w-24 h-24 rounded-full border-4 border-purple-500/50 shadow-xl"
+                  class="w-24 h-24 rounded-full border-4 border-blue-500/50 shadow-xl"
                 />
                 <div class="flex-1">
                   <div class="flex items-center gap-3 mb-2">
                     <h1 class="text-4xl font-bold text-white">{data.project.displayName}</h1>
-                    <span class="px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/50 rounded-full text-sm font-semibold">
+                    <span class="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/50 rounded-full text-sm font-semibold">
                       🚀 Pre-TGE
                     </span>
                   </div>
@@ -114,7 +114,7 @@ export default function PreTGEPage({ data }: PageProps<PreTGEPageData>) {
                     {data.project.ticker && (
                       <>
                         <span>•</span>
-                        <span class="font-semibold text-purple-400">${data.project.ticker}</span>
+                        <span class="font-semibold text-blue-400">${data.project.ticker}</span>
                       </>
                     )}
                   </div>
