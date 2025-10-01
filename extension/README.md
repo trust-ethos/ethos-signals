@@ -2,6 +2,31 @@
 
 Track bullish and bearish trading signals directly from X.com tweets.
 
+## 🛠️ Local Development Mode
+
+The extension can point at your local development server with **one click**!
+
+### Quick Setup
+
+1. **Start your local server**:
+   ```bash
+   deno task start
+   # Runs on http://localhost:8000
+   ```
+
+2. **Toggle local mode**:
+   - Click the extension icon (in Chrome toolbar)
+   - Toggle "Local Dev Mode" switch **ON**
+   - Badge changes from `PROD` to `LOCAL` 🎉
+
+3. **Reload X.com** and start testing!
+
+4. **To go back to production**: Toggle switch **OFF**
+
+That's it! See [LOCAL_DEV.md](./LOCAL_DEV.md) for advanced options and troubleshooting.
+
+---
+
 ## Installation
 
 ### For Users (Easy Method)

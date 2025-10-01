@@ -2,14 +2,43 @@
 // Much faster than PostgreSQL for caching, especially on Deno Deploy
 
 let kv: Deno.Kv | null = null;
+let kvAvailable: boolean | null = null;
+
+/**
+ * Check if Deno KV is available
+ * Returns false in environments without KV support (requires --unstable-kv flag locally)
+ */
+function isKvAvailable(): boolean {
+  if (kvAvailable !== null) return kvAvailable;
+  
+  try {
+    kvAvailable = typeof Deno.openKv === 'function';
+    return kvAvailable;
+  } catch {
+    kvAvailable = false;
+    return false;
+  }
+}
 
 /**
  * Get or initialize the Deno KV instance
  * On Deno Deploy, this automatically connects to the distributed KV store
+ * Returns null if KV is not available
  */
-async function getKv(): Promise<Deno.Kv> {
+async function getKv(): Promise<Deno.Kv | null> {
+  if (!isKvAvailable()) {
+    return null;
+  }
+  
   if (!kv) {
-    kv = await Deno.openKv();
+    try {
+      kv = await Deno.openKv();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn('Deno KV not available (run with --unstable-kv flag):', message);
+      kvAvailable = false;
+      return null;
+    }
   }
   return kv;
 }
@@ -21,6 +50,8 @@ async function getKv(): Promise<Deno.Kv> {
 export async function getCachedPrice(cacheKey: string): Promise<number | null> {
   try {
     const db = await getKv();
+    if (!db) return null; // KV not available, skip caching
+    
     const result = await db.get<number>(["price_cache", cacheKey]);
     
     // KV automatically handles expiration via TTL
@@ -44,6 +75,8 @@ export async function setCachedPrice(
 ): Promise<boolean> {
   try {
     const db = await getKv();
+    if (!db) return false; // KV not available, skip caching
+    
     const expiresIn = Math.floor(expirationHours * 60 * 60 * 1000); // Convert to milliseconds
     
     await db.set(["price_cache", cacheKey], price, { expireIn: expiresIn });
@@ -61,6 +94,8 @@ export async function setCachedPrice(
 export async function deleteCachedPrice(cacheKey: string): Promise<boolean> {
   try {
     const db = await getKv();
+    if (!db) return false; // KV not available
+    
     await db.delete(["price_cache", cacheKey]);
     return true;
   } catch (error) {
@@ -75,6 +110,8 @@ export async function deleteCachedPrice(cacheKey: string): Promise<boolean> {
 export async function getCacheStats(): Promise<{ totalEntries: number }> {
   try {
     const db = await getKv();
+    if (!db) return { totalEntries: 0 }; // KV not available
+    
     let totalEntries = 0;
     
     // List all cache entries to count them
@@ -96,6 +133,8 @@ export async function getCacheStats(): Promise<{ totalEntries: number }> {
 export async function clearAllCache(): Promise<boolean> {
   try {
     const db = await getKv();
+    if (!db) return false; // KV not available
+    
     const entries = db.list({ prefix: ["price_cache"] });
     
     for await (const entry of entries) {
@@ -118,6 +157,8 @@ export async function getCachedPrices(cacheKeys: string[]): Promise<Map<string, 
   
   try {
     const db = await getKv();
+    if (!db) return results; // KV not available
+    
     const keys = cacheKeys.map(key => ["price_cache", key]);
     const values = await db.getMany<number[]>(keys);
     
@@ -143,6 +184,7 @@ export async function setCachedPrices(
 ): Promise<boolean> {
   try {
     const db = await getKv();
+    if (!db) return false; // KV not available
     
     // Use atomic operation for batch writes
     let atomic = db.atomic();

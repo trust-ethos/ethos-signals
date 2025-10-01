@@ -36,6 +36,90 @@
     .btn:hover {
       opacity: 0.9;
     }
+    
+    .settings {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .setting-label {
+      font-size: 13px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+    
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    
+    .toggle input:checked + .toggle-slider {
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    }
+    
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    
+    .env-indicator {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .env-prod {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    
+    .env-local {
+      background: #fef3c7;
+      color: #92400e;
+    }
   </style>
 </head>
 <body>
@@ -48,6 +132,22 @@
     <button class="btn" id="open-dashboard">
       Open Dashboard
     </button>
+    
+    <div class="settings">
+      <div class="setting-row">
+        <span class="setting-label">
+          <span>Local Dev Mode</span>
+          <span id="env-badge" class="env-indicator env-prod">PROD</span>
+        </span>
+        <label class="toggle">
+          <input type="checkbox" id="local-dev-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">
+        Toggle to use localhost:8000
+      </div>
+    </div>
   </div>
 
   <script src="popup.js"></script>
