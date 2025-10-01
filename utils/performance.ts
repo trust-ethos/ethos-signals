@@ -1,14 +1,14 @@
 // Performance calculation utilities for trading signals
 
 export interface PerformanceMetrics {
-  shortTerm: number | null; // Average of 1d and 7d
-  longTerm: number | null;  // Average of 28d and all-time
-  d1: number | null;
-  d7: number | null;
-  d28: number | null;
-  allTime: number | null;
+  shortTerm: number | null; // Average return % across 1d and 7d periods
+  longTerm: number | null;  // Average return % across 28d and all-time periods
+  d1: number | null;        // Average 1-day return %
+  d7: number | null;        // Average 7-day return %
+  d28: number | null;       // Average 28-day return %
+  allTime: number | null;   // Average all-time return %
   totalSignals: number;
-  correctSignals: {
+  correctSignals: {         // Count of correct predictions (for reference)
     d1: number;
     d7: number;
     d28: number;
@@ -46,6 +46,7 @@ function isSignalCorrect(
 
 /**
  * Calculate performance metrics for a set of signals
+ * Returns average percentage returns, not accuracy
  */
 export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMetrics {
   const totalSignals = signals.length;
@@ -62,6 +63,11 @@ export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMet
       correctSignals: { d1: 0, d7: 0, d28: 0, allTime: 0 }
     };
   }
+  
+  let sum1d = 0;
+  let sum7d = 0;
+  let sum28d = 0;
+  let sumAllTime = 0;
   
   let correct1d = 0;
   let correct7d = 0;
@@ -80,6 +86,7 @@ export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMet
     if (callPrice && signal.priceAt1d !== null && signal.priceAt1d !== undefined) {
       count1d++;
       const priceChange = ((signal.priceAt1d - callPrice) / callPrice) * 100;
+      sum1d += priceChange;
       if (isSignalCorrect(signal.sentiment, priceChange)) {
         correct1d++;
       }
@@ -89,6 +96,7 @@ export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMet
     if (callPrice && signal.priceAt7d !== null && signal.priceAt7d !== undefined) {
       count7d++;
       const priceChange = ((signal.priceAt7d - callPrice) / callPrice) * 100;
+      sum7d += priceChange;
       if (isSignalCorrect(signal.sentiment, priceChange)) {
         correct7d++;
       }
@@ -98,6 +106,7 @@ export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMet
     if (callPrice && signal.priceAt28d !== null && signal.priceAt28d !== undefined) {
       count28d++;
       const priceChange = ((signal.priceAt28d - callPrice) / callPrice) * 100;
+      sum28d += priceChange;
       if (isSignalCorrect(signal.sentiment, priceChange)) {
         correct28d++;
       }
@@ -107,26 +116,27 @@ export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMet
     if (callPrice && signal.currentPrice !== null && signal.currentPrice !== undefined) {
       countAllTime++;
       const priceChange = ((signal.currentPrice - callPrice) / callPrice) * 100;
+      sumAllTime += priceChange;
       if (isSignalCorrect(signal.sentiment, priceChange)) {
         correctAllTime++;
       }
     }
   }
   
-  // Calculate percentages
-  const d1Accuracy = count1d > 0 ? (correct1d / count1d) * 100 : null;
-  const d7Accuracy = count7d > 0 ? (correct7d / count7d) * 100 : null;
-  const d28Accuracy = count28d > 0 ? (correct28d / count28d) * 100 : null;
-  const allTimeAccuracy = countAllTime > 0 ? (correctAllTime / countAllTime) * 100 : null;
+  // Calculate average returns (not accuracy)
+  const d1Avg = count1d > 0 ? sum1d / count1d : null;
+  const d7Avg = count7d > 0 ? sum7d / count7d : null;
+  const d28Avg = count28d > 0 ? sum28d / count28d : null;
+  const allTimeAvg = countAllTime > 0 ? sumAllTime / countAllTime : null;
   
-  // Calculate short-term (average of 1d and 7d)
-  const shortTermValues = [d1Accuracy, d7Accuracy].filter(v => v !== null) as number[];
+  // Calculate short-term (average of 1d and 7d returns)
+  const shortTermValues = [d1Avg, d7Avg].filter(v => v !== null) as number[];
   const shortTerm = shortTermValues.length > 0 
     ? shortTermValues.reduce((a, b) => a + b, 0) / shortTermValues.length 
     : null;
   
-  // Calculate long-term (average of 28d and all-time)
-  const longTermValues = [d28Accuracy, allTimeAccuracy].filter(v => v !== null) as number[];
+  // Calculate long-term (average of 28d and all-time returns)
+  const longTermValues = [d28Avg, allTimeAvg].filter(v => v !== null) as number[];
   const longTerm = longTermValues.length > 0 
     ? longTermValues.reduce((a, b) => a + b, 0) / longTermValues.length 
     : null;
@@ -134,10 +144,10 @@ export function calculatePerformance(signals: SignalWithPrice[]): PerformanceMet
   return {
     shortTerm,
     longTerm,
-    d1: d1Accuracy,
-    d7: d7Accuracy,
-    d28: d28Accuracy,
-    allTime: allTimeAccuracy,
+    d1: d1Avg,
+    d7: d7Avg,
+    d28: d28Avg,
+    allTime: allTimeAvg,
     totalSignals,
     correctSignals: {
       d1: correct1d,

@@ -182,11 +182,11 @@ export default function SignalsForm({ username }: Props) {
                       const longTerm = perf?.longTerm;
                       return (
                         <>
-                          <div class={`text-sm font-bold ${shortTerm !== null && shortTerm !== undefined ? (shortTerm >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
-                            {shortTerm !== null && shortTerm !== undefined ? `${shortTerm.toFixed(0)}%` : '--'}
+                          <div class={`text-sm font-bold ${shortTerm !== null && shortTerm !== undefined ? (shortTerm >= 0 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
+                            {shortTerm !== null && shortTerm !== undefined ? `${shortTerm >= 0 ? '+' : ''}${shortTerm.toFixed(0)}%` : '--'}
                           </div>
-                          <div class={`text-xs font-medium ${longTerm !== null && longTerm !== undefined ? (longTerm >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
-                            {longTerm !== null && longTerm !== undefined ? `${longTerm.toFixed(0)}%` : '--'}
+                          <div class={`text-xs font-medium ${longTerm !== null && longTerm !== undefined ? (longTerm >= 0 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
+                            {longTerm !== null && longTerm !== undefined ? `${longTerm >= 0 ? '+' : ''}${longTerm.toFixed(0)}%` : '--'}
                           </div>
                         </>
                       );
@@ -408,11 +408,11 @@ export default function SignalsForm({ username }: Props) {
                         const longTerm = perf?.longTerm;
                         return (
                           <>
-                            <div class={`text-xl font-bold ${shortTerm !== null && shortTerm !== undefined ? (shortTerm >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
-                              {shortTerm !== null && shortTerm !== undefined ? `${shortTerm.toFixed(0)}%` : '--'}
+                            <div class={`text-xl font-bold ${shortTerm !== null && shortTerm !== undefined ? (shortTerm >= 0 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
+                              {shortTerm !== null && shortTerm !== undefined ? `${shortTerm >= 0 ? '+' : ''}${shortTerm.toFixed(0)}%` : '--'}
                             </div>
-                            <div class={`text-sm font-medium ${longTerm !== null && longTerm !== undefined ? (longTerm >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
-                              {longTerm !== null && longTerm !== undefined ? `${longTerm.toFixed(0)}%` : '--'}
+                            <div class={`text-sm font-medium ${longTerm !== null && longTerm !== undefined ? (longTerm >= 0 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}`}>
+                              {longTerm !== null && longTerm !== undefined ? `${longTerm >= 0 ? '+' : ''}${longTerm.toFixed(0)}%` : '--'}
                             </div>
                           </>
                         );
