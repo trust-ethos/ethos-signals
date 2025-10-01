@@ -11,7 +11,7 @@ interface Props {
     avatarUrl: string; 
     type: ProjectType; 
     link?: string; 
-    chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
+    chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid";
     coinGeckoId?: string;
     ticker?: string;
   }>;
@@ -23,7 +23,7 @@ export default function AdminVerified({ initialItems }: Props) {
   const [selected, setSelected] = useState<EthosUser | null>(null);
   const [type, setType] = useState<ProjectType>("token");
   const [link, setLink] = useState("");
-  const [chain, setChain] = useState<"ethereum" | "base" | "solana" | "bsc" | "plasma">("ethereum");
+  const [chain, setChain] = useState<"ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid">("ethereum");
   const [coinGeckoId, setCoinGeckoId] = useState("");
   const [ticker, setTicker] = useState("");
   const [items, setItems] = useState(initialItems);
@@ -120,12 +120,13 @@ export default function AdminVerified({ initialItems }: Props) {
           <option value="pre_tge">Pre-TGE</option>
           <option value="nft">NFT</option>
         </select>
-        <select class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" value={chain} onInput={(e) => setChain((e.target as HTMLSelectElement).value as "ethereum" | "base" | "solana" | "bsc" | "plasma")}>
+        <select class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" value={chain} onInput={(e) => setChain((e.target as HTMLSelectElement).value as "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid")}>
           <option value="ethereum">Ethereum</option>
           <option value="base">Base</option>
           <option value="solana">Solana</option>
           <option value="bsc">BSC</option>
           <option value="plasma">Plasma</option>
+          <option value="hyperliquid">Hyperliquid</option>
         </select>
         <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="Contract address (optional)" value={link} onInput={(e) => setLink((e.target as HTMLInputElement).value)} />
         <input class="flex h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 transition-all" placeholder="CoinGecko ID (for Layer 1 tokens)" value={coinGeckoId} onInput={(e) => setCoinGeckoId((e.target as HTMLInputElement).value)} />

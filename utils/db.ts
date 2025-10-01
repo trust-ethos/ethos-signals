@@ -103,7 +103,7 @@ export async function initializeDatabase(): Promise<void> {
         display_name TEXT NOT NULL,
         avatar_url TEXT NOT NULL,
         type TEXT NOT NULL CHECK (type IN ('token', 'nft', 'pre_tge')),
-        chain TEXT DEFAULT 'ethereum' CHECK (chain IN ('ethereum', 'base', 'solana', 'bsc', 'plasma')),
+        chain TEXT DEFAULT 'ethereum' CHECK (chain IN ('ethereum', 'base', 'solana', 'bsc', 'plasma', 'hyperliquid')),
         link TEXT,
         coingecko_id TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

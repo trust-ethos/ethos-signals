@@ -32,7 +32,7 @@ export interface VerifiedProject {
   displayName: string;
   avatarUrl: string;
   type: VerifiedProjectType;
-  chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
+  chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid";
   link?: string;
   coinGeckoId?: string; // For Layer 1 tokens without contracts
   ticker?: string; // Token ticker symbol (e.g., MKR, ETH, XPL)

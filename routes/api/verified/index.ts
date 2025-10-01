@@ -73,7 +73,7 @@ export const handler: Handlers = {
           avatarUrl: string;
           type: VerifiedProjectType;
           link?: string;
-          chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
+          chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid";
           coinGeckoId?: string;
           ticker?: string;
         };

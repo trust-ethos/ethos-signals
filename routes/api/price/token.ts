@@ -13,7 +13,7 @@ export const handler: Handlers = {
   },
   async GET(req) {
     const url = new URL(req.url);
-    const chain = (url.searchParams.get("chain") as "ethereum" | "base" | "solana" | "bsc" | "plasma") ?? "ethereum";
+    const chain = (url.searchParams.get("chain") as "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid") ?? "ethereum";
     const address = url.searchParams.get("address");
     const date = url.searchParams.get("date"); // yyyy-mm-dd optional
     const timestamp = url.searchParams.get("timestamp"); // ISO datetime optional

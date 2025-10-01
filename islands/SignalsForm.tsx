@@ -22,7 +22,7 @@ interface SignalItem {
   projectAvatarUrl?: string;
 }
 
-type Chain = "ethereum" | "base" | "solana" | "bsc" | "plasma";
+type Chain = "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid";
 
 interface VerifiedItem {
   id: string;
@@ -306,7 +306,7 @@ export default function SignalsForm({ username }: Props) {
                           return (
                             <PriceDelta
                               id={s.id}
-                              chain={(project.chain ?? 'ethereum') as 'ethereum' | 'base' | 'solana' | 'bsc' | 'plasma'}
+                              chain={(project.chain ?? 'ethereum') as Chain}
                               address={project.link!}
                               notedAt={s.notedAt}
                               tweetTimestamp={s.tweetTimestamp}
@@ -429,7 +429,7 @@ export default function SignalsForm({ username }: Props) {
   );
 }
 
-function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: { id: string; chain: 'ethereum' | 'base' | 'solana' | 'bsc' | 'plasma'; address: string; notedAt: string; tweetTimestamp?: string; sentiment: Sentiment }) {
+function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: { id: string; chain: Chain; address: string; notedAt: string; tweetTimestamp?: string; sentiment: Sentiment }) {
   const [data, setData] = useState<{ call?: number|null; d1?: number|null; d7?: number|null; d28?: number|null; current?: number|null } | null>(null);
   useEffect(() => {
     (async () => {

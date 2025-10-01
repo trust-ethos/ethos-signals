@@ -10,7 +10,7 @@ interface Props {
   tweetTimestamp?: string;
   project?: {
     type: "token" | "nft" | "pre_tge";
-    chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
+    chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid";
     link?: string;
     coinGeckoId?: string;
   };

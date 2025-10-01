@@ -14,7 +14,7 @@ function findPriceInResponse(data: { coins?: Record<string, { price?: number }> 
 }
 
 export async function getDefiLlamaTokenPriceAt(
-  chainOrId: "ethereum" | "base" | "solana" | "bsc" | "plasma" | string,
+  chainOrId: "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid" | string,
   addressOrEmpty: string,
   atDateISO: string,
 ): Promise<number | null> {
@@ -50,7 +50,7 @@ export async function getDefiLlamaTokenPriceAt(
 }
 
 export async function getDefiLlamaTokenPriceAtTimestamp(
-  chain: "ethereum" | "base" | "solana" | "bsc" | "plasma",
+  chain: "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid",
   address: string,
   timestamp: string, // ISO datetime string
 ): Promise<number | null> {
@@ -79,7 +79,7 @@ export async function getDefiLlamaTokenPriceAtTimestamp(
 }
 
 export async function getDefiLlamaTokenPriceNow(
-  chainOrId: "ethereum" | "base" | "solana" | "bsc" | "plasma" | string,
+  chainOrId: "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid" | string,
   address?: string,
 ): Promise<number | null> {
   // If chainOrId contains "coingecko:", it's a CoinGecko ID, otherwise it's a chain:address pair

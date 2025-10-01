@@ -21,7 +21,7 @@ interface Project {
   displayName: string;
   avatarUrl: string;
   type: "token" | "nft" | "pre_tge";
-  chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma";
+  chain?: "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid";
   link?: string;
   coinGeckoId?: string;
   ticker?: string;
