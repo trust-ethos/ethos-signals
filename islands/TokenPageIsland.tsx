@@ -312,14 +312,36 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
       
       // Fetch performance data for each user
       const leaderboardEntries = Array.from(userMap.values());
+      let hasPerformanceData = false;
+      
       await Promise.all(
         leaderboardEntries.map(async (entry) => {
           try {
             const res = await fetch(`/api/performance/${entry.username}`);
             const data = await res.json();
             
-            // Get performance for this specific project
-            const projectPerf = data.byAsset?.[project.twitterUsername.toLowerCase()];
+            // Log all available asset keys to debug
+            console.log(`Available assets for ${entry.username}:`, Object.keys(data.byAsset || {}));
+            
+            // Try different key formats
+            const possibleKeys = [
+              project.twitterUsername.toLowerCase(),
+              `@${project.twitterUsername.toLowerCase()}`,
+              project.twitterUsername,
+              `@${project.twitterUsername}`,
+            ];
+            
+            let projectPerf = null;
+            let matchedKey = null;
+            
+            for (const key of possibleKeys) {
+              if (data.byAsset?.[key]) {
+                projectPerf = data.byAsset[key];
+                matchedKey = key;
+                break;
+              }
+            }
+            
             if (projectPerf) {
               entry.shortTerm = projectPerf.shortTerm;
               entry.longTerm = projectPerf.longTerm;
@@ -330,13 +352,20 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                 ? metrics.reduce((a, b) => a + b, 0) / metrics.length 
                 : null;
               
-              console.log(`Performance for ${entry.username} on ${project.twitterUsername}:`, {
+              if (entry.performance !== null) {
+                hasPerformanceData = true;
+              }
+              
+              console.log(`Performance for ${entry.username} on ${matchedKey}:`, {
                 shortTerm: entry.shortTerm,
                 longTerm: entry.longTerm,
                 overall: entry.performance
               });
             } else {
-              console.log(`No performance data found for ${entry.username} on ${project.twitterUsername}`);
+              console.log(`No performance data found for ${entry.username} on ${project.twitterUsername}`, {
+                triedKeys: possibleKeys,
+                availableKeys: Object.keys(data.byAsset || {})
+              });
             }
           } catch (error) {
             console.error(`Failed to fetch performance for ${entry.username}:`, error);
@@ -344,18 +373,17 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
         })
       );
       
-      // Sort by performance (highest first), then by signal count
-      const sortedLeaderboard = leaderboardEntries.sort((a, b) => {
-        // If both have performance data, sort by performance
-        if (a.performance !== null && b.performance !== null) {
-          return b.performance - a.performance;
-        }
-        // If only one has performance, prioritize it
-        if (a.performance !== null) return -1;
-        if (b.performance !== null) return 1;
-        // Otherwise sort by signal count
-        return b.signalCount - a.signalCount;
-      });
+      // If no performance data found for any user, show error
+      if (!hasPerformanceData) {
+        setLeaderboard([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Sort by performance (highest first)
+      const sortedLeaderboard = leaderboardEntries
+        .filter(entry => entry.performance !== null)
+        .sort((a, b) => b.performance! - a.performance!);
       
       setLeaderboard(sortedLeaderboard);
       setLoading(false);
@@ -373,6 +401,11 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
           {loading ? (
             <div class="text-center py-12 text-gray-400">
               Loading performance data...
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div class="text-center py-12">
+              <div class="text-red-400 font-semibold mb-2">Unable to load performance data</div>
+              <div class="text-sm text-gray-400">Performance metrics are not available for this token</div>
             </div>
           ) : (
             <div class="space-y-3">
@@ -427,12 +460,6 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                   </div>
                 </a>
               ))}
-              
-                {leaderboard.length === 0 && (
-                  <div class="text-center py-12 text-gray-400">
-                    No signals yet for this token
-                  </div>
-                )}
               </div>
             )}
           </div>

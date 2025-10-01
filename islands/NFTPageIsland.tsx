@@ -198,15 +198,28 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
     // Fetch performance for each user
     const fetchPerformance = async () => {
       const leaderboardData: LeaderboardEntry[] = [];
+      let hasPerformanceData = false;
       
       for (const [username, data] of userMap) {
         try {
           const res = await fetch(`/api/performance/${username}`);
           const perfData = await res.json();
           
-          // Get performance for this specific NFT
-          const projectKey = project.twitterUsername.toLowerCase();
-          const projectPerf = perfData.byAsset?.[projectKey];
+          // Try different key formats
+          const possibleKeys = [
+            project.twitterUsername.toLowerCase(),
+            `@${project.twitterUsername.toLowerCase()}`,
+            project.twitterUsername,
+            `@${project.twitterUsername}`,
+          ];
+          
+          let projectPerf = null;
+          for (const key of possibleKeys) {
+            if (perfData.byAsset?.[key]) {
+              projectPerf = perfData.byAsset[key];
+              break;
+            }
+          }
           
           // Calculate overall performance (average of short-term and long-term)
           let performance: number | null = null;
@@ -220,6 +233,7 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
             }
             if (values.length > 0) {
               performance = values.reduce((a, b) => a + b, 0) / values.length;
+              hasPerformanceData = true;
             }
           }
           
@@ -237,34 +251,22 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
           });
         } catch (error) {
           console.error(`Failed to fetch performance for ${username}:`, error);
-          
-          // Add without performance data
-          leaderboardData.push({
-            username,
-            displayName: data.user!.displayName,
-            avatarUrl: data.user!.avatarUrl,
-            score: data.user!.score,
-            signalCount: data.signals.length,
-            performance: null,
-            shortTerm: null,
-            longTerm: null,
-            bullishCount: data.bullish,
-            bearishCount: data.bearish,
-          });
         }
       }
       
-      // Sort by performance (highest first), then by signal count
-      leaderboardData.sort((a, b) => {
-        if (a.performance !== null && b.performance !== null) {
-          return b.performance - a.performance;
-        }
-        if (a.performance !== null) return -1;
-        if (b.performance !== null) return 1;
-        return b.signalCount - a.signalCount;
-      });
+      // If no performance data found, show error
+      if (!hasPerformanceData) {
+        setLeaderboard([]);
+        setLoading(false);
+        return;
+      }
       
-      setLeaderboard(leaderboardData);
+      // Sort by performance (highest first), only include those with performance data
+      const sortedLeaderboard = leaderboardData
+        .filter(entry => entry.performance !== null)
+        .sort((a, b) => b.performance! - a.performance!);
+      
+      setLeaderboard(sortedLeaderboard);
       setLoading(false);
     };
     
@@ -281,6 +283,11 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
           {loading ? (
             <div class="text-center py-12 text-gray-400">
               Loading performance data...
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div class="text-center py-12">
+              <div class="text-red-400 font-semibold mb-2">Unable to load performance data</div>
+              <div class="text-sm text-gray-400">Performance metrics are not available for this NFT</div>
             </div>
           ) : (
             <div class="space-y-3">
@@ -335,12 +342,6 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
                   </div>
                 </a>
               ))}
-              
-                {leaderboard.length === 0 && (
-                  <div class="text-center py-12 text-gray-400">
-                    No signals yet for this NFT
-                  </div>
-                )}
               </div>
             )}
           </div>
