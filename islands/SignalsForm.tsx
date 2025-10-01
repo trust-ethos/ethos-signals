@@ -244,18 +244,28 @@ export default function SignalsForm({ username }: Props) {
                   {/* Price Chart with Signal Markers */}
                   {project && signals.length > 0 && (
                     <div class="p-4 bg-black/20 border-b border-white/10">
-                      <PriceChart
-                        coinGeckoId={project.coinGeckoId}
-                        chain={project.chain}
-                        address={project.link}
-                        signals={signals.map(s => ({
-                          timestamp: s.tweetTimestamp || s.notedAt,
-                          sentiment: s.sentiment,
-                          tweetContent: s.tweetContent,
-                          twitterUsername: username, // The person who made the signal
-                        }))}
-                        projectName={project.displayName}
-                      />
+                      {project.type === 'pre_tge' ? (
+                        <div class="flex items-center justify-center py-12 px-6">
+                          <div class="text-center">
+                            <div class="text-4xl mb-4">🚀</div>
+                            <div class="text-lg font-semibold text-white mb-2">Launches Soon</div>
+                            <div class="text-sm text-gray-400">No price data available yet</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <PriceChart
+                          coinGeckoId={project.coinGeckoId}
+                          chain={project.chain}
+                          address={project.link}
+                          signals={signals.map(s => ({
+                            timestamp: s.tweetTimestamp || s.notedAt,
+                            sentiment: s.sentiment,
+                            tweetContent: s.tweetContent,
+                            twitterUsername: username, // The person who made the signal
+                          }))}
+                          projectName={project.displayName}
+                        />
+                      )}
                     </div>
                   )}
                   
