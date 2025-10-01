@@ -84,7 +84,6 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
       {/* Launch Status */}
       <div class="glass-strong rounded-2xl p-6 border border-white/10">
         <div class="flex items-center justify-center gap-4">
-          <div class="text-4xl">🚀</div>
           <div>
             <div class="text-xl font-bold text-white">Launches Soon</div>
             <div class="text-sm text-gray-400">Price data will be available after TGE</div>
@@ -95,7 +94,7 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
       {/* Top Performers - Short List */}
       <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-6">
-          <h2 class="text-2xl font-bold text-white mb-6">🏆 Early Supporters</h2>
+          <h2 class="text-2xl font-bold text-white mb-6">Early Supporters</h2>
             <div class="space-y-3">
               {leaderboard.slice(0, 5).map((entry, index) => (
                 <a
@@ -153,7 +152,7 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
       {/* All Signals */}
       <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-6">
-          <h2 class="text-2xl font-bold text-white mb-6">📢 All Signals</h2>
+          <h2 class="text-2xl font-bold text-white mb-6">All Signals</h2>
             <div class="space-y-4">
               {signals.map(signal => (
                 <div key={signal.id} class="p-4 rounded-xl bg-white/5 border border-white/10">
@@ -178,7 +177,7 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
                           </a>
                         )}
                         <Badge variant={signal.sentiment === "bullish" ? "success" : "destructive"} class="text-xs">
-                          {signal.sentiment === "bullish" ? "🐂 Bullish" : "🐻 Bearish"}
+                          {signal.sentiment === "bullish" ? "Bullish" : "Bearish"}
                         </Badge>
                         <span class="text-sm text-gray-400">
                           {new Date(signal.tweetTimestamp || signal.notedAt).toLocaleDateString()}

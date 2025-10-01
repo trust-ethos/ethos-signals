@@ -276,7 +276,7 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
       {/* Top Performers Leaderboard */}
       <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-6">
-          <h2 class="text-2xl font-bold text-white mb-4">🏆 Top Performers</h2>
+          <h2 class="text-2xl font-bold text-white mb-4">Top Performers</h2>
           
           {loading ? (
             <div class="text-center py-12 text-gray-400">
@@ -349,7 +349,7 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
       {/* Price History Chart */}
       <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-6">
-          <h2 class="text-2xl font-bold text-white mb-4">📊 Floor Price History</h2>
+          <h2 class="text-2xl font-bold text-white mb-4">Floor Price History</h2>
           <PriceChart
             coinGeckoId={project.coinGeckoId}
             chain={project.chain}
@@ -368,7 +368,7 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
       {/* All Signals */}
       <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-6">
-          <h2 class="text-2xl font-bold text-white mb-6">📢 All Signals</h2>
+          <h2 class="text-2xl font-bold text-white mb-6">All Signals</h2>
             <div class="space-y-4">
               {signals.map(signal => (
                 <div key={signal.id} class="p-4 rounded-xl bg-white/5 border border-white/10">
@@ -393,7 +393,7 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
                           </a>
                         )}
                         <Badge variant={signal.sentiment === "bullish" ? "success" : "destructive"} class="text-xs">
-                          {signal.sentiment === "bullish" ? "🐂 Bullish" : "🐻 Bearish"}
+                          {signal.sentiment === "bullish" ? "Bullish" : "Bearish"}
                         </Badge>
                         <span class="text-sm text-gray-400">
                           {new Date(signal.tweetTimestamp || signal.notedAt).toLocaleDateString()}
