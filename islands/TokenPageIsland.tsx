@@ -37,7 +37,9 @@ interface LeaderboardEntry {
   avatarUrl: string;
   score: number;
   signalCount: number;
-  performance: number | null;
+  performance: number | null; // Average of short-term + long-term
+  shortTerm: number | null;
+  longTerm: number | null;
   bullishCount: number;
   bearishCount: number;
 }
@@ -50,40 +52,84 @@ interface Props {
 export default function TokenPageIsland({ project, initialSignals }: Props) {
   const [signals] = useState<Signal[]>(initialSignals);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Calculate leaderboard from signals
-    const userMap = new Map<string, LeaderboardEntry>();
-    
-    signals.forEach(signal => {
-      if (!signal.user) return;
+    async function calculateLeaderboard() {
+      // Calculate leaderboard from signals
+      const userMap = new Map<string, LeaderboardEntry>();
       
-      const username = signal.user.username || signal.twitterUsername;
+      signals.forEach(signal => {
+        if (!signal.user) return;
+        
+        const username = signal.user.username || signal.twitterUsername;
+        
+        if (!userMap.has(username)) {
+          userMap.set(username, {
+            username,
+            displayName: signal.user.displayName,
+            avatarUrl: signal.user.avatarUrl,
+            score: signal.user.score,
+            signalCount: 0,
+            performance: null,
+            shortTerm: null,
+            longTerm: null,
+            bullishCount: 0,
+            bearishCount: 0,
+          });
+        }
+        
+        const entry = userMap.get(username)!;
+        entry.signalCount++;
+        if (signal.sentiment === 'bullish') entry.bullishCount++;
+        if (signal.sentiment === 'bearish') entry.bearishCount++;
+      });
       
-      if (!userMap.has(username)) {
-        userMap.set(username, {
-          username,
-          displayName: signal.user.displayName,
-          avatarUrl: signal.user.avatarUrl,
-          score: signal.user.score,
-          signalCount: 0,
-          performance: null, // Will be calculated via API
-          bullishCount: 0,
-          bearishCount: 0,
-        });
-      }
+      // Fetch performance data for each user
+      const leaderboardEntries = Array.from(userMap.values());
+      await Promise.all(
+        leaderboardEntries.map(async (entry) => {
+          try {
+            const res = await fetch(`/api/performance/${entry.username}`);
+            const data = await res.json();
+            
+            // Get performance for this specific project
+            const projectPerf = data.byAsset?.[project.twitterUsername.toLowerCase()];
+            if (projectPerf) {
+              entry.shortTerm = projectPerf.shortTerm;
+              entry.longTerm = projectPerf.longTerm;
+              
+              // Calculate overall performance (average of available metrics)
+              const metrics = [projectPerf.shortTerm, projectPerf.longTerm].filter(m => m !== null && m !== undefined);
+              entry.performance = metrics.length > 0 
+                ? metrics.reduce((a, b) => a + b, 0) / metrics.length 
+                : null;
+            }
+          } catch (error) {
+            console.error(`Failed to fetch performance for ${entry.username}:`, error);
+          }
+        })
+      );
       
-      const entry = userMap.get(username)!;
-      entry.signalCount++;
-      if (signal.sentiment === 'bullish') entry.bullishCount++;
-      if (signal.sentiment === 'bearish') entry.bearishCount++;
-    });
+      // Sort by performance (highest first), then by signal count
+      const sortedLeaderboard = leaderboardEntries.sort((a, b) => {
+        // If both have performance data, sort by performance
+        if (a.performance !== null && b.performance !== null) {
+          return b.performance - a.performance;
+        }
+        // If only one has performance, prioritize it
+        if (a.performance !== null) return -1;
+        if (b.performance !== null) return 1;
+        // Otherwise sort by signal count
+        return b.signalCount - a.signalCount;
+      });
+      
+      setLeaderboard(sortedLeaderboard);
+      setLoading(false);
+    }
     
-    const leaderboardData = Array.from(userMap.values())
-      .sort((a, b) => b.signalCount - a.signalCount);
-    
-    setLeaderboard(leaderboardData);
-  }, [signals]);
+    calculateLeaderboard();
+  }, [signals, project.twitterUsername]);
 
   return (
     <div class="space-y-6">
@@ -91,8 +137,13 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
       <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-6">
           <h2 class="text-2xl font-bold text-white mb-6">🏆 Top Performers</h2>
-          <div class="space-y-3">
-            {leaderboard.slice(0, 5).map((entry, index) => (
+          {loading ? (
+            <div class="text-center py-12 text-gray-400">
+              Loading performance data...
+            </div>
+          ) : (
+            <div class="space-y-3">
+              {leaderboard.slice(0, 5).map((entry, index) => (
                 <a
                   key={entry.username}
                   href={`/profile/${entry.username}`}
@@ -118,8 +169,16 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                     </div>
                   </div>
                   
-                  {/* Stats */}
+                  {/* Performance & Stats */}
                   <div class="flex gap-6 text-sm">
+                    {entry.performance !== null && (
+                      <div class="text-center">
+                        <div class={`text-lg font-bold ${entry.performance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {entry.performance >= 0 ? '+' : ''}{entry.performance.toFixed(0)}%
+                        </div>
+                        <div class="text-gray-400">Performance</div>
+                      </div>
+                    )}
                     <div class="text-center">
                       <div class="text-white font-bold">{entry.signalCount}</div>
                       <div class="text-gray-400">Signals</div>
@@ -136,12 +195,13 @@ export default function TokenPageIsland({ project, initialSignals }: Props) {
                 </a>
               ))}
               
-              {leaderboard.length === 0 && (
-                <div class="text-center py-12 text-gray-400">
-                  No signals yet for this token
-                </div>
-              )}
-            </div>
+                {leaderboard.length === 0 && (
+                  <div class="text-center py-12 text-gray-400">
+                    No signals yet for this token
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       

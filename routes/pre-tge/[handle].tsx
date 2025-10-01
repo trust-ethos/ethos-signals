@@ -84,7 +84,7 @@ export default function PreTGEPage({ data }: PageProps<PreTGEPageData>) {
         <meta name="description" content={`View all trading signals for ${data.project.displayName} (Pre-TGE)`} />
       </Head>
       
-      <div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
+      <div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-900">
         <div class="container mx-auto px-4 py-8">
           {/* Project Header */}
           <div class="mb-8">
