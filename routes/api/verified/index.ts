@@ -1,5 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 import { createUlid, deleteVerifiedProject, listVerifiedProjects, saveVerifiedProject, type VerifiedProjectType } from "../../../utils/database.ts";
+import { lookupCoinGeckoId } from "../../../utils/coingecko-lookup.ts";
 
 // Simple authentication check
 function checkAuth(req: Request): boolean {
@@ -66,7 +67,7 @@ export const handler: Handlers = {
     }
 
     const body = await req.json();
-        const { ethosUserId, twitterUsername, displayName, avatarUrl, type, link, chain, coinGeckoId, ticker } = body as {
+        let { ethosUserId, twitterUsername, displayName, avatarUrl, type, link, chain, coinGeckoId, ticker } = body as {
           ethosUserId: number;
           twitterUsername: string;
           displayName: string;
@@ -80,6 +81,19 @@ export const handler: Handlers = {
     if (!ethosUserId || !twitterUsername || !displayName || !avatarUrl || !type) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
     }
+
+    // Auto-lookup CoinGecko ID if not provided but contract address exists (tokens only)
+    if (type === "token" && link && !coinGeckoId) {
+      console.log(`🔍 Auto-looking up CoinGecko ID for ${displayName} (${link})...`);
+      const foundId = await lookupCoinGeckoId(link, chain ?? "ethereum");
+      if (foundId) {
+        coinGeckoId = foundId;
+        console.log(`✅ Auto-found CoinGecko ID: ${foundId}`);
+      } else {
+        console.log(`⚠️  No CoinGecko ID found, will use daily data from DefiLlama`);
+      }
+    }
+
     const ok = await saveVerifiedProject({
       id: createUlid(),
       ethosUserId,
