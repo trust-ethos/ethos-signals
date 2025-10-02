@@ -1,8 +1,10 @@
 import { Handlers } from "$fresh/server.ts";
 import { getMoralisNFTFloorAt, getMoralisNFTFloorNow } from "../../../utils/nft-price.ts";
 
+type SupportedChain = "ethereum" | "base" | "bsc" | "hyperliquid" | "polygon" | "arbitrum" | "optimism";
+
 export const handler: Handlers = {
-  async OPTIONS() {
+  OPTIONS() {
     return new Response(null, {
       headers: {
         "access-control-allow-origin": "*",
@@ -13,7 +15,7 @@ export const handler: Handlers = {
   },
   async GET(req) {
     const url = new URL(req.url);
-    const chain = (url.searchParams.get("chain") as "ethereum" | "base") ?? "ethereum";
+    const chain = (url.searchParams.get("chain") as SupportedChain) ?? "ethereum";
     const address = url.searchParams.get("address");
     const date = url.searchParams.get("date"); // yyyy-mm-dd optional
     

@@ -9,6 +9,8 @@ import * as $api_coins_search from "./routes/api/coins/search.ts";
 import * as $api_performance_username_ from "./routes/api/performance/[username].ts";
 import * as $api_price_chart from "./routes/api/price/chart.ts";
 import * as $api_price_coingecko from "./routes/api/price/coingecko.ts";
+import * as $api_price_dexscreener from "./routes/api/price/dexscreener.ts";
+import * as $api_price_nft_chart from "./routes/api/price/nft-chart.ts";
 import * as $api_price_nft from "./routes/api/price/nft.ts";
 import * as $api_price_token from "./routes/api/price/token.ts";
 import * as $api_search from "./routes/api/search.ts";
@@ -45,6 +47,8 @@ const manifest = {
     "./routes/api/performance/[username].ts": $api_performance_username_,
     "./routes/api/price/chart.ts": $api_price_chart,
     "./routes/api/price/coingecko.ts": $api_price_coingecko,
+    "./routes/api/price/dexscreener.ts": $api_price_dexscreener,
+    "./routes/api/price/nft-chart.ts": $api_price_nft_chart,
     "./routes/api/price/nft.ts": $api_price_nft,
     "./routes/api/price/token.ts": $api_price_token,
     "./routes/api/search.ts": $api_search,

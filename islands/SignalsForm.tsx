@@ -163,8 +163,8 @@ export default function SignalsForm({ username }: Props) {
                 {projectStats.map(stat => (
                 <a
                   key={stat.projectKey}
-                  href={stat.project ? `/${stat.project.type}/${stat.project.twitterUsername}` : `#asset-${stat.projectKey}`}
-                  class="flex items-center gap-2 px-3 py-2 glass-subtle hover:glass border border-white/10 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20"
+                  href={`#asset-${stat.projectKey}`}
+                  class="flex items-center gap-2 px-3 py-2 glass-subtle hover:glass border border-white/10 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
                 >
                   {stat.avatarUrl && (
                     <img src={stat.avatarUrl} class="w-6 h-6 rounded-full" alt={stat.displayName} />
@@ -420,8 +420,8 @@ export default function SignalsForm({ username }: Props) {
                 {projectStats.map(stat => (
                   <a
                     key={stat.projectKey}
-                    href={stat.project ? `/${stat.project.type}/${stat.project.twitterUsername}` : `#asset-${stat.projectKey}`}
-                    class="flex items-center gap-3 px-3 py-3 glass-subtle hover:glass border border-white/10 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/20"
+                    href={`#asset-${stat.projectKey}`}
+                    class="flex items-center gap-3 px-3 py-3 glass-subtle hover:glass border border-white/10 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
                   >
                     {stat.avatarUrl && (
                       <img src={stat.avatarUrl} class="w-10 h-10 rounded-full flex-shrink-0" alt={stat.displayName} />

@@ -89,11 +89,11 @@ function NFTPriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment 
         fetchCurrent(),
       ]);
       setData({ 
-        call: p0.price ?? null, 
-        d1: p1.price ?? null, 
-        d7: p7.price ?? null, 
-        d28: p28.price ?? null,
-        current: pCurrent.price ?? null
+        call: p0.floorPrice ?? null, 
+        d1: p1.floorPrice ?? null, 
+        d7: p7.floorPrice ?? null, 
+        d28: p28.floorPrice ?? null,
+        current: pCurrent.floorPrice ?? null
       });
     })();
   }, [id, chain, address, notedAt, tweetTimestamp]);
@@ -359,7 +359,7 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
       {/* Price History Chart */}
       <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-6">
-          <h2 class="text-2xl font-bold text-white mb-4">Floor Price History</h2>
+          <h2 class="text-2xl font-bold text-white mb-4">{project.displayName} Floor Price History</h2>
           <PriceChart
             coinGeckoId={project.coinGeckoId}
             chain={project.chain}
@@ -371,6 +371,7 @@ export default function NFTPageIsland({ project, initialSignals }: Props) {
               twitterUsername: s.twitterUsername,
             }))}
             projectName={project.displayName}
+            isNFT
           />
         </div>
       </div>

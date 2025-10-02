@@ -20,9 +20,10 @@ interface Props {
   address?: string;
   signals: Signal[];
   projectName: string;
+  isNFT?: boolean;  // NEW: Flag to indicate this is an NFT
 }
 
-export default function PriceChart({ coinGeckoId, chain, address, signals, projectName }: Props) {
+export default function PriceChart({ coinGeckoId, chain, address, signals, projectName, isNFT = false }: Props) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
@@ -91,7 +92,6 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
           top: 0.1,    // Reduced from default 0.2 (10% padding instead of 20%)
           bottom: 0.1, // Reduced from default 0.2 (10% padding instead of 20%)
         },
-        minMove: 0.00000001, // Allow very small price movements
       },
     });
 
@@ -164,7 +164,22 @@ export default function PriceChart({ coinGeckoId, chain, address, signals, proje
         // Fetch price data based on what's available
         let priceData: Array<{ time: Time; value: number }> = [];
         
-        if (coinGeckoId) {
+        if (isNFT && chain && address) {
+          // Use NFT chart endpoint for floor price history
+          const days = Math.ceil((now - startTime) / (24 * 60 * 60 * 1000));
+          
+          const response = await fetch(
+            `/api/price/nft-chart?chain=${chain}&address=${address}&days=${days}`
+          );
+          const data = await response.json();
+          
+          if (data.data && Array.isArray(data.data)) {
+            priceData = data.data.map(({ date, floorPrice }: { date: string; floorPrice: number }) => ({
+              time: date as Time,  // Use date string format for daily data
+              value: floorPrice,
+            }));
+          }
+        } else if (coinGeckoId) {
           // CoinGecko provides 5-minute data through market_chart/range
           // We can aggregate this based on the selected interval
           const from = Math.floor(startTime / 1000);
