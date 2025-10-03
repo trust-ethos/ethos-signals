@@ -27,50 +27,21 @@ export async function lookupCoinGeckoId(
       return null;
     }
 
-    // Search by contract address
-    const searchUrl = `https://api.coingecko.com/api/v3/search?query=${contractAddress}`;
-    const response = await fetch(searchUrl);
+    // Use the direct contract lookup endpoint - most reliable method
+    const contractUrl = `https://api.coingecko.com/api/v3/coins/${cgChain}/contract/${contractAddress}`;
+    const contractResponse = await fetch(contractUrl);
 
-    if (!response.ok) {
-      console.log(`CoinGecko API error: ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-
-    // Look for exact match in search results
-    for (const coin of data.coins || []) {
-      const platforms = coin.platforms || {};
-      const platformAddress = platforms[cgChain]?.toLowerCase();
-
-      if (platformAddress === contractAddress.toLowerCase()) {
-        console.log(`✅ Found CoinGecko ID: ${coin.id} for ${contractAddress}`);
-        return coin.id;
+    if (contractResponse.ok) {
+      const data = await contractResponse.json();
+      if (data.id) {
+        console.log(`✅ Found CoinGecko ID: ${data.id} for ${contractAddress}`);
+        return data.id;
       }
     }
 
-    // If no exact match, try fetching details for top 3 results
-    for (const coin of (data.coins || []).slice(0, 3)) {
-      try {
-        const detailUrl = `https://api.coingecko.com/api/v3/coins/${coin.id}`;
-        const detailResponse = await fetch(detailUrl);
-
-        if (detailResponse.ok) {
-          const detail = await detailResponse.json();
-          const platformAddress = detail.platforms?.[cgChain]?.toLowerCase();
-
-          if (platformAddress === contractAddress.toLowerCase()) {
-            console.log(`✅ Found CoinGecko ID: ${detail.id} for ${contractAddress}`);
-            return detail.id;
-          }
-        }
-
-        // Small delay between detail requests
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        console.log(`Error fetching CoinGecko details for ${coin.id}:`, message);
-      }
+    // If direct lookup fails (404 or other error), log but don't spam
+    if (contractResponse.status !== 404) {
+      console.log(`CoinGecko API error: ${contractResponse.status}`);
     }
 
     console.log(`No CoinGecko ID found for ${contractAddress} on ${chain}`);
