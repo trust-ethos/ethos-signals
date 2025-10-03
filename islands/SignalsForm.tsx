@@ -530,7 +530,7 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
             <span class="font-medium">
               {reached(1) && data.d1 ? (
                 <>
-                  {fmt(data.d1)}
+                  <span class="text-white">{fmt(data.d1)}</span>
                   {(() => { const p = pct(data.call, data.d1); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
@@ -541,7 +541,7 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
             <span class="font-medium">
               {reached(7) && data.d7 ? (
                 <>
-                  {fmt(data.d7)}
+                  <span class="text-white">{fmt(data.d7)}</span>
                   {(() => { const p = pct(data.call, data.d7); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
@@ -552,7 +552,7 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
             <span class="font-medium">
               {reached(28) && data.d28 ? (
                 <>
-                  {fmt(data.d28)}
+                  <span class="text-white">{fmt(data.d28)}</span>
                   {(() => { const p = pct(data.call, data.d28); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
@@ -676,7 +676,7 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             <span class="font-medium">
               {reached(1) && data.d1 ? (
                 <>
-                  {fmt(data.d1)}
+                  <span class="text-white">{fmt(data.d1)}</span>
                   {(() => { const p = pct(data.call, data.d1); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
@@ -687,7 +687,7 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             <span class="font-medium">
               {reached(7) && data.d7 ? (
                 <>
-                  {fmt(data.d7)}
+                  <span class="text-white">{fmt(data.d7)}</span>
                   {(() => { const p = pct(data.call, data.d7); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
@@ -698,7 +698,7 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             <span class="font-medium">
               {reached(28) && data.d28 ? (
                 <>
-                  {fmt(data.d28)}
+                  <span class="text-white">{fmt(data.d28)}</span>
                   {(() => { const p = pct(data.call, data.d28); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
