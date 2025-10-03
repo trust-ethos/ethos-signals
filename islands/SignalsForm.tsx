@@ -519,84 +519,103 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
   
   return (
     <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10">
-      <div class="grid grid-cols-2 gap-4 text-xs">
-        {/* Left Column - Historical Prices */}
-        <div class="space-y-2">
-          <div>
-            <div class="text-gray-400 mb-1">Call Price:</div>
-            <div class="font-mono font-semibold text-white text-sm">{fmt(data.call)}</div>
-          </div>
-          <div>
-            <div class="text-gray-400 mb-1">+1 Day:</div>
-            {reached(1) && data.d1 ? (
-              <div class="grid grid-cols-2 gap-2">
-                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.d1)}
-                </div>
-                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d1) !== null ? `${pct(data.call, data.d1)! >= 0 ? '+' : ''}${pct(data.call, data.d1)!.toFixed(1)}%` : ''}
-                </div>
-              </div>
-            ) : <div class="font-mono text-gray-500">—</div>}
-          </div>
-          <div>
-            <div class="text-gray-400 mb-1">+7 Days:</div>
-            {reached(7) && data.d7 ? (
-              <div class="grid grid-cols-2 gap-2">
-                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.d7)}
-                </div>
-                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d7) !== null ? `${pct(data.call, data.d7)! >= 0 ? '+' : ''}${pct(data.call, data.d7)!.toFixed(1)}%` : ''}
-                </div>
-              </div>
-            ) : <div class="font-mono text-gray-500">—</div>}
-          </div>
-          <div>
-            <div class="text-gray-400 mb-1">+28 Days:</div>
-            {reached(28) && data.d28 ? (
-              <div class="grid grid-cols-2 gap-2">
-                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.d28)}
-                </div>
-                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d28) !== null ? `${pct(data.call, data.d28)! >= 0 ? '+' : ''}${pct(data.call, data.d28)!.toFixed(1)}%` : ''}
-                </div>
-              </div>
-            ) : <div class="font-mono text-gray-500">—</div>}
-          </div>
+      <div class="space-y-1.5 text-xs">
+        {/* Call Price */}
+        <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+          <span class="text-gray-400">Call Price:</span>
+          <span class="font-mono font-semibold text-white text-sm">{fmt(data.call)}</span>
+          <span></span>
         </div>
         
-        {/* Right Column - Current Performance */}
-        <div class="border-l border-white/10 pl-4 space-y-2">
-          {currentPct !== null ? (
+        {/* +1 Day */}
+        <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+          <span class="text-gray-400">+1 Day:</span>
+          {reached(1) && data.d1 ? (
             <>
-              <div>
-                <div class="text-white font-medium text-[11px] mb-1">Performance as of Today:</div>
-                <div class={"font-mono text-xl font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
-                </div>
-              </div>
-              <div>
-                <div class="text-white font-medium mb-1">Current:</div>
-                <div class={"font-mono font-semibold text-sm " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.current)}
-                </div>
-              </div>
-              <div class="pt-1 border-t border-white/5">
-                <div class="text-white font-medium text-[11px] mb-1">Accuracy as of Today:</div>
-                <div class={"font-semibold " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
-                  {isCorrect ? '✅ Correct' : '❌ Wrong'}
-                </div>
-              </div>
+              <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {fmt(data.d1)}
+              </span>
+              <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {pct(data.call, data.d1) !== null ? `${pct(data.call, data.d1)! >= 0 ? '+' : ''}${pct(data.call, data.d1)!.toFixed(1)}%` : ''}
+              </span>
             </>
           ) : (
-            <div>
-              <div class="text-white font-medium mb-1">Current:</div>
-              <div class="font-mono font-semibold text-white text-sm">{fmt(data.current)}</div>
-            </div>
+            <>
+              <span class="font-mono text-gray-500">—</span>
+              <span></span>
+            </>
           )}
         </div>
+        
+        {/* +7 Days */}
+        <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+          <span class="text-gray-400">+7 Days:</span>
+          {reached(7) && data.d7 ? (
+            <>
+              <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {fmt(data.d7)}
+              </span>
+              <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {pct(data.call, data.d7) !== null ? `${pct(data.call, data.d7)! >= 0 ? '+' : ''}${pct(data.call, data.d7)!.toFixed(1)}%` : ''}
+              </span>
+            </>
+          ) : (
+            <>
+              <span class="font-mono text-gray-500">—</span>
+              <span></span>
+            </>
+          )}
+        </div>
+        
+        {/* +28 Days */}
+        <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+          <span class="text-gray-400">+28 Days:</span>
+          {reached(28) && data.d28 ? (
+            <>
+              <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {fmt(data.d28)}
+              </span>
+              <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {pct(data.call, data.d28) !== null ? `${pct(data.call, data.d28)! >= 0 ? '+' : ''}${pct(data.call, data.d28)!.toFixed(1)}%` : ''}
+              </span>
+            </>
+          ) : (
+            <>
+              <span class="font-mono text-gray-500">—</span>
+              <span></span>
+            </>
+          )}
+        </div>
+        
+        {/* Divider */}
+        <div class="border-t border-white/10 my-2"></div>
+        
+        {/* Current Performance */}
+        {currentPct !== null ? (
+          <>
+            <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+              <span class="text-white font-medium">Current:</span>
+              <span class={"font-mono font-semibold text-sm " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {fmt(data.current)}
+              </span>
+              <span class={"font-mono text-xl font-bold text-right " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
+              </span>
+            </div>
+            <div class="grid grid-cols-[100px_1fr] gap-3 items-center pt-1">
+              <span class="text-white font-medium text-[11px]">Accuracy:</span>
+              <span class={"font-semibold " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
+                {isCorrect ? '✅ Correct' : '❌ Wrong'}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+            <span class="text-white font-medium">Current:</span>
+            <span class="font-mono font-semibold text-white text-sm">{fmt(data.current)}</span>
+            <span></span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -678,84 +697,103 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
   
   return (
     <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10">
-      <div class="grid grid-cols-2 gap-4 text-xs">
-        {/* Left Column - Historical Prices */}
-        <div class="space-y-2">
-          <div>
-            <div class="text-gray-400 mb-1">Call Price:</div>
-            <div class="font-mono font-semibold text-white text-sm">{fmt(data.call)}</div>
-          </div>
-          <div>
-            <div class="text-gray-400 mb-1">+1 Day:</div>
-            {reached(1) && data.d1 ? (
-              <div class="grid grid-cols-2 gap-2">
-                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.d1)}
-                </div>
-                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d1) !== null ? `${pct(data.call, data.d1)! >= 0 ? '+' : ''}${pct(data.call, data.d1)!.toFixed(1)}%` : ''}
-                </div>
-              </div>
-            ) : <div class="font-mono text-gray-500">—</div>}
-          </div>
-          <div>
-            <div class="text-gray-400 mb-1">+7 Days:</div>
-            {reached(7) && data.d7 ? (
-              <div class="grid grid-cols-2 gap-2">
-                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.d7)}
-                </div>
-                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d7) !== null ? `${pct(data.call, data.d7)! >= 0 ? '+' : ''}${pct(data.call, data.d7)!.toFixed(1)}%` : ''}
-                </div>
-              </div>
-            ) : <div class="font-mono text-gray-500">—</div>}
-          </div>
-          <div>
-            <div class="text-gray-400 mb-1">+28 Days:</div>
-            {reached(28) && data.d28 ? (
-              <div class="grid grid-cols-2 gap-2">
-                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.d28)}
-                </div>
-                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d28) !== null ? `${pct(data.call, data.d28)! >= 0 ? '+' : ''}${pct(data.call, data.d28)!.toFixed(1)}%` : ''}
-                </div>
-              </div>
-            ) : <div class="font-mono text-gray-500">—</div>}
-          </div>
+      <div class="space-y-1.5 text-xs">
+        {/* Call Price */}
+        <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+          <span class="text-gray-400">Call Price:</span>
+          <span class="font-mono font-semibold text-white text-sm">{fmt(data.call)}</span>
+          <span></span>
         </div>
         
-        {/* Right Column - Current Performance */}
-        <div class="border-l border-white/10 pl-4 space-y-2">
-          {currentPct !== null ? (
+        {/* +1 Day */}
+        <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+          <span class="text-gray-400">+1 Day:</span>
+          {reached(1) && data.d1 ? (
             <>
-              <div>
-                <div class="text-white font-medium text-[11px] mb-1">Performance as of Today:</div>
-                <div class={"font-mono text-xl font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
-                </div>
-              </div>
-              <div>
-                <div class="text-white font-medium mb-1">Current:</div>
-                <div class={"font-mono font-semibold text-sm " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.current)}
-                </div>
-              </div>
-              <div class="pt-1 border-t border-white/5">
-                <div class="text-white font-medium text-[11px] mb-1">Accuracy as of Today:</div>
-                <div class={"font-semibold " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
-                  {isCorrect ? '✅ Correct' : '❌ Wrong'}
-                </div>
-              </div>
+              <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {fmt(data.d1)}
+              </span>
+              <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {pct(data.call, data.d1) !== null ? `${pct(data.call, data.d1)! >= 0 ? '+' : ''}${pct(data.call, data.d1)!.toFixed(1)}%` : ''}
+              </span>
             </>
           ) : (
-            <div>
-              <div class="text-white font-medium mb-1">Current:</div>
-              <div class="font-mono font-semibold text-white text-sm">{fmt(data.current)}</div>
-            </div>
+            <>
+              <span class="font-mono text-gray-500">—</span>
+              <span></span>
+            </>
           )}
         </div>
+        
+        {/* +7 Days */}
+        <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+          <span class="text-gray-400">+7 Days:</span>
+          {reached(7) && data.d7 ? (
+            <>
+              <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {fmt(data.d7)}
+              </span>
+              <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {pct(data.call, data.d7) !== null ? `${pct(data.call, data.d7)! >= 0 ? '+' : ''}${pct(data.call, data.d7)!.toFixed(1)}%` : ''}
+              </span>
+            </>
+          ) : (
+            <>
+              <span class="font-mono text-gray-500">—</span>
+              <span></span>
+            </>
+          )}
+        </div>
+        
+        {/* +28 Days */}
+        <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+          <span class="text-gray-400">+28 Days:</span>
+          {reached(28) && data.d28 ? (
+            <>
+              <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {fmt(data.d28)}
+              </span>
+              <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {pct(data.call, data.d28) !== null ? `${pct(data.call, data.d28)! >= 0 ? '+' : ''}${pct(data.call, data.d28)!.toFixed(1)}%` : ''}
+              </span>
+            </>
+          ) : (
+            <>
+              <span class="font-mono text-gray-500">—</span>
+              <span></span>
+            </>
+          )}
+        </div>
+        
+        {/* Divider */}
+        <div class="border-t border-white/10 my-2"></div>
+        
+        {/* Current Performance */}
+        {currentPct !== null ? (
+          <>
+            <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+              <span class="text-white font-medium">Current:</span>
+              <span class={"font-mono font-semibold text-sm " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {fmt(data.current)}
+              </span>
+              <span class={"font-mono text-xl font-bold text-right " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+                {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
+              </span>
+            </div>
+            <div class="grid grid-cols-[100px_1fr] gap-3 items-center pt-1">
+              <span class="text-white font-medium text-[11px]">Accuracy:</span>
+              <span class={"font-semibold " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
+                {isCorrect ? '✅ Correct' : '❌ Wrong'}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div class="grid grid-cols-[100px_1fr_80px] gap-3 items-center">
+            <span class="text-white font-medium">Current:</span>
+            <span class="font-mono font-semibold text-white text-sm">{fmt(data.current)}</span>
+            <span></span>
+          </div>
+        )}
       </div>
     </div>
   );
