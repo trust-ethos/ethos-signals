@@ -281,37 +281,13 @@ export default function SignalsForm({ username }: Props) {
                     {(expandedProjects[projectKey] ? signals : signals.slice(0, 3)).map((s) => (
               <div key={s.id} class="p-4 hover:bg-white/5 transition-all duration-300">
                 <div class="flex-1">
-                  <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center gap-2">
-                      <Badge variant={s.sentiment === "bullish" ? "success" : "destructive"} class="text-xs">
-                        {s.sentiment === "bullish" ? "🐂 Bullish" : "🐻 Bearish"}
-                      </Badge>
-                      <span class="text-sm text-gray-400">
-                        {s.tweetTimestamp ? new Date(s.tweetTimestamp).toLocaleString() : s.notedAt}
-                      </span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                      <a class="text-sm text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 transition-colors" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
-                        View Tweet
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </a>
-                      {s.onchainTxHash && (
-                        <a 
-                          class="text-sm text-green-400 hover:text-green-300 hover:underline inline-flex items-center gap-1 transition-colors" 
-                          href={`https://basescan.org/tx/${s.onchainTxHash}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          title="View on BaseScan"
-                        >
-                          View Onchain
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </a>
-                      )}
-                    </div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <Badge variant={s.sentiment === "bullish" ? "success" : "destructive"} class="text-xs">
+                      {s.sentiment === "bullish" ? "🐂 Bullish" : "🐻 Bearish"}
+                    </Badge>
+                    <span class="text-sm text-gray-400">
+                      {s.tweetTimestamp ? new Date(s.tweetTimestamp).toLocaleDateString() : s.notedAt}
+                    </span>
                   </div>
                   
                   {s.tweetContent && (
@@ -319,6 +295,29 @@ export default function SignalsForm({ username }: Props) {
                       "{s.tweetContent.length > 400 ? s.tweetContent.slice(0, 400) + '...' : s.tweetContent}"
                     </div>
                   )}
+                  
+                  <div class="flex items-center gap-3">
+                    <a class="text-sm text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 transition-colors" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
+                      View Tweet
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                    {s.onchainTxHash && (
+                      <a 
+                        class="text-sm text-green-400 hover:text-green-300 hover:underline inline-flex items-center gap-1 transition-colors" 
+                        href={`https://basescan.org/tx/${s.onchainTxHash}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        title="View on BaseScan"
+                      >
+                        View Onchain
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
                   
                   {/* Price snapshots for verified projects */}
                   {s.projectHandle && verifiedByUsername[s.projectHandle.toLowerCase()] && (
@@ -519,99 +518,69 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
   
   return (
     <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10">
-      <div class="grid grid-cols-2 gap-4 text-xs">
+      <div class="grid grid-cols-2 gap-3 text-xs">
         {/* Left Column - Historical Prices */}
-        <div class="space-y-1.5">
-          <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
+        <div class="space-y-2">
+          <div class="flex justify-between">
             <span class="text-gray-400">Call Price:</span>
-            <span class="font-mono font-semibold text-white text-sm">{fmt(data.call)}</span>
-            <span></span>
+            <span class="font-semibold text-white">{fmt(data.call)}</span>
           </div>
-          
-          <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
+          <div class="flex justify-between">
             <span class="text-gray-400">+1 Day:</span>
-            {reached(1) && data.d1 ? (
-              <>
-                <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+            <span class="font-medium">
+              {reached(1) && data.d1 ? (
+                <>
                   {fmt(data.d1)}
-                </span>
-                <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d1) !== null ? `${pct(data.call, data.d1)! >= 0 ? '+' : ''}${pct(data.call, data.d1)!.toFixed(1)}%` : ''}
-                </span>
-              </>
-            ) : (
-              <>
-                <span class="font-mono text-gray-500">—</span>
-                <span></span>
-              </>
-            )}
+                  {(() => { const p = pct(data.call, data.d1); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
           </div>
-          
-          <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
+          <div class="flex justify-between">
             <span class="text-gray-400">+7 Days:</span>
-            {reached(7) && data.d7 ? (
-              <>
-                <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+            <span class="font-medium">
+              {reached(7) && data.d7 ? (
+                <>
                   {fmt(data.d7)}
-                </span>
-                <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d7) !== null ? `${pct(data.call, data.d7)! >= 0 ? '+' : ''}${pct(data.call, data.d7)!.toFixed(1)}%` : ''}
-                </span>
-              </>
-            ) : (
-              <>
-                <span class="font-mono text-gray-500">—</span>
-                <span></span>
-              </>
-            )}
+                  {(() => { const p = pct(data.call, data.d7); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
           </div>
-          
-          <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
+          <div class="flex justify-between">
             <span class="text-gray-400">+28 Days:</span>
-            {reached(28) && data.d28 ? (
-              <>
-                <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+            <span class="font-medium">
+              {reached(28) && data.d28 ? (
+                <>
                   {fmt(data.d28)}
-                </span>
-                <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d28) !== null ? `${pct(data.call, data.d28)! >= 0 ? '+' : ''}${pct(data.call, data.d28)!.toFixed(1)}%` : ''}
-                </span>
-              </>
-            ) : (
-              <>
-                <span class="font-mono text-gray-500">—</span>
-                <span></span>
-              </>
-            )}
+                  {(() => { const p = pct(data.call, data.d28); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
           </div>
         </div>
         
         {/* Right Column - Current Performance */}
-        <div class="border-l border-white/10 pl-4 space-y-1.5">
-          {currentPct !== null ? (
+        <div class="border-l border-white/10 pl-3 space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-400">Current:</span>
+            <span class="font-semibold text-white">{fmt(data.current)}</span>
+          </div>
+          {currentPct !== null && (
             <>
-              <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
-                <span class="text-white font-medium">Current:</span>
-                <span class={"font-mono font-semibold text-sm " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.current)}
-                </span>
-                <span class={"font-mono text-xl font-bold text-right " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-400 text-[11px]">Performance as of Today:</span>
+                <span class={"text-lg font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
                   {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
                 </span>
               </div>
-              <div class="grid grid-cols-[80px_1fr] gap-2 items-center pt-1 border-t border-white/10">
-                <span class="text-white font-medium text-[11px]">Accuracy:</span>
-                <span class={"font-semibold " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
+              <div class="flex justify-between items-center pt-1 border-t border-white/5">
+                <span class="text-gray-400 text-[11px]">Accuracy as of Today:</span>
+                <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
                   {isCorrect ? '✅ Correct' : '❌ Wrong'}
                 </span>
               </div>
             </>
-          ) : (
-            <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
-              <span class="text-white font-medium">Current:</span>
-              <span class="font-mono font-semibold text-white text-sm">{fmt(data.current)}</span>
-              <span></span>
-            </div>
           )}
         </div>
       </div>
@@ -695,99 +664,69 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
   
   return (
     <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10">
-      <div class="grid grid-cols-2 gap-4 text-xs">
+      <div class="grid grid-cols-2 gap-3 text-xs">
         {/* Left Column - Historical Prices */}
-        <div class="space-y-1.5">
-          <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
+        <div class="space-y-2">
+          <div class="flex justify-between">
             <span class="text-gray-400">Call Price:</span>
-            <span class="font-mono font-semibold text-white text-sm">{fmt(data.call)}</span>
-            <span></span>
+            <span class="font-semibold text-white">{fmt(data.call)}</span>
           </div>
-          
-          <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
+          <div class="flex justify-between">
             <span class="text-gray-400">+1 Day:</span>
-            {reached(1) && data.d1 ? (
-              <>
-                <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+            <span class="font-medium">
+              {reached(1) && data.d1 ? (
+                <>
                   {fmt(data.d1)}
-                </span>
-                <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d1) !== null ? `${pct(data.call, data.d1)! >= 0 ? '+' : ''}${pct(data.call, data.d1)!.toFixed(1)}%` : ''}
-                </span>
-              </>
-            ) : (
-              <>
-                <span class="font-mono text-gray-500">—</span>
-                <span></span>
-              </>
-            )}
+                  {(() => { const p = pct(data.call, data.d1); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
           </div>
-          
-          <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
+          <div class="flex justify-between">
             <span class="text-gray-400">+7 Days:</span>
-            {reached(7) && data.d7 ? (
-              <>
-                <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+            <span class="font-medium">
+              {reached(7) && data.d7 ? (
+                <>
                   {fmt(data.d7)}
-                </span>
-                <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d7) !== null ? `${pct(data.call, data.d7)! >= 0 ? '+' : ''}${pct(data.call, data.d7)!.toFixed(1)}%` : ''}
-                </span>
-              </>
-            ) : (
-              <>
-                <span class="font-mono text-gray-500">—</span>
-                <span></span>
-              </>
-            )}
+                  {(() => { const p = pct(data.call, data.d7); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
           </div>
-          
-          <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
+          <div class="flex justify-between">
             <span class="text-gray-400">+28 Days:</span>
-            {reached(28) && data.d28 ? (
-              <>
-                <span class={"font-mono font-semibold text-sm " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+            <span class="font-medium">
+              {reached(28) && data.d28 ? (
+                <>
                   {fmt(data.d28)}
-                </span>
-                <span class={"font-mono font-semibold text-right " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {pct(data.call, data.d28) !== null ? `${pct(data.call, data.d28)! >= 0 ? '+' : ''}${pct(data.call, data.d28)!.toFixed(1)}%` : ''}
-                </span>
-              </>
-            ) : (
-              <>
-                <span class="font-mono text-gray-500">—</span>
-                <span></span>
-              </>
-            )}
+                  {(() => { const p = pct(data.call, data.d28); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
           </div>
         </div>
         
         {/* Right Column - Current Performance */}
-        <div class="border-l border-white/10 pl-4 space-y-1.5">
-          {currentPct !== null ? (
+        <div class="border-l border-white/10 pl-3 space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-400">Current:</span>
+            <span class="font-semibold text-white">{fmt(data.current)}</span>
+          </div>
+          {currentPct !== null && (
             <>
-              <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
-                <span class="text-white font-medium">Current:</span>
-                <span class={"font-mono font-semibold text-sm " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
-                  {fmt(data.current)}
-                </span>
-                <span class={"font-mono text-xl font-bold text-right " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-400 text-[11px]">Performance as of Today:</span>
+                <span class={"text-lg font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
                   {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
                 </span>
               </div>
-              <div class="grid grid-cols-[80px_1fr] gap-2 items-center pt-1 border-t border-white/10">
-                <span class="text-white font-medium text-[11px]">Accuracy:</span>
-                <span class={"font-semibold " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
+              <div class="flex justify-between items-center pt-1 border-t border-white/5">
+                <span class="text-gray-400 text-[11px]">Accuracy as of Today:</span>
+                <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
                   {isCorrect ? '✅ Correct' : '❌ Wrong'}
                 </span>
               </div>
             </>
-          ) : (
-            <div class="grid grid-cols-[80px_1fr_70px] gap-2 items-center">
-              <span class="text-white font-medium">Current:</span>
-              <span class="font-mono font-semibold text-white text-sm">{fmt(data.current)}</span>
-              <span></span>
-            </div>
           )}
         </div>
       </div>
