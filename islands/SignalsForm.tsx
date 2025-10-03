@@ -513,55 +513,76 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
     const start = new Date(notedAt + 'T00:00:00Z').getTime();
     return Date.now() >= start + days * 24 * 3600 * 1000;
   };
+  const currentPct = pct(data.call, data.current);
+  const isCorrect = currentPct !== null && ((sentiment === 'bullish' && currentPct >= 0) || (sentiment === 'bearish' && currentPct < 0));
+  
   return (
-    <div class="text-xs text-gray-300 mt-2">
-      <div class="flex gap-4 flex-wrap">
-        <span>Call: {fmt(data.call)}</span>
-        <span>
-          +1d: {reached(1) ? (
+    <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10">
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        {/* Left Column - Historical Prices */}
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-400">Call Price:</span>
+            <span class="font-semibold text-white">{fmt(data.call)}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">+1 Day:</span>
+            <span class="font-medium">
+              {reached(1) && data.d1 ? (
+                <>
+                  {fmt(data.d1)}
+                  {(() => { const p = pct(data.call, data.d1); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">+7 Days:</span>
+            <span class="font-medium">
+              {reached(7) && data.d7 ? (
+                <>
+                  {fmt(data.d7)}
+                  {(() => { const p = pct(data.call, data.d7); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">+28 Days:</span>
+            <span class="font-medium">
+              {reached(28) && data.d28 ? (
+                <>
+                  {fmt(data.d28)}
+                  {(() => { const p = pct(data.call, data.d28); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
+          </div>
+        </div>
+        
+        {/* Right Column - Current Performance */}
+        <div class="border-l border-white/10 pl-3 space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-400">Current:</span>
+            <span class="font-semibold text-white">{fmt(data.current)}</span>
+          </div>
+          {currentPct !== null && (
             <>
-              {fmt(data.d1)}{' '}
-              {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
-            </>
-          ) : '—'}
-        </span>
-        <span>
-          +7d: {reached(7) ? (
-            <>
-              {fmt(data.d7)}{' '}
-              {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
-            </>
-          ) : '—'}
-        </span>
-        <span>
-          +28d: {reached(28) ? (
-            <>
-              {fmt(data.d28)}{' '}
-              {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
-            </>
-          ) : '—'}
-        </span>
-        <span class="border-l border-white/20 pl-4">
-          Current: {fmt(data.current)}{' '}
-          {(() => { 
-            const p = pct(data.call, data.current); 
-            if (p == null) return '';
-            
-            // Calculate accuracy: bullish + positive = correct, bearish + negative = correct
-            const isCorrect = (sentiment === 'bullish' && p >= 0) || (sentiment === 'bearish' && p < 0);
-            const accuracyIcon = isCorrect ? '✅' : '❌';
-            const accuracyText = isCorrect ? 'Correct' : 'Wrong';
-            
-            return (
-              <>
-                <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>
-                <span class="ml-2 text-xs" title={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} signal ${accuracyText.toLowerCase()}`}>
-                  {accuracyIcon} {accuracyText}
+              <div class="flex justify-between items-center">
+                <span class="text-gray-400">Performance:</span>
+                <span class={"text-lg font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
                 </span>
-              </>
-            ); 
-          })()}
-        </span>
+              </div>
+              <div class="flex justify-between items-center pt-1 border-t border-white/5">
+                <span class="text-gray-400">Accuracy:</span>
+                <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
+                  {isCorrect ? '✅ Correct' : '❌ Wrong'}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -619,71 +640,96 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
     return Date.now() >= start + days * 24 * 3600 * 1000;
   };
   
+  const currentPct = pct(data.call, data.current);
+  const isCorrect = currentPct !== null && ((sentiment === 'bullish' && currentPct >= 0) || (sentiment === 'bearish' && currentPct < 0));
   const allSame = data.call === data.d1 && data.call === data.d7 && data.call === data.d28 && data.call === data.current;
   const signalDate = new Date(notedAt + 'T00:00:00Z');
   const daysSinceSignal = Math.floor((Date.now() - signalDate.getTime()) / (24 * 60 * 60 * 1000));
   
+  if (allSame) {
+    return (
+      <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Current Price:</span>
+          <span class="font-semibold text-white">{fmt(data.current)}</span>
+        </div>
+        <div class="text-gray-400 italic text-center mt-2 text-[10px]">
+          {daysSinceSignal > 30 ? 
+            'Historical data only available for recent 30 days' : 
+            'Historical data not available'}
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div class="text-xs text-gray-300 mt-2">
-      {allSame ? (
-        <div class="flex gap-4 flex-wrap">
-          <span>Current Price: {fmt(data.current)}</span>
-          <span class="text-gray-400 italic">
-            {daysSinceSignal > 30 ? 
-              '(Historical data only available for recent 30 days)' : 
-              '(Historical data not available)'}
-          </span>
-        </div>
-      ) : (
-        <div class="flex gap-4 flex-wrap">
-          <span>Call: {fmt(data.call)}</span>
-          <span>
-            +1d: {reached(1) ? (
-              <>
-                {fmt(data.d1)}{' '}
-                {(() => { const p = pct(data.call, data.d1); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
-              </>
-            ) : '—'}
-          </span>
-          <span>
-            +7d: {reached(7) ? (
-              <>
-                {fmt(data.d7)}{' '}
-                {(() => { const p = pct(data.call, data.d7); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
-              </>
-            ) : '—'}
-          </span>
-          <span>
-            +28d: {reached(28) ? (
-              <>
-                {fmt(data.d28)}{' '}
-                {(() => { const p = pct(data.call, data.d28); return p == null ? '' : (<span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>); })()}
-              </>
-            ) : '—'}
-          </span>
-          <span class="border-l border-white/20 pl-4">
-            Current: {fmt(data.current)}{' '}
-            {(() => { 
-              const p = pct(data.call, data.current); 
-              if (p == null) return '';
-              
-              // Calculate accuracy: bullish + positive = correct, bearish + negative = correct
-              const isCorrect = (sentiment === 'bullish' && p >= 0) || (sentiment === 'bearish' && p < 0);
-              const accuracyIcon = isCorrect ? '✅' : '❌';
-              const accuracyText = isCorrect ? 'Correct' : 'Wrong';
-              
-              return (
+    <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10">
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        {/* Left Column - Historical Prices */}
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-400">Call Price:</span>
+            <span class="font-semibold text-white">{fmt(data.call)}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">+1 Day:</span>
+            <span class="font-medium">
+              {reached(1) && data.d1 ? (
                 <>
-                  <span class={"ml-1 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p.toFixed(2)}%</span>
-                  <span class="ml-2 text-xs" title={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} signal ${accuracyText.toLowerCase()}`}>
-                    {accuracyIcon} {accuracyText}
-                  </span>
+                  {fmt(data.d1)}
+                  {(() => { const p = pct(data.call, data.d1); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
                 </>
-              ); 
-            })()}
-          </span>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">+7 Days:</span>
+            <span class="font-medium">
+              {reached(7) && data.d7 ? (
+                <>
+                  {fmt(data.d7)}
+                  {(() => { const p = pct(data.call, data.d7); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">+28 Days:</span>
+            <span class="font-medium">
+              {reached(28) && data.d28 ? (
+                <>
+                  {fmt(data.d28)}
+                  {(() => { const p = pct(data.call, data.d28); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                </>
+              ) : <span class="text-gray-500">—</span>}
+            </span>
+          </div>
         </div>
-      )}
+        
+        {/* Right Column - Current Performance */}
+        <div class="border-l border-white/10 pl-3 space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-400">Current:</span>
+            <span class="font-semibold text-white">{fmt(data.current)}</span>
+          </div>
+          {currentPct !== null && (
+            <>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-400">Performance:</span>
+                <span class={"text-lg font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
+                </span>
+              </div>
+              <div class="flex justify-between items-center pt-1 border-t border-white/5">
+                <span class="text-gray-400">Accuracy:</span>
+                <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
+                  {isCorrect ? '✅ Correct' : '❌ Wrong'}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
