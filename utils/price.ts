@@ -27,25 +27,35 @@ export async function getDefiLlamaTokenPriceAt(
     return cached;
   }
 
-  const ts = Math.floor(new Date(atDateISO + "T00:00:00Z").getTime() / 1000);
-  const url = `https://coins.llama.fi/prices/historical/${ts}/${priceKey}`;
+  // Try the exact date first, then nearby dates if not found
+  const targetDate = new Date(atDateISO + "T00:00:00Z");
+  const dayOffsets = [0, -1, 1, -2, 2, -3, 3]; // Try exact date, then ±1, ±2, ±3 days
   
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
+  for (const offset of dayOffsets) {
+    const checkDate = new Date(targetDate);
+    checkDate.setDate(checkDate.getDate() + offset);
+    const ts = Math.floor(checkDate.getTime() / 1000);
+    const url = `https://coins.llama.fi/prices/historical/${ts}/${priceKey}`;
     
-    // Find price in response (handle both contract and CoinGecko ID formats)
-    const actualKey = Object.keys(data?.coins || {}).find(k => k.toLowerCase() === priceKey.toLowerCase());
-    const price = actualKey ? data?.coins?.[actualKey]?.price as number | undefined : undefined;
-    
-    if (typeof price === "number" && Number.isFinite(price)) {
-      await setCachedPrice(cacheKey, price, 24); // Cache for 24 hours
-      return price;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      
+      // Find price in response (handle both contract and CoinGecko ID formats)
+      const actualKey = Object.keys(data?.coins || {}).find(k => k.toLowerCase() === priceKey.toLowerCase());
+      const price = actualKey ? data?.coins?.[actualKey]?.price as number | undefined : undefined;
+      
+      if (typeof price === "number" && Number.isFinite(price)) {
+        await setCachedPrice(cacheKey, price, 24); // Cache for 24 hours
+        return price;
+      }
+    } catch (_err) {
+      // Try next offset
+      continue;
     }
-  } catch (_err) {
-    // ignore network errors, return null below
   }
+  
   return null;
 }
 
@@ -62,19 +72,29 @@ export async function getDefiLlamaTokenPriceAtTimestamp(
     return cached;
   }
 
-  const url = `https://coins.llama.fi/prices/historical/${ts}/${chain}:${address}`;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const price = findPriceInResponse(data, chain, address);
-    if (typeof price === "number" && Number.isFinite(price)) {
-      await setCachedPrice(cacheKey, price, 24); // Cache for 24 hours
-      return price;
+  // Try exact timestamp, then expand search window if not found
+  const timeOffsets = [0, -3600, 3600, -86400, 86400]; // 0, ±1 hour, ±1 day
+  
+  for (const offset of timeOffsets) {
+    const checkTs = ts + offset;
+    const url = `https://coins.llama.fi/prices/historical/${checkTs}/${chain}:${address}`;
+    
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const price = findPriceInResponse(data, chain, address);
+      
+      if (typeof price === "number" && Number.isFinite(price)) {
+        await setCachedPrice(cacheKey, price, 24); // Cache for 24 hours
+        return price;
+      }
+    } catch (_err) {
+      // Try next offset
+      continue;
     }
-  } catch (_err) {
-    // ignore network errors, return null below
   }
+  
   return null;
 }
 
@@ -129,42 +149,52 @@ export async function getCoinGeckoPriceAtTimestamp(
     return cached;
   }
 
-  // CoinGecko's market_chart/range endpoint returns 5-minute intervals
-  // We'll fetch a 1-hour range around the timestamp and find the closest price
-  const from = ts - 1800; // 30 minutes before
-  const to = ts + 1800; // 30 minutes after
-  const url = buildCoinGeckoUrl(`/coins/${coinGeckoId}/market_chart/range`, {
-    vs_currency: "usd",
-    from: String(from),
-    to: String(to),
-  });
+  // Try progressively larger time windows to find the nearest available price
+  // Start with ±1 hour, then ±1 day, then ±3 days
+  const windows = [
+    3600,        // ±1 hour
+    86400,       // ±1 day
+    259200,      // ±3 days
+  ];
   
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
+  for (const window of windows) {
+    const from = ts - window;
+    const to = ts + window;
+    const url = buildCoinGeckoUrl(`/coins/${coinGeckoId}/market_chart/range`, {
+      vs_currency: "usd",
+      from: String(from),
+      to: String(to),
+    });
     
-    if (!data?.prices || data.prices.length === 0) return null;
-    
-    // Find the price closest to our target timestamp
-    // data.prices is an array of [timestamp_ms, price]
-    let closestPrice = null;
-    let closestDiff = Infinity;
-    
-    for (const [priceTs, price] of data.prices) {
-      const diff = Math.abs(priceTs / 1000 - ts);
-      if (diff < closestDiff) {
-        closestDiff = diff;
-        closestPrice = price;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      
+      if (!data?.prices || data.prices.length === 0) continue;
+      
+      // Find the price closest to our target timestamp
+      // data.prices is an array of [timestamp_ms, price]
+      let closestPrice = null;
+      let closestDiff = Infinity;
+      
+      for (const [priceTs, price] of data.prices) {
+        const diff = Math.abs(priceTs / 1000 - ts);
+        if (diff < closestDiff) {
+          closestDiff = diff;
+          closestPrice = price;
+        }
       }
+      
+      if (typeof closestPrice === "number" && Number.isFinite(closestPrice)) {
+        await setCachedPrice(cacheKey, closestPrice, 24); // Cache for 24 hours
+        return closestPrice;
+      }
+    } catch (_err) {
+      // Try next window
+      continue;
     }
-    
-    if (typeof closestPrice === "number" && Number.isFinite(closestPrice)) {
-      await setCachedPrice(cacheKey, closestPrice, 24); // Cache for 24 hours
-      return closestPrice;
-    }
-  } catch (_err) {
-    // ignore network errors, return null below
   }
+  
   return null;
 }
