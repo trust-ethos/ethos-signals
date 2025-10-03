@@ -563,19 +563,19 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
         {/* Right Column - Current Performance */}
         <div class="border-l border-white/10 pl-3 space-y-2">
           <div class="flex justify-between">
-            <span class="text-gray-400">Current:</span>
+            <span class="text-white font-medium">Current:</span>
             <span class="font-semibold text-white">{fmt(data.current)}</span>
           </div>
           {currentPct !== null && (
             <>
               <div class="flex justify-between items-center">
-                <span class="text-gray-400">Performance:</span>
+                <span class="text-white font-medium text-[11px]">Performance as of Today:</span>
                 <span class={"text-lg font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
                   {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
                 </span>
               </div>
               <div class="flex justify-between items-center pt-1 border-t border-white/5">
-                <span class="text-gray-400">Accuracy:</span>
+                <span class="text-white font-medium text-[11px]">Accuracy as of Today:</span>
                 <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
                   {isCorrect ? '✅ Correct' : '❌ Wrong'}
                 </span>
@@ -709,19 +709,19 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
         {/* Right Column - Current Performance */}
         <div class="border-l border-white/10 pl-3 space-y-2">
           <div class="flex justify-between">
-            <span class="text-gray-400">Current:</span>
+            <span class="text-white font-medium">Current:</span>
             <span class="font-semibold text-white">{fmt(data.current)}</span>
           </div>
           {currentPct !== null && (
             <>
               <div class="flex justify-between items-center">
-                <span class="text-gray-400">Performance:</span>
+                <span class="text-white font-medium text-[11px]">Performance as of Today:</span>
                 <span class={"text-lg font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
                   {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
                 </span>
               </div>
               <div class="flex justify-between items-center pt-1 border-t border-white/5">
-                <span class="text-gray-400">Accuracy:</span>
+                <span class="text-white font-medium text-[11px]">Accuracy as of Today:</span>
                 <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
                   {isCorrect ? '✅ Correct' : '❌ Wrong'}
                 </span>
