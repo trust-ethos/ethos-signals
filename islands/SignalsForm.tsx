@@ -281,13 +281,37 @@ export default function SignalsForm({ username }: Props) {
                     {(expandedProjects[projectKey] ? signals : signals.slice(0, 3)).map((s) => (
               <div key={s.id} class="p-4 hover:bg-white/5 transition-all duration-300">
                 <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-2">
-                    <Badge variant={s.sentiment === "bullish" ? "success" : "destructive"} class="text-xs">
-                      {s.sentiment === "bullish" ? "🐂 Bullish" : "🐻 Bearish"}
-                    </Badge>
-                    <span class="text-sm text-gray-400">
-                      {s.tweetTimestamp ? new Date(s.tweetTimestamp).toLocaleDateString() : s.notedAt}
-                    </span>
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <Badge variant={s.sentiment === "bullish" ? "success" : "destructive"} class="text-xs">
+                        {s.sentiment === "bullish" ? "🐂 Bullish" : "🐻 Bearish"}
+                      </Badge>
+                      <span class="text-sm text-gray-400">
+                        {s.tweetTimestamp ? new Date(s.tweetTimestamp).toLocaleString() : s.notedAt}
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <a class="text-sm text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 transition-colors" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
+                        View Tweet
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                      {s.onchainTxHash && (
+                        <a 
+                          class="text-sm text-green-400 hover:text-green-300 hover:underline inline-flex items-center gap-1 transition-colors" 
+                          href={`https://basescan.org/tx/${s.onchainTxHash}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          title="View on BaseScan"
+                        >
+                          View Onchain
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
                   </div>
                   
                   {s.tweetContent && (
@@ -295,29 +319,6 @@ export default function SignalsForm({ username }: Props) {
                       "{s.tweetContent.length > 400 ? s.tweetContent.slice(0, 400) + '...' : s.tweetContent}"
                     </div>
                   )}
-                  
-                  <div class="flex items-center gap-3">
-                    <a class="text-sm text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 transition-colors" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
-                      View Tweet
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
-                    {s.onchainTxHash && (
-                      <a 
-                        class="text-sm text-green-400 hover:text-green-300 hover:underline inline-flex items-center gap-1 transition-colors" 
-                        href={`https://basescan.org/tx/${s.onchainTxHash}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        title="View on BaseScan"
-                      >
-                        View Onchain
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </a>
-                    )}
-                  </div>
                   
                   {/* Price snapshots for verified projects */}
                   {s.projectHandle && verifiedByUsername[s.projectHandle.toLowerCase()] && (
@@ -530,8 +531,15 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
             <span class="font-medium">
               {reached(1) && data.d1 ? (
                 <>
-                  {fmt(data.d1)}
-                  {(() => { const p = pct(data.call, data.d1); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                  {(() => { 
+                    const p = pct(data.call, data.d1); 
+                    return p !== null ? (
+                      <>
+                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
+                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d1)}</span>
+                      </>
+                    ) : <span class="text-white">{fmt(data.d1)}</span>;
+                  })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
             </span>
@@ -541,8 +549,15 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
             <span class="font-medium">
               {reached(7) && data.d7 ? (
                 <>
-                  {fmt(data.d7)}
-                  {(() => { const p = pct(data.call, data.d7); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                  {(() => { 
+                    const p = pct(data.call, data.d7); 
+                    return p !== null ? (
+                      <>
+                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
+                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d7)}</span>
+                      </>
+                    ) : <span class="text-white">{fmt(data.d7)}</span>;
+                  })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
             </span>
@@ -552,8 +567,15 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
             <span class="font-medium">
               {reached(28) && data.d28 ? (
                 <>
-                  {fmt(data.d28)}
-                  {(() => { const p = pct(data.call, data.d28); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                  {(() => { 
+                    const p = pct(data.call, data.d28); 
+                    return p !== null ? (
+                      <>
+                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
+                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d28)}</span>
+                      </>
+                    ) : <span class="text-white">{fmt(data.d28)}</span>;
+                  })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
             </span>
@@ -562,10 +584,6 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
         
         {/* Right Column - Current Performance */}
         <div class="border-l border-white/10 pl-3 space-y-2">
-          <div class="flex justify-between">
-            <span class="text-white font-medium">Current:</span>
-            <span class="font-semibold text-white">{fmt(data.current)}</span>
-          </div>
           {currentPct !== null && (
             <>
               <div class="flex justify-between items-center">
@@ -574,6 +592,10 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
                   {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
                 </span>
               </div>
+              <div class="flex justify-between">
+                <span class="text-white font-medium">Current:</span>
+                <span class={"font-semibold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.current)}</span>
+              </div>
               <div class="flex justify-between items-center pt-1 border-t border-white/5">
                 <span class="text-white font-medium text-[11px]">Accuracy as of Today:</span>
                 <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
@@ -581,6 +603,12 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
                 </span>
               </div>
             </>
+          )}
+          {currentPct === null && (
+            <div class="flex justify-between">
+              <span class="text-white font-medium">Current:</span>
+              <span class="font-semibold text-white">{fmt(data.current)}</span>
+            </div>
           )}
         </div>
       </div>
@@ -676,8 +704,15 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             <span class="font-medium">
               {reached(1) && data.d1 ? (
                 <>
-                  {fmt(data.d1)}
-                  {(() => { const p = pct(data.call, data.d1); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                  {(() => { 
+                    const p = pct(data.call, data.d1); 
+                    return p !== null ? (
+                      <>
+                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
+                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d1)}</span>
+                      </>
+                    ) : <span class="text-white">{fmt(data.d1)}</span>;
+                  })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
             </span>
@@ -687,8 +722,15 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             <span class="font-medium">
               {reached(7) && data.d7 ? (
                 <>
-                  {fmt(data.d7)}
-                  {(() => { const p = pct(data.call, data.d7); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                  {(() => { 
+                    const p = pct(data.call, data.d7); 
+                    return p !== null ? (
+                      <>
+                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
+                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d7)}</span>
+                      </>
+                    ) : <span class="text-white">{fmt(data.d7)}</span>;
+                  })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
             </span>
@@ -698,8 +740,15 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
             <span class="font-medium">
               {reached(28) && data.d28 ? (
                 <>
-                  {fmt(data.d28)}
-                  {(() => { const p = pct(data.call, data.d28); return p !== null ? (<span class={"ml-2 font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>) : ''; })()}
+                  {(() => { 
+                    const p = pct(data.call, data.d28); 
+                    return p !== null ? (
+                      <>
+                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
+                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d28)}</span>
+                      </>
+                    ) : <span class="text-white">{fmt(data.d28)}</span>;
+                  })()}
                 </>
               ) : <span class="text-gray-500">—</span>}
             </span>
@@ -708,10 +757,6 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
         
         {/* Right Column - Current Performance */}
         <div class="border-l border-white/10 pl-3 space-y-2">
-          <div class="flex justify-between">
-            <span class="text-white font-medium">Current:</span>
-            <span class="font-semibold text-white">{fmt(data.current)}</span>
-          </div>
           {currentPct !== null && (
             <>
               <div class="flex justify-between items-center">
@@ -720,6 +765,10 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
                   {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
                 </span>
               </div>
+              <div class="flex justify-between">
+                <span class="text-white font-medium">Current:</span>
+                <span class={"font-semibold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.current)}</span>
+              </div>
               <div class="flex justify-between items-center pt-1 border-t border-white/5">
                 <span class="text-white font-medium text-[11px]">Accuracy as of Today:</span>
                 <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
@@ -727,6 +776,12 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
                 </span>
               </div>
             </>
+          )}
+          {currentPct === null && (
+            <div class="flex justify-between">
+              <span class="text-white font-medium">Current:</span>
+              <span class="font-semibold text-white">{fmt(data.current)}</span>
+            </div>
           )}
         </div>
       </div>
