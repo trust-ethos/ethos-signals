@@ -519,95 +519,81 @@ function PriceDelta({ id, chain, address, notedAt, tweetTimestamp, sentiment }: 
   
   return (
     <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10">
-      <div class="grid grid-cols-2 gap-3 text-xs">
+      <div class="grid grid-cols-2 gap-4 text-xs">
         {/* Left Column - Historical Prices */}
         <div class="space-y-2">
-          <div class="flex justify-between">
-            <span class="text-gray-400">Call Price:</span>
-            <span class="font-semibold text-white">{fmt(data.call)}</span>
+          <div>
+            <div class="text-gray-400 mb-1">Call Price:</div>
+            <div class="font-mono font-semibold text-white text-sm">{fmt(data.call)}</div>
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-400">+1 Day:</span>
-            <span class="font-medium">
-              {reached(1) && data.d1 ? (
-                <>
-                  {(() => { 
-                    const p = pct(data.call, data.d1); 
-                    return p !== null ? (
-                      <>
-                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
-                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d1)}</span>
-                      </>
-                    ) : <span class="text-white">{fmt(data.d1)}</span>;
-                  })()}
-                </>
-              ) : <span class="text-gray-500">—</span>}
-            </span>
+          <div>
+            <div class="text-gray-400 mb-1">+1 Day:</div>
+            {reached(1) && data.d1 ? (
+              <div class="grid grid-cols-2 gap-2">
+                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {fmt(data.d1)}
+                </div>
+                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {pct(data.call, data.d1) !== null ? `${pct(data.call, data.d1)! >= 0 ? '+' : ''}${pct(data.call, data.d1)!.toFixed(1)}%` : ''}
+                </div>
+              </div>
+            ) : <div class="font-mono text-gray-500">—</div>}
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-400">+7 Days:</span>
-            <span class="font-medium">
-              {reached(7) && data.d7 ? (
-                <>
-                  {(() => { 
-                    const p = pct(data.call, data.d7); 
-                    return p !== null ? (
-                      <>
-                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
-                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d7)}</span>
-                      </>
-                    ) : <span class="text-white">{fmt(data.d7)}</span>;
-                  })()}
-                </>
-              ) : <span class="text-gray-500">—</span>}
-            </span>
+          <div>
+            <div class="text-gray-400 mb-1">+7 Days:</div>
+            {reached(7) && data.d7 ? (
+              <div class="grid grid-cols-2 gap-2">
+                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {fmt(data.d7)}
+                </div>
+                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {pct(data.call, data.d7) !== null ? `${pct(data.call, data.d7)! >= 0 ? '+' : ''}${pct(data.call, data.d7)!.toFixed(1)}%` : ''}
+                </div>
+              </div>
+            ) : <div class="font-mono text-gray-500">—</div>}
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-400">+28 Days:</span>
-            <span class="font-medium">
-              {reached(28) && data.d28 ? (
-                <>
-                  {(() => { 
-                    const p = pct(data.call, data.d28); 
-                    return p !== null ? (
-                      <>
-                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
-                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d28)}</span>
-                      </>
-                    ) : <span class="text-white">{fmt(data.d28)}</span>;
-                  })()}
-                </>
-              ) : <span class="text-gray-500">—</span>}
-            </span>
+          <div>
+            <div class="text-gray-400 mb-1">+28 Days:</div>
+            {reached(28) && data.d28 ? (
+              <div class="grid grid-cols-2 gap-2">
+                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {fmt(data.d28)}
+                </div>
+                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {pct(data.call, data.d28) !== null ? `${pct(data.call, data.d28)! >= 0 ? '+' : ''}${pct(data.call, data.d28)!.toFixed(1)}%` : ''}
+                </div>
+              </div>
+            ) : <div class="font-mono text-gray-500">—</div>}
           </div>
         </div>
         
         {/* Right Column - Current Performance */}
-        <div class="border-l border-white/10 pl-3 space-y-2">
-          {currentPct !== null && (
+        <div class="border-l border-white/10 pl-4 space-y-2">
+          {currentPct !== null ? (
             <>
-              <div class="flex justify-between items-center">
-                <span class="text-white font-medium text-[11px]">Performance as of Today:</span>
-                <span class={"text-lg font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+              <div>
+                <div class="text-white font-medium text-[11px] mb-1">Performance as of Today:</div>
+                <div class={"font-mono text-xl font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
                   {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
-                </span>
+                </div>
               </div>
-              <div class="flex justify-between">
-                <span class="text-white font-medium">Current:</span>
-                <span class={"font-semibold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.current)}</span>
+              <div>
+                <div class="text-white font-medium mb-1">Current:</div>
+                <div class={"font-mono font-semibold text-sm " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {fmt(data.current)}
+                </div>
               </div>
-              <div class="flex justify-between items-center pt-1 border-t border-white/5">
-                <span class="text-white font-medium text-[11px]">Accuracy as of Today:</span>
-                <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
+              <div class="pt-1 border-t border-white/5">
+                <div class="text-white font-medium text-[11px] mb-1">Accuracy as of Today:</div>
+                <div class={"font-semibold " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
                   {isCorrect ? '✅ Correct' : '❌ Wrong'}
-                </span>
+                </div>
               </div>
             </>
-          )}
-          {currentPct === null && (
-            <div class="flex justify-between">
-              <span class="text-white font-medium">Current:</span>
-              <span class="font-semibold text-white">{fmt(data.current)}</span>
+          ) : (
+            <div>
+              <div class="text-white font-medium mb-1">Current:</div>
+              <div class="font-mono font-semibold text-white text-sm">{fmt(data.current)}</div>
             </div>
           )}
         </div>
@@ -692,95 +678,81 @@ function CoinGeckoPriceDelta({ id, coinGeckoId, notedAt, tweetTimestamp, sentime
   
   return (
     <div class="mt-3 p-3 glass-subtle rounded-xl border border-white/10">
-      <div class="grid grid-cols-2 gap-3 text-xs">
+      <div class="grid grid-cols-2 gap-4 text-xs">
         {/* Left Column - Historical Prices */}
         <div class="space-y-2">
-          <div class="flex justify-between">
-            <span class="text-gray-400">Call Price:</span>
-            <span class="font-semibold text-white">{fmt(data.call)}</span>
+          <div>
+            <div class="text-gray-400 mb-1">Call Price:</div>
+            <div class="font-mono font-semibold text-white text-sm">{fmt(data.call)}</div>
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-400">+1 Day:</span>
-            <span class="font-medium">
-              {reached(1) && data.d1 ? (
-                <>
-                  {(() => { 
-                    const p = pct(data.call, data.d1); 
-                    return p !== null ? (
-                      <>
-                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
-                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d1)}</span>
-                      </>
-                    ) : <span class="text-white">{fmt(data.d1)}</span>;
-                  })()}
-                </>
-              ) : <span class="text-gray-500">—</span>}
-            </span>
+          <div>
+            <div class="text-gray-400 mb-1">+1 Day:</div>
+            {reached(1) && data.d1 ? (
+              <div class="grid grid-cols-2 gap-2">
+                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {fmt(data.d1)}
+                </div>
+                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d1) !== null && pct(data.call, data.d1)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {pct(data.call, data.d1) !== null ? `${pct(data.call, data.d1)! >= 0 ? '+' : ''}${pct(data.call, data.d1)!.toFixed(1)}%` : ''}
+                </div>
+              </div>
+            ) : <div class="font-mono text-gray-500">—</div>}
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-400">+7 Days:</span>
-            <span class="font-medium">
-              {reached(7) && data.d7 ? (
-                <>
-                  {(() => { 
-                    const p = pct(data.call, data.d7); 
-                    return p !== null ? (
-                      <>
-                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
-                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d7)}</span>
-                      </>
-                    ) : <span class="text-white">{fmt(data.d7)}</span>;
-                  })()}
-                </>
-              ) : <span class="text-gray-500">—</span>}
-            </span>
+          <div>
+            <div class="text-gray-400 mb-1">+7 Days:</div>
+            {reached(7) && data.d7 ? (
+              <div class="grid grid-cols-2 gap-2">
+                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {fmt(data.d7)}
+                </div>
+                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d7) !== null && pct(data.call, data.d7)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {pct(data.call, data.d7) !== null ? `${pct(data.call, data.d7)! >= 0 ? '+' : ''}${pct(data.call, data.d7)!.toFixed(1)}%` : ''}
+                </div>
+              </div>
+            ) : <div class="font-mono text-gray-500">—</div>}
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-400">+28 Days:</span>
-            <span class="font-medium">
-              {reached(28) && data.d28 ? (
-                <>
-                  {(() => { 
-                    const p = pct(data.call, data.d28); 
-                    return p !== null ? (
-                      <>
-                        <span class={"font-semibold " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{p >= 0 ? '+' : ''}{p.toFixed(1)}%</span>
-                        <span class={"ml-2 " + (p >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.d28)}</span>
-                      </>
-                    ) : <span class="text-white">{fmt(data.d28)}</span>;
-                  })()}
-                </>
-              ) : <span class="text-gray-500">—</span>}
-            </span>
+          <div>
+            <div class="text-gray-400 mb-1">+28 Days:</div>
+            {reached(28) && data.d28 ? (
+              <div class="grid grid-cols-2 gap-2">
+                <div class={"font-mono font-semibold text-sm " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {fmt(data.d28)}
+                </div>
+                <div class={"font-mono font-semibold text-right " + (pct(data.call, data.d28) !== null && pct(data.call, data.d28)! >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {pct(data.call, data.d28) !== null ? `${pct(data.call, data.d28)! >= 0 ? '+' : ''}${pct(data.call, data.d28)!.toFixed(1)}%` : ''}
+                </div>
+              </div>
+            ) : <div class="font-mono text-gray-500">—</div>}
           </div>
         </div>
         
         {/* Right Column - Current Performance */}
-        <div class="border-l border-white/10 pl-3 space-y-2">
-          {currentPct !== null && (
+        <div class="border-l border-white/10 pl-4 space-y-2">
+          {currentPct !== null ? (
             <>
-              <div class="flex justify-between items-center">
-                <span class="text-white font-medium text-[11px]">Performance as of Today:</span>
-                <span class={"text-lg font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+              <div>
+                <div class="text-white font-medium text-[11px] mb-1">Performance as of Today:</div>
+                <div class={"font-mono text-xl font-bold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
                   {currentPct >= 0 ? '+' : ''}{currentPct.toFixed(1)}%
-                </span>
+                </div>
               </div>
-              <div class="flex justify-between">
-                <span class="text-white font-medium">Current:</span>
-                <span class={"font-semibold " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>{fmt(data.current)}</span>
+              <div>
+                <div class="text-white font-medium mb-1">Current:</div>
+                <div class={"font-mono font-semibold text-sm " + (currentPct >= 0 ? 'text-green-400' : 'text-red-400')}>
+                  {fmt(data.current)}
+                </div>
               </div>
-              <div class="flex justify-between items-center pt-1 border-t border-white/5">
-                <span class="text-white font-medium text-[11px]">Accuracy as of Today:</span>
-                <span class={"font-semibold flex items-center gap-1 " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
+              <div class="pt-1 border-t border-white/5">
+                <div class="text-white font-medium text-[11px] mb-1">Accuracy as of Today:</div>
+                <div class={"font-semibold " + (isCorrect ? 'text-green-400' : 'text-red-400')}>
                   {isCorrect ? '✅ Correct' : '❌ Wrong'}
-                </span>
+                </div>
               </div>
             </>
-          )}
-          {currentPct === null && (
-            <div class="flex justify-between">
-              <span class="text-white font-medium">Current:</span>
-              <span class="font-semibold text-white">{fmt(data.current)}</span>
+          ) : (
+            <div>
+              <div class="text-white font-medium mb-1">Current:</div>
+              <div class="font-mono font-semibold text-white text-sm">{fmt(data.current)}</div>
             </div>
           )}
         </div>
