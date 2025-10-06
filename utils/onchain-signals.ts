@@ -27,6 +27,8 @@ export interface OnchainSignal {
 export interface SignalMetadata {
   dateTimeOfPost?: string; // ISO 8601 timestamp of when the tweet was posted
   dateTimeOfSave: string;  // ISO 8601 timestamp of when the signal was saved
+  savedByHandle?: string;  // Ethos/Twitter handle of who saved it
+  savedByProfileId?: number; // Ethos profile ID of who saved it
 }
 
 /**

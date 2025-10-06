@@ -103,41 +103,28 @@ export default function SearchForm() {
                 onClick={() => handleUserClick(user.username || user.id.toString())}
                 class="p-4 hover:bg-white/10 transition-all duration-200 cursor-pointer border-b border-white/5 last:border-b-0"
               >
-                <div class="flex items-center gap-4">
-                  <div class="relative">
-                    <img
-                      src={user.avatarUrl}
-                      alt={user.displayName}
-                      class="w-12 h-12 rounded-full ring-4 shadow-lg"
-                      style={`border-color: ${getScoreColor(user.score)}; box-shadow: 0 0 12px ${getScoreColor(user.score)}40, 0 10px 25px rgba(0,0,0,0.3);`}
-                    />
-                    {user.status === "ACTIVE" && (
-                      <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black shadow-lg shadow-green-500/50"></div>
-                    )}
-                  </div>
-                  
+                <div class="flex items-center gap-3">
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.displayName}
+                    class="w-14 h-14 rounded-full object-cover border-4 shadow-lg"
+                    style={`border-color: ${getScoreColor(user.score)}; box-shadow: 0 0 16px ${getScoreColor(user.score)}40, 0 10px 25px rgba(0,0,0,0.3);`}
+                  />
                   <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between">
-                      <div>
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="min-w-0">
                         <h4 class="font-semibold text-white text-base">{user.displayName}</h4>
                         {user.username && (
                           <p class="text-sm text-gray-400">@{user.username}</p>
                         )}
                       </div>
-                      <Badge variant={getScoreBadgeVariant(user.score)} class="text-xs">
+                      <Badge variant={getScoreBadgeVariant(user.score)} class="text-xs flex-shrink-0">
                         {getScoreLevelName(user.score)}
                       </Badge>
                     </div>
-                    
-                    <div class="flex items-center gap-4 mt-2">
+                    <div class="mt-1">
                       <span class="text-xs text-gray-400">
                         Score: <span class="font-semibold" style={`color: ${getScoreColor(user.score)};`}>{user.score}</span>
-                      </span>
-                      <span class="text-xs text-gray-400">
-                        XP: <span class="font-semibold text-white">{user.xpTotal.toLocaleString()}</span>
-                      </span>
-                      <span class="text-xs text-gray-400">
-                        Reviews: <span class="font-semibold text-white">{user.stats.review.received.positive}</span>
                       </span>
                     </div>
                   </div>

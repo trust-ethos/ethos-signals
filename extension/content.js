@@ -6,26 +6,51 @@
 let SIGNALS_API_BASE = 'https://signals.deno.dev';
 
 // Check Chrome storage for local development override
-chrome.storage.sync.get(['apiBaseUrl'], (result) => {
-  if (result.apiBaseUrl) {
-    SIGNALS_API_BASE = result.apiBaseUrl;
-    console.log('🔧 Using custom API URL:', SIGNALS_API_BASE);
-  }
-});
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+  chrome.storage.sync.get(['apiBaseUrl'], (result) => {
+    if (result && result.apiBaseUrl) {
+      SIGNALS_API_BASE = result.apiBaseUrl;
+      console.log('🔧 Using custom API URL:', SIGNALS_API_BASE);
+    }
+  });
+}
 
 class SignalsInjector {
   constructor() {
     this.processedTweets = new Set();
     this.verifiedProjects = [];
     this.savedSignals = new Map(); // tweetUrl -> signal data
+    this.authToken = null;
     this.init();
   }
 
   async init() {
+    await this.loadAuthToken();
     await this.loadVerifiedProjects();
     await this.loadExistingSignals();
     this.injectButtons();
     this.observeNewTweets();
+    
+    // Listen for auth changes
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === 'AUTH_EXPIRED') {
+        this.authToken = null;
+        this.showToast('Authentication expired. Please reconnect your wallet.', 'error');
+      } else if (message.type === 'AUTH_STATUS_CHANGED') {
+        console.log('🔄 Auth status changed, reloading token...');
+        this.loadAuthToken();
+      }
+    });
+  }
+
+  async loadAuthToken() {
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'GET_AUTH_TOKEN' });
+      this.authToken = response || null;
+    } catch (error) {
+      console.error('Failed to load auth token:', error);
+      this.authToken = null;
+    }
   }
 
   async loadExistingSignals() {
@@ -429,8 +454,10 @@ class SignalsInjector {
 
     // Load recently used projects
     try {
-      const result = await chrome.storage.local.get(['recentProjects']);
-      recentProjectIds = result.recentProjects || [];
+      if (chrome && chrome.storage && chrome.storage.local) {
+        const result = await chrome.storage.local.get(['recentProjects']);
+        recentProjectIds = result.recentProjects || [];
+      }
     } catch (error) {
       console.error('Failed to load recent projects:', error);
     }
@@ -586,8 +613,14 @@ class SignalsInjector {
         });
 
         // Save to recently used
-        const updatedRecent = [selectedProject.id, ...recentProjectIds.filter(id => id !== selectedProject.id)].slice(0, 5);
-        await chrome.storage.local.set({ recentProjects: updatedRecent });
+        try {
+          if (chrome && chrome.storage && chrome.storage.local) {
+            const updatedRecent = [selectedProject.id, ...recentProjectIds.filter(id => id !== selectedProject.id)].slice(0, 5);
+            await chrome.storage.local.set({ recentProjects: updatedRecent });
+          }
+        } catch (storageError) {
+          console.warn('Could not save to recently used:', storageError);
+        }
         
         // Show success with profile link
         const profileUrl = `${SIGNALS_API_BASE}/profile/${tweetData.username}`;
@@ -595,7 +628,15 @@ class SignalsInjector {
         overlay.remove();
       } catch (error) {
         console.error('Failed to save signal:', error);
-        this.showToast('Failed to save signal', 'error');
+        const errorMessage = error.message || 'Failed to save signal';
+        
+        // If auth error, suggest reconnection
+        if (errorMessage.includes('Authentication')) {
+          this.showToast(errorMessage + ' Open the extension to reconnect.', 'error');
+        } else {
+          this.showToast(errorMessage, 'error');
+        }
+        
         saveBtn.textContent = 'Save Signal';
         saveBtn.disabled = false;
       }
@@ -615,18 +656,42 @@ class SignalsInjector {
   }
 
   async saveSignal(signalData) {
+    // Ensure we have auth token
+    if (!this.authToken) {
+      await this.loadAuthToken();
+    }
+
+    if (!this.authToken) {
+      throw new Error('Authentication required. Please connect your wallet in the extension.');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Ethos-Client': 'signals-extension@1.0.0',
+      'Authorization': `Bearer ${this.authToken}`,
+    };
+
     const response = await fetch(`${SIGNALS_API_BASE}/api/signals/${signalData.twitterUsername}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Ethos-Client': 'signals-extension@1.0.0',
-      },
+      headers,
       body: JSON.stringify(signalData),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      
+      // Handle auth errors
+      if (response.status === 401) {
+        this.authToken = null;
+        throw new Error('Authentication expired. Please reconnect your wallet.');
+      }
+      
+      // Handle rate limit errors
+      if (response.status === 429) {
+        throw new Error(errorData.error || 'Rate limit exceeded. Please try again later.');
+      }
+      
+      throw new Error(errorData.error || `API error: ${response.status}`);
     }
 
     return response.json();
@@ -725,11 +790,13 @@ class SignalsInjector {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === 1) { // Element node
             // Skip if this is likely a modal, overlay, or image viewer
-            if (node.className && (
-              node.className.includes('modal') || 
-              node.className.includes('overlay') || 
-              node.className.includes('layer') ||
-              node.className.includes('dialog')
+            const className = node.className || '';
+            const classStr = typeof className === 'string' ? className : (className.baseVal || '');
+            if (classStr && (
+              classStr.includes('modal') || 
+              classStr.includes('overlay') || 
+              classStr.includes('layer') ||
+              classStr.includes('dialog')
             )) {
               return;
             }

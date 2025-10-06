@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "preact/hooks";
 import { Badge } from "../components/ui/Badge.tsx";
 import SignalPerformance from "./SignalPerformance.tsx";
 import RelativeTime from "./RelativeTime.tsx";
@@ -39,94 +38,97 @@ interface EthosUser {
   displayName: string;
   avatarUrl: string;
   score: number;
-  username?: string;
 }
 
 interface Props {
-  initialSignals: Signal[];
-  initialProjects: Project[];
-  initialEthosUsers: Record<string, EthosUser>;
+  signals: Signal[];
+  projects: Project[];
+  ethosUsers: Record<string, EthosUser>;
+  currentPage: number;
+  totalPages: number;
 }
 
-export default function RecentSignalsInfinite({ 
-  initialSignals, 
-  initialProjects, 
-  initialEthosUsers 
+export default function RecentSignalsPaginated({ 
+  signals, 
+  projects, 
+  ethosUsers,
+  currentPage,
+  totalPages
 }: Props) {
-  const [signals, setSignals] = useState<Signal[]>(initialSignals);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [ethosUsers, setEthosUsers] = useState<Record<string, EthosUser>>(initialEthosUsers);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(initialSignals.length);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-
   // Create lookup maps
   const verifiedByUsername: Record<string, Project> = {};
   for (const project of projects) {
     verifiedByUsername[project.twitterUsername.toLowerCase()] = project;
   }
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const first = entries[0];
-        if (first.isIntersecting && hasMore && !loading) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
+  const handlePageChange = (page: number) => {
+    globalThis.location.href = `/?page=${page}`;
+  };
 
-    const currentRef = loadMoreRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
+  const renderPaginationButtons = () => {
+    const buttons = [];
+    
+    // Always show first page
+    if (currentPage > 3) {
+      buttons.push(
+        <button
+          key={1}
+          type="button"
+          onClick={() => handlePageChange(1)}
+          class="px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+        >
+          1
+        </button>
+      );
+      
+      if (currentPage > 4) {
+        buttons.push(
+          <span key="ellipsis-start" class="px-2 text-gray-400">...</span>
+        );
       }
-    };
-  }, [hasMore, loading, offset]);
-
-  const loadMore = async () => {
-    if (loading || !hasMore) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/signals/recent?limit=15&offset=${offset}`);
-      const data = await response.json();
-
-      if (data.signals && data.signals.length > 0) {
-        setSignals(prev => [...prev, ...data.signals]);
-        setOffset(prev => prev + data.signals.length);
-        setHasMore(data.hasMore);
-
-        // Merge new projects
-        if (data.verifiedProjects) {
-          setProjects(prev => {
-            const existingIds = new Set(prev.map(p => p.twitterUsername.toLowerCase()));
-            const newProjects = data.verifiedProjects.filter(
-              (p: Project) => !existingIds.has(p.twitterUsername.toLowerCase())
-            );
-            return [...prev, ...newProjects];
-          });
-        }
-
-        // Merge new Ethos users
-        if (data.ethosUsers) {
-          setEthosUsers(prev => ({ ...prev, ...data.ethosUsers }));
-        }
-      } else {
-        setHasMore(false);
-      }
-    } catch (error) {
-      console.error("Failed to load more signals:", error);
-      setHasMore(false);
-    } finally {
-      setLoading(false);
     }
+    
+    // Show pages around current page
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button
+          key={i}
+          type="button"
+          onClick={() => handlePageChange(i)}
+          class={i === currentPage 
+            ? "px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30" 
+            : "px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+          }
+        >
+          {i}
+        </button>
+      );
+    }
+    
+    // Always show last page
+    if (currentPage < totalPages - 2) {
+      if (currentPage < totalPages - 3) {
+        buttons.push(
+          <span key="ellipsis-end" class="px-2 text-gray-400">...</span>
+        );
+      }
+      
+      buttons.push(
+        <button
+          key={totalPages}
+          type="button"
+          onClick={() => handlePageChange(totalPages)}
+          class="px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+        >
+          {totalPages}
+        </button>
+      );
+    }
+    
+    return buttons;
   };
 
   return (
@@ -148,21 +150,48 @@ export default function RecentSignalsInfinite({
         })}
       </div>
 
-      {/* Load More Trigger */}
-      <div ref={loadMoreRef} class="py-8 text-center">
-        {loading && (
-          <div class="text-gray-400">
-            <svg class="animate-spin h-8 w-8 mx-auto text-blue-400" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p class="mt-2">Loading more signals...</p>
-          </div>
-        )}
-        {!hasMore && signals.length > 0 && (
-          <div class="text-gray-400">No more signals to load</div>
-        )}
-      </div>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div class="mt-12 flex items-center justify-center gap-2 flex-wrap">
+          {/* Previous Button */}
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            class={`px-4 py-2 rounded-lg font-medium transition-all ${
+              currentPage === 1
+                ? "bg-white/5 text-gray-600 cursor-not-allowed"
+                : "bg-white/10 text-white hover:bg-white/20"
+            }`}
+          >
+            ← Previous
+          </button>
+          
+          {/* Page Numbers */}
+          {renderPaginationButtons()}
+          
+          {/* Next Button */}
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            class={`px-4 py-2 rounded-lg font-medium transition-all ${
+              currentPage === totalPages
+                ? "bg-white/5 text-gray-600 cursor-not-allowed"
+                : "bg-white/10 text-white hover:bg-white/20"
+            }`}
+          >
+            Next →
+          </button>
+        </div>
+      )}
+      
+      {/* Page Info */}
+      {totalPages > 1 && (
+        <div class="mt-4 text-center text-sm text-gray-400">
+          Page {currentPage} of {totalPages}
+        </div>
+      )}
     </>
   );
 }
@@ -343,3 +372,4 @@ function SignalCard({ signal, project, ethosUser, ethosUsers }: {
     </div>
   );
 }
+

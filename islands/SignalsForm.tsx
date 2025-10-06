@@ -22,6 +22,11 @@ interface SignalItem {
   projectAvatarUrl?: string;
   onchainTxHash?: string;
   onchainSignalId?: number;
+  savedBy?: {
+    walletAddress: string;
+    ethosUsername?: string;
+    ethosProfileId?: number;
+  };
 }
 
 type Chain = "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid";
@@ -296,13 +301,68 @@ export default function SignalsForm({ username }: Props) {
                     </div>
                   )}
                   
-                  <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-3 flex-wrap">
                     <a class="text-sm text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 transition-colors" href={s.tweetUrl} target="_blank" rel="noopener noreferrer">
                       View Tweet
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </a>
+                    {s.savedBy && (() => {
+                      // Try to fetch the Ethos user avatar
+                      const avatarUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${s.savedBy.walletAddress}`;
+                      
+                      if (s.savedBy.ethosUsername) {
+                        // Try direct fetch from Ethos API
+                        fetch(`https://api.ethos.network/api/v2/user/by/x/${encodeURIComponent(s.savedBy.ethosUsername)}`, {
+                          headers: { 'X-Ethos-Client': 'signals-app@1.0.0' }
+                        })
+                        .then(r => r.ok ? r.json() : null)
+                        .then(user => {
+                          if (user?.avatarUrl) {
+                            const img = document.querySelector(`img[data-saved-by="${s.savedBy!.walletAddress}"]`);
+                            if (img) {
+                              img.setAttribute('src', user.avatarUrl);
+                            }
+                          }
+                        })
+                        .catch(() => {});
+                      }
+                      
+                      return (
+                        <div class="inline-flex items-center gap-1.5 text-sm text-gray-400" title={`Saved by ${s.savedBy.ethosUsername || s.savedBy.walletAddress.slice(0, 6) + '...' + s.savedBy.walletAddress.slice(-4)}`}>
+                          <span class="text-gray-500">Saved by</span>
+                          {s.savedBy.ethosUsername ? (
+                            <a 
+                              href={`/contributors/${s.savedBy.ethosUsername}`}
+                              class="inline-flex items-center gap-1.5 hover:text-blue-400 transition-colors"
+                            >
+                              <img 
+                                src={avatarUrl}
+                                data-saved-by={s.savedBy.walletAddress}
+                                alt="Saved by"
+                                class="w-4 h-4 rounded-full border border-gray-600"
+                              />
+                              <span>
+                                @{s.savedBy.ethosUsername}
+                              </span>
+                            </a>
+                          ) : (
+                            <>
+                              <img 
+                                src={avatarUrl}
+                                data-saved-by={s.savedBy.walletAddress}
+                                alt="Saved by"
+                                class="w-4 h-4 rounded-full border border-gray-600"
+                              />
+                              <span>
+                                {s.savedBy.walletAddress.slice(0, 6)}...{s.savedBy.walletAddress.slice(-4)}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {s.onchainTxHash && (
                       <a 
                         class="text-sm text-green-400 hover:text-green-300 hover:underline inline-flex items-center gap-1 transition-colors" 

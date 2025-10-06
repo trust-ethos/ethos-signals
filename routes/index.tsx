@@ -1,10 +1,10 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import SearchForm from "../islands/SearchForm.tsx";
-import RecentSignalsInfinite from "../islands/RecentSignalsInfinite.tsx";
+import RecentSignalsPaginated from "../islands/RecentSignalsPaginated.tsx";
 import TradersCarousel from "../islands/TradersCarousel.tsx";
-import { listAllRecentSignals, listVerifiedProjects, TestSignal, VerifiedProject } from "../utils/database.ts";
-import { getUserByTwitterUsername, EthosUser } from "../utils/ethos-api.ts";
+import { listAllRecentSignals, countAllRecentSignals, listVerifiedProjects, TestSignal, VerifiedProject } from "../utils/database.ts";
+import { getUserByTwitterUsername, getUserByAddress, getUserByProfileId, EthosUser } from "../utils/ethos-api.ts";
 
 interface TraderWithStats {
   username: string;
@@ -19,37 +19,85 @@ interface PageData {
   verifiedProjects: VerifiedProject[];
   ethosUsers: Record<string, EthosUser>;
   featuredTraders: TraderWithStats[];
+  currentPage: number;
+  totalPages: number;
 }
 
 export const handler: Handlers<PageData> = {
-  async GET(_req, ctx) {
-    const [signals, verifiedProjects] = await Promise.all([
-      listAllRecentSignals(50), // Load more signals for better trader stats
-      listVerifiedProjects()
+  async GET(req, ctx) {
+    const url = new URL(req.url);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const perPage = 15;
+    const offset = (page - 1) * perPage;
+    
+    const [totalCount, signals, verifiedProjects, allSignals] = await Promise.all([
+      countAllRecentSignals(),
+      listAllRecentSignals(perPage, offset),
+      listVerifiedProjects(),
+      listAllRecentSignals(50) // Load more signals for better trader stats
     ]);
     
-    // Fetch Ethos user data for all unique usernames in signals
-    const uniqueUsernames = [...new Set(signals.map(s => s.twitterUsername))];
-    const ethosUsersArray = await Promise.all(
-      uniqueUsernames.map(async (username) => {
+    const totalPages = Math.ceil(totalCount / perPage);
+    
+    // Fetch Ethos user data for signal authors
+    const signalAuthors = [...new Set([...signals.map(s => s.twitterUsername), ...allSignals.map(s => s.twitterUsername)])];
+    const authorsData = await Promise.all(
+      signalAuthors.map(async (username) => {
         const user = await getUserByTwitterUsername(username);
         return { username, user };
       })
     );
     
     const ethosUsers: Record<string, EthosUser> = {};
-    for (const { username, user } of ethosUsersArray) {
+    for (const { username, user } of authorsData) {
       if (user) {
         ethosUsers[username] = user;
       }
     }
     
-    // Calculate stats for featured traders
-    const traderStats = uniqueUsernames.map(username => {
+    // Fetch Ethos user data for saved-by users
+    const savedByPromises = [...signals, ...allSignals]
+      .filter(s => s.savedBy)
+      .map(async (signal) => {
+        const savedBy = signal.savedBy!;
+        let user = null;
+        
+        // Try username first if available
+        if (savedBy.ethosUsername) {
+          user = await getUserByTwitterUsername(savedBy.ethosUsername);
+        }
+        
+        // Otherwise try profile ID
+        if (!user && savedBy.ethosProfileId) {
+          user = await getUserByProfileId(savedBy.ethosProfileId);
+        }
+        
+        // Otherwise try wallet address as last resort
+        if (!user) {
+          user = await getUserByAddress(savedBy.walletAddress);
+        }
+        
+          // Store user data with their actual username (or savedBy username as fallback)
+          if (user) {
+            const key = user.username || savedBy.ethosUsername || savedBy.walletAddress;
+            if (key && !ethosUsers[key]) {
+              ethosUsers[key] = user;
+              // Also store under savedBy username if different (case-insensitive)
+              if (savedBy.ethosUsername && savedBy.ethosUsername.toLowerCase() !== (user.username || '').toLowerCase()) {
+                ethosUsers[savedBy.ethosUsername] = user;
+              }
+            }
+          }
+      });
+    
+    await Promise.all(savedByPromises);
+    
+    // Calculate stats for featured traders using all signals
+    const traderStats = [...new Set(allSignals.map(s => s.twitterUsername))].map(username => {
       const user = ethosUsers[username];
       if (!user) return null;
       
-      const userSignals = signals.filter(s => s.twitterUsername === username);
+      const userSignals = allSignals.filter(s => s.twitterUsername === username);
       const signalCount = userSignals.length;
       const bullishCount = userSignals.filter(s => s.sentiment === 'bullish').length;
       const bearishCount = userSignals.filter(s => s.sentiment === 'bearish').length;
@@ -68,12 +116,19 @@ export const handler: Handlers<PageData> = {
       .sort((a, b) => b.signalCount - a.signalCount)
       .slice(0, 15);
     
-    return ctx.render({ signals: signals.slice(0, 15), verifiedProjects, ethosUsers, featuredTraders });
+    return ctx.render({ 
+      signals, 
+      verifiedProjects, 
+      ethosUsers, 
+      featuredTraders,
+      currentPage: page,
+      totalPages
+    });
   },
 };
 
 export default function Home({ data }: PageProps<PageData>) {
-  const { signals, verifiedProjects, ethosUsers, featuredTraders } = data;
+  const { signals, verifiedProjects, ethosUsers, featuredTraders, currentPage, totalPages } = data;
   
   return (
     <>
@@ -152,10 +207,12 @@ export default function Home({ data }: PageProps<PageData>) {
                 <p class="text-lg">No signals yet. Start tracking traders to see their calls here!</p>
               </div>
             ) : (
-              <RecentSignalsInfinite
-                initialSignals={signals}
-                initialProjects={verifiedProjects}
-                initialEthosUsers={ethosUsers}
+              <RecentSignalsPaginated
+                signals={signals}
+                projects={verifiedProjects}
+                ethosUsers={ethosUsers}
+                currentPage={currentPage}
+                totalPages={totalPages}
               />
             )}
           </div>

@@ -1,6 +1,8 @@
 import { Handlers } from "$fresh/server.ts";
 import { createUlid, deleteTestSignal, listTestSignals, saveTestSignal, type SignalSentiment } from "../../../utils/database.ts";
 import { getSignalsContractWithSigner, createSignalOnchain } from "../../../utils/onchain-signals.ts";
+import { getAuthFromRequest } from "../../../utils/auth-middleware.ts";
+import { checkRateLimit } from "../../../utils/extension-auth.ts";
 
 export const handler: Handlers = {
   OPTIONS() {
@@ -8,12 +10,39 @@ export const handler: Handlers = {
       headers: {
         "access-control-allow-origin": "*",
         "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
-        "access-control-allow-headers": "content-type, x-ethos-client",
+        "access-control-allow-headers": "content-type, authorization, x-ethos-client",
       },
     });
   },
-  async GET(_req, ctx) {
+  async GET(req, ctx) {
     const { username } = ctx.params;
+    
+    // Check authentication (optional for GET)
+    const auth = await getAuthFromRequest(req);
+    
+    // If authenticated, check rate limit
+    if (auth) {
+      const rateLimit = await checkRateLimit(auth.authToken, 'signals:list');
+      if (!rateLimit.allowed) {
+        const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded',
+            code: 'RATE_LIMIT_EXCEEDED',
+            resetAt: rateLimit.resetAt,
+          }),
+          { 
+            status: 429,
+            headers: { 
+              "content-type": "application/json",
+              "access-control-allow-origin": "*",
+              "retry-after": retryAfter.toString(),
+            }
+          }
+        );
+      }
+    }
+    
     const items = await listTestSignals(username);
     
     // Convert BigInt to number for JSON serialization
@@ -27,12 +56,57 @@ export const handler: Handlers = {
         "content-type": "application/json",
         "access-control-allow-origin": "*",
         "access-control-allow-methods": "GET, POST, DELETE",
-        "access-control-allow-headers": "content-type, x-ethos-client"
+        "access-control-allow-headers": "content-type, authorization, x-ethos-client"
       },
     });
   },
   async POST(req, ctx) {
     const { username } = ctx.params;
+    
+    // Require authentication for POST
+    const auth = await getAuthFromRequest(req);
+    if (!auth) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Authentication required',
+          code: 'AUTH_REQUIRED',
+          message: 'Please connect your wallet in the extension to save signals.'
+        }),
+        { 
+          status: 401,
+          headers: { 
+            "content-type": "application/json",
+            "access-control-allow-origin": "*"
+          }
+        }
+      );
+    }
+    
+    // NOTE: username is the Twitter user who posted the signal (can be anyone)
+    // The auth token tracks WHO saved it (stored in savedBy via auth_token relationship)
+    
+    // Check rate limit
+    const rateLimit = await checkRateLimit(auth.authToken, 'signals:create');
+    if (!rateLimit.allowed) {
+      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again later.',
+          code: 'RATE_LIMIT_EXCEEDED',
+          resetAt: rateLimit.resetAt,
+          limit: rateLimit.limit,
+        }),
+        { 
+          status: 429,
+          headers: { 
+            "content-type": "application/json",
+            "access-control-allow-origin": "*",
+            "retry-after": retryAfter.toString(),
+          }
+        }
+      );
+    }
+    
     const body = await req.json();
     const { sentiment, tweetUrl, tweetContent, projectHandle, notedAt, tweetTimestamp, projectUserId, projectDisplayName, projectAvatarUrl } = body as {
       sentiment: SignalSentiment;
@@ -64,6 +138,7 @@ export const handler: Handlers = {
       notedAt,
       tweetTimestamp,
       createdAt: Date.now(),
+      authToken: auth.authToken, // Track which auth token created this signal
       // Onchain data will be added later
     });
     
@@ -84,6 +159,8 @@ export const handler: Handlers = {
             metadata: {
               dateTimeOfPost: tweetTimestamp || undefined,
               dateTimeOfSave: new Date().toISOString(),
+              savedByHandle: auth.ethosUsername || undefined,
+              savedByProfileId: auth.ethosProfileId || undefined,
             },
             twitterAccountId: projectUserId?.toString() || "",
           });
@@ -131,6 +208,26 @@ export const handler: Handlers = {
   },
   async DELETE(req, ctx) {
     const { username } = ctx.params;
+    
+    // Require authentication for DELETE
+    const auth = await getAuthFromRequest(req);
+    if (!auth) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Authentication required',
+          code: 'AUTH_REQUIRED',
+          message: 'Please connect your wallet in the extension to delete signals.'
+        }),
+        { 
+          status: 401,
+          headers: { 
+            "content-type": "application/json",
+            "access-control-allow-origin": "*"
+          }
+        }
+      );
+    }
+    
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400 });

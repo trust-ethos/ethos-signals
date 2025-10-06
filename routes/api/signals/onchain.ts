@@ -13,11 +13,25 @@ import {
   getSignalsBatchOnchain,
   getProjectSentimentOnchain
 } from "../../../utils/onchain-signals.ts";
+import { getAuthFromRequest } from "../../../utils/auth-middleware.ts";
 
 export const handler: Handlers = {
   // POST: Create a signal both in database and onchain
   async POST(req) {
     try {
+      // SECURITY: Require authentication for all signal creation
+      const auth = await getAuthFromRequest(req);
+      if (!auth) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Authentication required",
+            code: "AUTH_REQUIRED",
+            message: "Please connect your wallet to save signals."
+          }),
+          { status: 401, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      
       const body = await req.json();
       const { signal, walletPrivateKey } = body;
       
@@ -28,10 +42,13 @@ export const handler: Handlers = {
         );
       }
       
+      // NOTE: signal.twitterUsername is the Twitter user who posted the signal (can be anyone)
+      // The auth token tracks WHO saved it (stored in savedBy via auth_token relationship)
+      
       // Validate signal structure
       const testSignal: TestSignal = {
         id: signal.id,
-        twitterUsername: signal.twitterUsername,
+        twitterUsername: signal.twitterUsername, // The user who posted the tweet
         projectHandle: signal.projectHandle,
         projectUserId: signal.projectUserId,
         projectDisplayName: signal.projectDisplayName,
@@ -43,6 +60,7 @@ export const handler: Handlers = {
         notedAt: signal.notedAt,
         tweetTimestamp: signal.tweetTimestamp,
         createdAt: signal.createdAt || Date.now(),
+        authToken: auth.authToken, // SECURITY: Track which auth token created this signal
       };
       
       // Save to database first (fast)
@@ -66,12 +84,10 @@ export const handler: Handlers = {
             tweetContent: testSignal.tweetContent || "",
             isBullish: testSignal.sentiment === "bullish",
             metadata: {
-              twitterUsername: testSignal.twitterUsername,
-              notedAt: testSignal.notedAt,
-              projectDisplayName: testSignal.projectDisplayName,
-              projectUserId: testSignal.projectUserId,
-              projectAvatarUrl: testSignal.projectAvatarUrl,
-              verifiedProjectId: testSignal.verifiedProjectId,
+              dateTimeOfPost: testSignal.tweetTimestamp,
+              dateTimeOfSave: new Date().toISOString(),
+              savedByHandle: auth.ethosUsername, // SECURITY: Use authenticated user's data
+              savedByProfileId: auth.ethosProfileId, // SECURITY: Use authenticated user's data
             },
             twitterAccountId: testSignal.projectUserId?.toString() || "",
           });

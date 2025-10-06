@@ -4,6 +4,9 @@
 
 import * as $_app from "./routes/_app.tsx";
 import * as $admin_verified from "./routes/admin/verified.tsx";
+import * as $api_auth_connect from "./routes/api/auth/connect.ts";
+import * as $api_auth_revoke from "./routes/api/auth/revoke.ts";
+import * as $api_auth_verify from "./routes/api/auth/verify.ts";
 import * as $api_cache_stats from "./routes/api/cache/stats.ts";
 import * as $api_coins_search from "./routes/api/coins/search.ts";
 import * as $api_performance_username_ from "./routes/api/performance/[username].ts";
@@ -15,9 +18,12 @@ import * as $api_price_nft from "./routes/api/price/nft.ts";
 import * as $api_price_token from "./routes/api/price/token.ts";
 import * as $api_search from "./routes/api/search.ts";
 import * as $api_signals_username_ from "./routes/api/signals/[username].ts";
+import * as $api_signals_delete_id_ from "./routes/api/signals/delete/[id].ts";
 import * as $api_signals_onchain from "./routes/api/signals/onchain.ts";
 import * as $api_signals_recent from "./routes/api/signals/recent.ts";
 import * as $api_verified_index from "./routes/api/verified/index.ts";
+import * as $contributors_handle_ from "./routes/contributors/[handle].tsx";
+import * as $extension_auth from "./routes/extension-auth.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $nft_handle_ from "./routes/nft/[handle].tsx";
 import * as $pre_tge_handle_ from "./routes/pre-tge/[handle].tsx";
@@ -25,11 +31,13 @@ import * as $profile_username_ from "./routes/profile/[username].tsx";
 import * as $projects from "./routes/projects.tsx";
 import * as $token_handle_ from "./routes/token/[handle].tsx";
 import * as $AdminVerified from "./islands/AdminVerified.tsx";
+import * as $ContributorSignalsList from "./islands/ContributorSignalsList.tsx";
 import * as $NFTPageIsland from "./islands/NFTPageIsland.tsx";
 import * as $PerformanceMetrics from "./islands/PerformanceMetrics.tsx";
 import * as $PreTGEPageIsland from "./islands/PreTGEPageIsland.tsx";
 import * as $PriceChart from "./islands/PriceChart.tsx";
 import * as $RecentSignalsInfinite from "./islands/RecentSignalsInfinite.tsx";
+import * as $RecentSignalsPaginated from "./islands/RecentSignalsPaginated.tsx";
 import * as $RelativeTime from "./islands/RelativeTime.tsx";
 import * as $SearchForm from "./islands/SearchForm.tsx";
 import * as $SignalPerformance from "./islands/SignalPerformance.tsx";
@@ -42,6 +50,9 @@ const manifest = {
   routes: {
     "./routes/_app.tsx": $_app,
     "./routes/admin/verified.tsx": $admin_verified,
+    "./routes/api/auth/connect.ts": $api_auth_connect,
+    "./routes/api/auth/revoke.ts": $api_auth_revoke,
+    "./routes/api/auth/verify.ts": $api_auth_verify,
     "./routes/api/cache/stats.ts": $api_cache_stats,
     "./routes/api/coins/search.ts": $api_coins_search,
     "./routes/api/performance/[username].ts": $api_performance_username_,
@@ -53,9 +64,12 @@ const manifest = {
     "./routes/api/price/token.ts": $api_price_token,
     "./routes/api/search.ts": $api_search,
     "./routes/api/signals/[username].ts": $api_signals_username_,
+    "./routes/api/signals/delete/[id].ts": $api_signals_delete_id_,
     "./routes/api/signals/onchain.ts": $api_signals_onchain,
     "./routes/api/signals/recent.ts": $api_signals_recent,
     "./routes/api/verified/index.ts": $api_verified_index,
+    "./routes/contributors/[handle].tsx": $contributors_handle_,
+    "./routes/extension-auth.tsx": $extension_auth,
     "./routes/index.tsx": $index,
     "./routes/nft/[handle].tsx": $nft_handle_,
     "./routes/pre-tge/[handle].tsx": $pre_tge_handle_,
@@ -65,11 +79,13 @@ const manifest = {
   },
   islands: {
     "./islands/AdminVerified.tsx": $AdminVerified,
+    "./islands/ContributorSignalsList.tsx": $ContributorSignalsList,
     "./islands/NFTPageIsland.tsx": $NFTPageIsland,
     "./islands/PerformanceMetrics.tsx": $PerformanceMetrics,
     "./islands/PreTGEPageIsland.tsx": $PreTGEPageIsland,
     "./islands/PriceChart.tsx": $PriceChart,
     "./islands/RecentSignalsInfinite.tsx": $RecentSignalsInfinite,
+    "./islands/RecentSignalsPaginated.tsx": $RecentSignalsPaginated,
     "./islands/RelativeTime.tsx": $RelativeTime,
     "./islands/SearchForm.tsx": $SearchForm,
     "./islands/SignalPerformance.tsx": $SignalPerformance,

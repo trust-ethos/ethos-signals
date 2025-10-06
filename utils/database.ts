@@ -21,8 +21,14 @@ export interface TestSignal {
   notedAt: string; // yyyy-mm-dd
   tweetTimestamp?: string; // ISO datetime
   createdAt: number; // epoch ms
+  authToken?: string; // Auth token of the user who created this signal
   onchainTxHash?: string; // Base blockchain transaction hash
   onchainSignalId?: number; // ID in SignalsAttestation contract
+  savedBy?: {
+    walletAddress: string;
+    ethosUsername?: string;
+    ethosProfileId?: number;
+  };
 }
 
 export type VerifiedProjectType = "token" | "nft" | "pre_tge";
@@ -52,9 +58,9 @@ export async function saveTestSignal(signal: TestSignal): Promise<boolean> {
         id, twitter_username, project_handle, project_user_id, 
         project_display_name, project_avatar_url, verified_project_id,
         tweet_url, tweet_content, sentiment, noted_at, tweet_timestamp, created_at,
-        onchain_tx_hash, onchain_signal_id
+        auth_token, onchain_tx_hash, onchain_signal_id
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_timestamp($13), $14, $15
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_timestamp($13), $14, $15, $16
       )
       ON CONFLICT (id) DO UPDATE SET
         twitter_username = EXCLUDED.twitter_username,
@@ -68,6 +74,7 @@ export async function saveTestSignal(signal: TestSignal): Promise<boolean> {
         sentiment = EXCLUDED.sentiment,
         noted_at = EXCLUDED.noted_at,
         tweet_timestamp = EXCLUDED.tweet_timestamp,
+        auth_token = COALESCE(EXCLUDED.auth_token, signals.auth_token),
         onchain_tx_hash = COALESCE(EXCLUDED.onchain_tx_hash, signals.onchain_tx_hash),
         onchain_signal_id = COALESCE(EXCLUDED.onchain_signal_id, signals.onchain_signal_id)
     `, [
@@ -84,6 +91,7 @@ export async function saveTestSignal(signal: TestSignal): Promise<boolean> {
       signal.notedAt,
       signal.tweetTimestamp || null,
       signal.createdAt / 1000, // Convert to seconds for PostgreSQL
+      signal.authToken || null,
       signal.onchainTxHash || null,
       signal.onchainSignalId || null,
     ]);
@@ -112,12 +120,22 @@ export async function listTestSignals(username: string): Promise<TestSignal[]> {
       noted_at: Date;
       tweet_timestamp: Date | null;
       created_at: Date;
+      auth_token: string | null;
       onchain_tx_hash: string | null;
       onchain_signal_id: number | null;
+      saved_by_wallet: string | null;
+      saved_by_ethos_username: string | null;
+      saved_by_ethos_profile_id: number | null;
     }>(`
-      SELECT * FROM signals 
-      WHERE twitter_username = $1 
-      ORDER BY created_at DESC
+      SELECT 
+        s.*,
+        eat.wallet_address as saved_by_wallet,
+        eat.ethos_username as saved_by_ethos_username,
+        eat.ethos_profile_id as saved_by_ethos_profile_id
+      FROM signals s
+      LEFT JOIN extension_auth_tokens eat ON s.auth_token = eat.auth_token
+      WHERE s.twitter_username = $1 
+      ORDER BY s.created_at DESC
     `, [username]);
     
     return result.rows.map(row => ({
@@ -134,12 +152,32 @@ export async function listTestSignals(username: string): Promise<TestSignal[]> {
       notedAt: row.noted_at.toISOString().slice(0, 10), // Convert to yyyy-mm-dd
       tweetTimestamp: row.tweet_timestamp?.toISOString(),
       createdAt: row.created_at.getTime(), // Convert to epoch ms
+      authToken: row.auth_token || undefined,
       onchainTxHash: row.onchain_tx_hash || undefined,
       onchainSignalId: row.onchain_signal_id || undefined,
+      savedBy: row.saved_by_wallet ? {
+        walletAddress: row.saved_by_wallet,
+        ethosUsername: row.saved_by_ethos_username || undefined,
+        ethosProfileId: row.saved_by_ethos_profile_id || undefined,
+      } : undefined,
     }));
   } catch (error) {
     console.error("Failed to list signals:", error);
     return [];
+  }
+}
+
+export async function countAllRecentSignals(): Promise<number> {
+  try {
+    const client = await getDbClient();
+    const result = await client.queryObject<{ count: string }>(`
+      SELECT COUNT(*) as count FROM signals
+    `);
+    
+    return parseInt(result.rows[0]?.count || "0");
+  } catch (error) {
+    console.error("Failed to count signals:", error);
+    return 0;
   }
 }
 
@@ -160,11 +198,21 @@ export async function listAllRecentSignals(limit = 15, offset = 0): Promise<Test
       noted_at: Date;
       tweet_timestamp: Date | null;
       created_at: Date;
+      auth_token: string | null;
       onchain_tx_hash: string | null;
       onchain_signal_id: number | null;
+      saved_by_wallet: string | null;
+      saved_by_ethos_username: string | null;
+      saved_by_ethos_profile_id: number | null;
     }>(`
-      SELECT * FROM signals 
-      ORDER BY created_at DESC
+      SELECT 
+        s.*,
+        eat.wallet_address as saved_by_wallet,
+        eat.ethos_username as saved_by_ethos_username,
+        eat.ethos_profile_id as saved_by_ethos_profile_id
+      FROM signals s
+      LEFT JOIN extension_auth_tokens eat ON s.auth_token = eat.auth_token
+      ORDER BY s.created_at DESC
       LIMIT $1 OFFSET $2
     `, [limit, offset]);
     
@@ -182,11 +230,69 @@ export async function listAllRecentSignals(limit = 15, offset = 0): Promise<Test
       notedAt: row.noted_at.toISOString().slice(0, 10), // Convert to yyyy-mm-dd
       tweetTimestamp: row.tweet_timestamp?.toISOString(),
       createdAt: row.created_at.getTime(), // Convert to epoch ms
+      authToken: row.auth_token || undefined,
+      onchainTxHash: row.onchain_tx_hash || undefined,
+      onchainSignalId: row.onchain_signal_id || undefined,
+      savedBy: row.saved_by_wallet ? {
+        walletAddress: row.saved_by_wallet,
+        ethosUsername: row.saved_by_ethos_username || undefined,
+        ethosProfileId: row.saved_by_ethos_profile_id || undefined,
+      } : undefined,
+    }));
+  } catch (error) {
+    console.error("Failed to list all recent signals:", error);
+    return [];
+  }
+}
+
+export async function getSignalsByContributor(ethosUsername: string): Promise<TestSignal[]> {
+  try {
+    const client = await getDbClient();
+    const result = await client.queryObject<{
+      id: string;
+      twitter_username: string;
+      project_handle: string;
+      project_user_id: number | null;
+      project_display_name: string | null;
+      project_avatar_url: string | null;
+      verified_project_id: string | null;
+      tweet_url: string;
+      tweet_content: string | null;
+      sentiment: SignalSentiment;
+      noted_at: Date;
+      tweet_timestamp: Date | null;
+      created_at: Date;
+      auth_token: string | null;
+      onchain_tx_hash: string | null;
+      onchain_signal_id: number | null;
+    }>(`
+      SELECT s.* 
+      FROM signals s
+      LEFT JOIN extension_auth_tokens eat ON s.auth_token = eat.auth_token
+      WHERE eat.ethos_username = $1
+      ORDER BY s.created_at DESC
+    `, [ethosUsername]);
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      twitterUsername: row.twitter_username,
+      projectHandle: row.project_handle,
+      projectUserId: row.project_user_id || undefined,
+      projectDisplayName: row.project_display_name || undefined,
+      projectAvatarUrl: row.project_avatar_url || undefined,
+      verifiedProjectId: row.verified_project_id || undefined,
+      tweetUrl: row.tweet_url,
+      tweetContent: row.tweet_content || undefined,
+      sentiment: row.sentiment,
+      notedAt: row.noted_at.toISOString().slice(0, 10),
+      tweetTimestamp: row.tweet_timestamp?.toISOString(),
+      createdAt: row.created_at.getTime(),
+      authToken: row.auth_token || undefined,
       onchainTxHash: row.onchain_tx_hash || undefined,
       onchainSignalId: row.onchain_signal_id || undefined,
     }));
   } catch (error) {
-    console.error("Failed to list all recent signals:", error);
+    console.error("Failed to get signals by contributor:", error);
     return [];
   }
 }
@@ -224,12 +330,22 @@ export async function getSignalsByProject(projectHandle: string): Promise<TestSi
       project_display_name: string | null;
       project_avatar_url: string | null;
       created_at: Date;
+      auth_token: string | null;
       onchain_tx_hash: string | null;
       onchain_signal_id: number | null;
+      saved_by_wallet: string | null;
+      saved_by_ethos_username: string | null;
+      saved_by_ethos_profile_id: number | null;
     }>(`
-      SELECT * FROM signals 
-      WHERE LOWER(project_handle) = LOWER($1)
-      ORDER BY COALESCE(tweet_timestamp, noted_at::timestamp) DESC
+      SELECT 
+        s.*,
+        eat.wallet_address as saved_by_wallet,
+        eat.ethos_username as saved_by_ethos_username,
+        eat.ethos_profile_id as saved_by_ethos_profile_id
+      FROM signals s
+      LEFT JOIN extension_auth_tokens eat ON s.auth_token = eat.auth_token
+      WHERE LOWER(s.project_handle) = LOWER($1)
+      ORDER BY COALESCE(s.tweet_timestamp, s.noted_at::timestamp) DESC
     `, [projectHandle]);
     
     return result.rows.map(row => ({
@@ -245,8 +361,14 @@ export async function getSignalsByProject(projectHandle: string): Promise<TestSi
       projectDisplayName: row.project_display_name || undefined,
       projectAvatarUrl: row.project_avatar_url || undefined,
       createdAt: row.created_at.getTime(),
+      authToken: row.auth_token || undefined,
       onchainTxHash: row.onchain_tx_hash || undefined,
       onchainSignalId: row.onchain_signal_id || undefined,
+      savedBy: row.saved_by_wallet ? {
+        walletAddress: row.saved_by_wallet,
+        ethosUsername: row.saved_by_ethos_username || undefined,
+        ethosProfileId: row.saved_by_ethos_profile_id || undefined,
+      } : undefined,
     }));
   } catch (error) {
     console.error("Failed to get signals by project:", error);
