@@ -1,9 +1,8 @@
 // Signals Chrome Extension - Popup Script
 
 const PROD_URL = 'https://signals.deno.dev';
-const LOCAL_URL = 'http://localhost:8000';
-let DASHBOARD_URL = PROD_URL;
-let API_BASE_URL = PROD_URL;
+const DASHBOARD_URL = PROD_URL;
+const API_BASE_URL = PROD_URL;
 
 // Ethos Score Levels (matching utils/ethos-score.ts)
 const SCORE_LEVELS = [
@@ -32,50 +31,15 @@ function getScoreColor(score) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const toggle = document.getElementById('local-dev-toggle');
-  const envBadge = document.getElementById('env-badge');
   const connectWalletBtn = document.getElementById('connect-wallet-btn');
   const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
-  
-  // Load current settings
-  const settings = await chrome.storage.sync.get(['apiBaseUrl']);
-  const isLocal = settings.apiBaseUrl === LOCAL_URL;
-  toggle.checked = isLocal;
-  updateUI(isLocal);
-  DASHBOARD_URL = settings.apiBaseUrl || PROD_URL;
-  API_BASE_URL = settings.apiBaseUrl || PROD_URL;
   
   // Load and display auth status
   await updateAuthStatus();
   
-  // Handle toggle change
-  toggle.addEventListener('change', async (e) => {
-    const isLocal = e.target.checked;
-    const newUrl = isLocal ? LOCAL_URL : null; // null removes the override
-    
-    if (newUrl) {
-      await chrome.storage.sync.set({ apiBaseUrl: newUrl });
-      console.log('✅ Switched to LOCAL:', newUrl);
-      DASHBOARD_URL = newUrl;
-      API_BASE_URL = newUrl;
-      updateUI(true);
-      showNotification('Local mode enabled! Reload X.com to apply.');
-    } else {
-      await chrome.storage.sync.remove('apiBaseUrl');
-      console.log('✅ Switched to PRODUCTION');
-      DASHBOARD_URL = PROD_URL;
-      API_BASE_URL = PROD_URL;
-      updateUI(false);
-      showNotification('Production mode enabled! Reload X.com to apply.');
-    }
-  });
-  
   // Connect wallet - open web-based onboarding page
   connectWalletBtn.addEventListener('click', async () => {
-    // Get the web-based onboarding URL
-    const settings = await chrome.storage.sync.get(['apiBaseUrl']);
-    const baseUrl = settings.apiBaseUrl || PROD_URL;
-    const onboardingUrl = `${baseUrl}/extension-auth`;
+    const onboardingUrl = `${PROD_URL}/extension-auth`;
     
     // Open web-based onboarding page in a new tab
     chrome.tabs.create({ url: onboardingUrl });
@@ -91,16 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('open-dashboard').addEventListener('click', () => {
     chrome.tabs.create({ url: DASHBOARD_URL });
   });
-  
-  function updateUI(isLocal) {
-    if (isLocal) {
-      envBadge.textContent = 'LOCAL';
-      envBadge.className = 'env-indicator env-local';
-    } else {
-      envBadge.textContent = 'PROD';
-      envBadge.className = 'env-indicator env-prod';
-    }
-  }
   
   async function fetchEthosProfile(username, walletAddress) {
     try {

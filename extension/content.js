@@ -1,19 +1,7 @@
 // Signals Chrome Extension - Content Script
 // Injects save buttons on X.com tweets
 
-// Get API base URL from Chrome storage or default to production
-// Set to 'http://localhost:8000' for local development
-let SIGNALS_API_BASE = 'https://signals.deno.dev';
-
-// Check Chrome storage for local development override
-if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-  chrome.storage.sync.get(['apiBaseUrl'], (result) => {
-    if (result && result.apiBaseUrl) {
-      SIGNALS_API_BASE = result.apiBaseUrl;
-      console.log('🔧 Using custom API URL:', SIGNALS_API_BASE);
-    }
-  });
-}
+const SIGNALS_API_BASE = 'https://signals.deno.dev';
 
 class SignalsInjector {
   constructor() {
