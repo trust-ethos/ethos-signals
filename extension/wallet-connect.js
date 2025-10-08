@@ -16,13 +16,11 @@ async function waitForWallet(maxWaitMs = 3000) {
   
   while (Date.now() - startTime < maxWaitMs) {
     if (typeof window.ethereum !== 'undefined') {
-      console.log('✅ Wallet detected:', detectWallet());
       return true;
     }
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   
-  console.log('❌ No wallet detected after waiting');
   return false;
 }
 
