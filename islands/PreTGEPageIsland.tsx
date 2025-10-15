@@ -1,5 +1,4 @@
 import { useState, useEffect } from "preact/hooks";
-import { Badge } from "../components/ui/Badge.tsx";
 
 interface Signal {
   id: string;
@@ -29,14 +28,16 @@ interface Project {
   ticker?: string;
 }
 
-interface LeaderboardEntry {
+interface SupporterEntry {
   username: string;
   displayName: string;
   avatarUrl: string;
   score: number;
+  firstSignalDate: string;
   signalCount: number;
   bullishCount: number;
   bearishCount: number;
+  signals: Signal[];
 }
 
 interface Props {
@@ -46,16 +47,17 @@ interface Props {
 
 export default function PreTGEPageIsland({ initialSignals }: Props) {
   const [signals] = useState<Signal[]>(initialSignals);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [supporters, setSupporters] = useState<SupporterEntry[]>([]);
 
   useEffect(() => {
-    // Calculate leaderboard from signals
-    const userMap = new Map<string, LeaderboardEntry>();
+    // Calculate supporters from signals, grouped by user and sorted chronologically
+    const userMap = new Map<string, SupporterEntry>();
     
     signals.forEach(signal => {
       if (!signal.user) return;
       
       const username = signal.user.username || signal.twitterUsername;
+      const signalDate = signal.tweetTimestamp || signal.notedAt;
       
       if (!userMap.has(username)) {
         userMap.set(username, {
@@ -63,9 +65,11 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
           displayName: signal.user.displayName,
           avatarUrl: signal.user.avatarUrl,
           score: signal.user.score,
+          firstSignalDate: signalDate,
           signalCount: 0,
           bullishCount: 0,
           bearishCount: 0,
+          signals: [],
         });
       }
       
@@ -73,12 +77,19 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
       entry.signalCount++;
       if (signal.sentiment === 'bullish') entry.bullishCount++;
       if (signal.sentiment === 'bearish') entry.bearishCount++;
+      entry.signals.push(signal);
+      
+      // Update first signal date if this one is earlier
+      if (signalDate < entry.firstSignalDate) {
+        entry.firstSignalDate = signalDate;
+      }
     });
     
-    const leaderboardData = Array.from(userMap.values())
-      .sort((a, b) => b.signalCount - a.signalCount);
+    // Sort by first signal date (earliest first)
+    const supportersData = Array.from(userMap.values())
+      .sort((a, b) => new Date(a.firstSignalDate).getTime() - new Date(b.firstSignalDate).getTime());
     
-    setLeaderboard(leaderboardData);
+    setSupporters(supportersData);
   }, [signals]);
 
   return (
@@ -86,138 +97,136 @@ export default function PreTGEPageIsland({ initialSignals }: Props) {
       {/* Launch Status */}
       <div class="glass-strong rounded-2xl p-6 border border-white/10">
         <div class="flex items-center justify-center gap-4">
-          <div>
-            <div class="text-xl font-bold text-white">Launches Soon</div>
+          <div class="text-center">
+            <div class="text-xl font-bold text-white mb-2">🚀 Launches Soon</div>
             <div class="text-sm text-gray-400">Price data will be available after TGE</div>
           </div>
         </div>
       </div>
 
-      {/* Top Performers - Short List */}
+      {/* Early Supporters Table */}
       <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-6">
-          <h2 class="text-2xl font-bold text-white mb-6">Early Supporters</h2>
-            <div class="space-y-3">
-              {leaderboard.slice(0, 5).map((entry, index) => (
-                <a
-                  key={entry.username}
-                  href={`/profile/${entry.username}`}
-                  class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group"
-                >
-                  {/* Rank */}
-                  <div class="text-2xl font-bold text-gray-400 w-8">
-                    {index + 1}
-                  </div>
-                  
-                  {/* User Info */}
-                  <img 
-                    src={entry.avatarUrl} 
-                    alt={entry.displayName}
-                    class="w-12 h-12 rounded-full border-2 border-blue-500/50"
-                  />
-                  <div class="flex-1">
-                    <div class="font-semibold text-white group-hover:text-blue-400 transition-colors">
-                      {entry.displayName}
-                    </div>
-                    <div class="text-sm text-gray-400">
-                      @{entry.username} • Score: {entry.score}
-                    </div>
-                  </div>
-                  
-                  {/* Stats */}
-                  <div class="flex gap-6 text-sm">
-                    <div class="text-center">
-                      <div class="text-white font-bold">{entry.signalCount}</div>
-                      <div class="text-gray-400">Signals</div>
-                    </div>
-                    <div class="text-center">
-                      <div class="text-green-400 font-bold">{entry.bullishCount}</div>
-                      <div class="text-gray-400">Bull</div>
-                    </div>
-                    <div class="text-center">
-                      <div class="text-red-400 font-bold">{entry.bearishCount}</div>
-                      <div class="text-gray-400">Bear</div>
-                    </div>
-                  </div>
-                </a>
-              ))}
-              
-              {leaderboard.length === 0 && (
-                <div class="text-center py-12 text-gray-400">
-                  No signals yet for this project
-                </div>
-              )}
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-white">Early Supporters</h2>
+            <div class="text-sm text-gray-400">
+              {supporters.length} {supporters.length === 1 ? 'supporter' : 'supporters'}
             </div>
-        </div>
-      </div>
-
-      {/* All Signals */}
-      <div class="glass-strong rounded-2xl border border-white/10 overflow-hidden">
-        <div class="p-6">
-          <h2 class="text-2xl font-bold text-white mb-6">All Signals</h2>
-            <div class="space-y-4">
-              {signals.map(signal => (
-                <div key={signal.id} class="p-4 rounded-xl bg-white/5 border border-white/10">
-                  <div class="flex items-start gap-4">
-                    {signal.user && (
-                      <a href={`/profile/${signal.user.username || signal.twitterUsername}`}>
-                        <img 
-                          src={signal.user.avatarUrl} 
-                          alt={signal.user.displayName}
-                          class="w-12 h-12 rounded-full border-2 border-blue-500/50 hover:scale-110 transition-transform"
-                        />
-                      </a>
-                    )}
-                    <div class="flex-1">
-                      <div class="flex items-center gap-2 mb-2">
-                        {signal.user && (
-                          <a 
-                            href={`/profile/${signal.user.username || signal.twitterUsername}`}
-                            class="font-semibold text-white hover:text-blue-400"
-                          >
-                            {signal.user.displayName}
-                          </a>
-                        )}
-                        <Badge variant={signal.sentiment === "bullish" ? "success" : "destructive"} class="text-xs">
-                          {signal.sentiment === "bullish" ? "Bullish" : "Bearish"}
-                        </Badge>
-                        <span class="text-sm text-gray-400">
-                          {new Date(signal.tweetTimestamp || signal.notedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p class="text-gray-300 mb-2">{signal.tweetContent}</p>
-                      <div class="flex items-center gap-3">
+          </div>
+          
+          {supporters.length > 0 ? (
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-white/10">
+                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-400">#</th>
+                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-400">Supporter</th>
+                    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-400">First Signal</th>
+                    <th class="text-center py-3 px-4 text-sm font-semibold text-gray-400">Signals</th>
+                    <th class="text-center py-3 px-4 text-sm font-semibold text-gray-400">Sentiment</th>
+                    <th class="text-center py-3 px-4 text-sm font-semibold text-gray-400">Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {supporters.map((supporter, index) => (
+                    <tr 
+                      key={supporter.username}
+                      class="border-b border-white/5 hover:bg-white/5 transition-colors"
+                    >
+                      {/* Rank */}
+                      <td class="py-4 px-4">
+                        <div class="flex items-center gap-2">
+                          <span class="text-lg font-bold text-gray-400">
+                            {index + 1}
+                          </span>
+                          {index === 0 && (
+                            <span class="text-xl" title="First supporter">🥇</span>
+                          )}
+                          {index === 1 && (
+                            <span class="text-xl" title="Second supporter">🥈</span>
+                          )}
+                          {index === 2 && (
+                            <span class="text-xl" title="Third supporter">🥉</span>
+                          )}
+                        </div>
+                      </td>
+                      
+                      {/* User Info */}
+                      <td class="py-4 px-4">
                         <a 
-                          href={signal.tweetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+                          href={`/profile/${supporter.username}`}
+                          class="flex items-center gap-3 group"
                         >
-                          View Tweet →
+                          <img 
+                            src={supporter.avatarUrl} 
+                            alt={supporter.displayName}
+                            class="w-10 h-10 rounded-full border-2 border-blue-500/50 group-hover:scale-110 transition-transform"
+                          />
+                          <div>
+                            <div class="font-semibold text-white group-hover:text-blue-400 transition-colors">
+                              {supporter.displayName}
+                            </div>
+                            <div class="text-sm text-gray-400">
+                              @{supporter.username}
+                            </div>
+                          </div>
                         </a>
-                        {signal.onchainTxHash && (
-                          <a 
-                            href={`https://basescan.org/tx/${signal.onchainTxHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="text-sm text-green-400 hover:text-green-300 inline-flex items-center gap-1"
-                            title="View on BaseScan"
-                          >
-                            View Onchain →
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {signals.length === 0 && (
-                <div class="text-center py-12 text-gray-400">
-                  No signals yet for this project
-                </div>
-              )}
+                      </td>
+                      
+                      {/* First Signal Date */}
+                      <td class="py-4 px-4">
+                        <div class="text-sm text-gray-300">
+                          {new Date(supporter.firstSignalDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </div>
+                        <div class="text-xs text-gray-500">
+                          {new Date(supporter.firstSignalDate).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </td>
+                      
+                      {/* Signal Count */}
+                      <td class="py-4 px-4 text-center">
+                        <div class="text-lg font-bold text-white">
+                          {supporter.signalCount}
+                        </div>
+                      </td>
+                      
+                      {/* Sentiment Breakdown */}
+                      <td class="py-4 px-4">
+                        <div class="flex items-center justify-center gap-3">
+                          <div class="flex items-center gap-1">
+                            <span class="text-green-400 font-bold">{supporter.bullishCount}</span>
+                            <span class="text-xs text-gray-400">🐂</span>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <span class="text-red-400 font-bold">{supporter.bearishCount}</span>
+                            <span class="text-xs text-gray-400">🐻</span>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      {/* Ethos Score */}
+                      <td class="py-4 px-4 text-center">
+                        <div class="text-sm font-semibold text-blue-400">
+                          {supporter.score}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          ) : (
+            <div class="text-center py-12 text-gray-400">
+              No supporters yet for this project
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -112,10 +112,12 @@ export default function ProjectsPage({ data }: PageProps<ProjectsPageData>) {
 
           {/* Projects Grid */}
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.projects.map((project) => (
+            {data.projects.map((project) => {
+              const urlType = project.type === 'pre_tge' ? 'pre-tge' : project.type;
+              return (
               <a
                 key={project.id}
-                href={`/${project.type}/${project.twitterUsername}`}
+                href={`/${urlType}/${project.twitterUsername}`}
                 class="glass-strong rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all group"
               >
                 <div class="flex items-start gap-4">
@@ -157,7 +159,8 @@ export default function ProjectsPage({ data }: PageProps<ProjectsPageData>) {
                   </div>
                 </div>
               </a>
-            ))}
+              );
+            })}
           </div>
           
           {data.projects.length === 0 && (

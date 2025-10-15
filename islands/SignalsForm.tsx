@@ -222,7 +222,7 @@ export default function SignalsForm({ username }: Props) {
                       {project ? (
                         <>
                           <a 
-                            href={`/${project.type}/${project.twitterUsername}`}
+                            href={`/${project.type === 'pre_tge' ? 'pre-tge' : project.type}/${project.twitterUsername}`}
                             class="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity group"
                           >
                             <img src={project.avatarUrl} class="w-10 h-10 rounded-full border-2 border-blue-500/50 shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform" alt={project.displayName} />
