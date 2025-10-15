@@ -2,9 +2,10 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import SearchForm from "../islands/SearchForm.tsx";
 import RecentSignalsPaginated from "../islands/RecentSignalsPaginated.tsx";
-import TradersCarousel from "../islands/TradersCarousel.tsx";
+import TraderAvatar from "../islands/TraderAvatar.tsx";
 import { listAllRecentSignals, countAllRecentSignals, listVerifiedProjects, TestSignal, VerifiedProject } from "../utils/database.ts";
 import { getUserByTwitterUsername, getUserByAddress, getUserByProfileId, EthosUser } from "../utils/ethos-api.ts";
+import { getScoreColor } from "../utils/ethos-score.ts";
 
 interface TraderWithStats {
   username: string;
@@ -18,7 +19,8 @@ interface PageData {
   signals: TestSignal[];
   verifiedProjects: VerifiedProject[];
   ethosUsers: Record<string, EthosUser>;
-  featuredTraders: TraderWithStats[];
+  topTraders: TraderWithStats[];
+  recentTraders: TraderWithStats[];
   currentPage: number;
   totalPages: number;
 }
@@ -34,7 +36,7 @@ export const handler: Handlers<PageData> = {
       countAllRecentSignals(),
       listAllRecentSignals(perPage, offset),
       listVerifiedProjects(),
-      listAllRecentSignals(50) // Load more signals for better trader stats
+      listAllRecentSignals(500) // Load many more signals to get enough unique traders for both sections
     ]);
     
     const totalPages = Math.ceil(totalCount / perPage);
@@ -92,8 +94,8 @@ export const handler: Handlers<PageData> = {
     
     await Promise.all(savedByPromises);
     
-    // Calculate stats for featured traders using all signals
-    const traderStats = [...new Set(allSignals.map(s => s.twitterUsername))].map(username => {
+    // Calculate all trader stats
+    const allTraderStats = [...new Set(allSignals.map(s => s.twitterUsername))].map(username => {
       const user = ethosUsers[username];
       if (!user) return null;
       
@@ -102,25 +104,41 @@ export const handler: Handlers<PageData> = {
       const bullishCount = userSignals.filter(s => s.sentiment === 'bullish').length;
       const bearishCount = userSignals.filter(s => s.sentiment === 'bearish').length;
       
+      // Get most recent signal timestamp for this trader
+      const mostRecentSignal = userSignals.reduce((latest, signal) => {
+        const signalTime = new Date(signal.tweetTimestamp || signal.notedAt).getTime();
+        const latestTime = new Date(latest.tweetTimestamp || latest.notedAt).getTime();
+        return signalTime > latestTime ? signal : latest;
+      }, userSignals[0]);
+      
       return {
         username,
         user,
         signalCount,
         bullishCount,
-        bearishCount
+        bearishCount,
+        mostRecentTimestamp: new Date(mostRecentSignal.tweetTimestamp || mostRecentSignal.notedAt).getTime()
       };
-    }).filter(Boolean) as TraderWithStats[];
+    }).filter(Boolean) as (TraderWithStats & { mostRecentTimestamp: number })[];
     
-    // Sort by signal count and take top 15
-    const featuredTraders = traderStats
+    // Top traders by signal count (36 traders)
+    const topTraders = allTraderStats
       .sort((a, b) => b.signalCount - a.signalCount)
-      .slice(0, 15);
+      .slice(0, 36)
+      .map(({ mostRecentTimestamp: _mostRecentTimestamp, ...trader }) => trader);
+    
+    // Recent traders by most recent signal (54 traders)
+    const recentTraders = allTraderStats
+      .sort((a, b) => b.mostRecentTimestamp - a.mostRecentTimestamp)
+      .slice(0, 54)
+      .map(({ mostRecentTimestamp: _mostRecentTimestamp2, ...trader }) => trader);
     
     return ctx.render({ 
       signals, 
       verifiedProjects, 
       ethosUsers, 
-      featuredTraders,
+      topTraders,
+      recentTraders,
       currentPage: page,
       totalPages
     });
@@ -128,7 +146,7 @@ export const handler: Handlers<PageData> = {
 };
 
 export default function Home({ data }: PageProps<PageData>) {
-  const { signals, verifiedProjects, ethosUsers, featuredTraders, currentPage, totalPages } = data;
+  const { signals, verifiedProjects, ethosUsers, topTraders, recentTraders, currentPage, totalPages } = data;
   
   return (
     <>
@@ -178,27 +196,117 @@ export default function Home({ data }: PageProps<PageData>) {
           </div>
 
           {/* Search Section */}
-          <div class="mb-12 flex justify-center">
+          <div class="mb-8 flex justify-center">
             <SearchForm />
           </div>
           
-          {/* Featured Traders - Only show if we have traders */}
-          {featuredTraders.length > 0 && (
+          {/* Most Signals - Top 20 traders */}
+          {topTraders.length > 0 && (
+            <div class="glass-strong rounded-3xl shadow-2xl shadow-black/40 p-8 mb-8">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-1 h-8 bg-gradient-to-b from-yellow-500 to-orange-500 rounded-full"></div>
+                <h2 class="text-2xl font-bold text-white">Most Signals</h2>
+              </div>
+              
+              {/* Grid of top trader avatars - dynamically fills rows */}
+              <div class="grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));">
+                {topTraders.map((trader) => {
+                  const scoreColor = getScoreColor(trader.user.score || 1200);
+                  return (
+                    <a
+                      key={trader.username}
+                      href={`/profile/${trader.user.username || trader.username}`}
+                      class="group relative"
+                      title={`${trader.user.username || trader.username} - ${trader.signalCount} signals`}
+                    >
+                      {/* Avatar with Ethos score colored border */}
+                      <div class="relative aspect-square">
+                        <TraderAvatar
+                          avatarUrl={trader.user.avatarUrl}
+                          username={trader.user.username || trader.username}
+                          scoreColor={scoreColor}
+                          className="w-full h-full rounded-lg object-cover transition-all duration-300 group-hover:scale-125 group-hover:shadow-2xl group-hover:z-10 border-[3px]"
+                        />
+                        
+                        {/* Sentiment indicator badge */}
+                        <div class="absolute -bottom-0.5 -right-0.5 bg-gradient-to-br from-gray-900 to-gray-800 rounded px-1 py-0.5 border border-white/20 shadow-lg">
+                          <div class="flex items-center gap-0.5 text-[8px] font-bold leading-none">
+                            <span class="text-green-400">{trader.bullishCount}</span>
+                            <span class="text-gray-500">/</span>
+                            <span class="text-red-400">{trader.bearishCount}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Username on hover */}
+                      <div class="absolute inset-x-0 -bottom-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
+                        <div class="text-[10px] font-medium text-white text-center truncate px-1 bg-black/80 rounded py-0.5">
+                          {trader.user.username || trader.username}
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Signals - Last 54 active traders */}
+          {recentTraders.length > 0 && (
             <div class="glass-strong rounded-3xl shadow-2xl shadow-black/40 p-8 mb-8">
               <div class="flex items-center gap-3 mb-6">
                 <div class="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-                <h2 class="text-2xl font-bold text-white">Active Traders</h2>
+                <h2 class="text-2xl font-bold text-white">Recent Signals</h2>
               </div>
               
-              <TradersCarousel traders={featuredTraders} />
+              {/* Grid of recent trader avatars - dynamically fills rows */}
+              <div class="grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));">
+                {recentTraders.map((trader) => {
+                  const scoreColor = getScoreColor(trader.user.score || 1200);
+                  return (
+                    <a
+                      key={trader.username}
+                      href={`/profile/${trader.user.username || trader.username}`}
+                      class="group relative"
+                      title={`${trader.user.username || trader.username} - ${trader.signalCount} signals`}
+                    >
+                      {/* Avatar with Ethos score colored border */}
+                      <div class="relative aspect-square">
+                        <TraderAvatar
+                          avatarUrl={trader.user.avatarUrl}
+                          username={trader.user.username || trader.username}
+                          scoreColor={scoreColor}
+                          className="w-full h-full rounded-lg object-cover transition-all duration-300 group-hover:scale-125 group-hover:shadow-2xl group-hover:z-10 border-[3px]"
+                        />
+                        
+                        {/* Sentiment indicator badge */}
+                        <div class="absolute -bottom-0.5 -right-0.5 bg-gradient-to-br from-gray-900 to-gray-800 rounded px-1 py-0.5 border border-white/20 shadow-lg">
+                          <div class="flex items-center gap-0.5 text-[8px] font-bold leading-none">
+                            <span class="text-green-400">{trader.bullishCount}</span>
+                            <span class="text-gray-500">/</span>
+                            <span class="text-red-400">{trader.bearishCount}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Username on hover */}
+                      <div class="absolute inset-x-0 -bottom-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
+                        <div class="text-[10px] font-medium text-white text-center truncate px-1 bg-black/80 rounded py-0.5">
+                          {trader.user.username || trader.username}
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
             </div>
           )}
           
-          {/* Recent Signals */}
+          {/* All Signals Feed */}
           <div class="glass-strong rounded-3xl shadow-2xl shadow-black/40 p-8">
             <div class="flex items-center gap-3 mb-8">
               <div class="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-              <h2 class="text-3xl font-bold text-white">Recent Signals</h2>
+              <h2 class="text-3xl font-bold text-white">All Signals</h2>
             </div>
             
             {signals.length === 0 ? (

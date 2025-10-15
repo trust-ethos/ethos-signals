@@ -46,6 +46,7 @@ import * as $SignalPerformance from "./islands/SignalPerformance.tsx";
 import * as $SignalsForm from "./islands/SignalsForm.tsx";
 import * as $SuggestProjectForm from "./islands/SuggestProjectForm.tsx";
 import * as $TokenPageIsland from "./islands/TokenPageIsland.tsx";
+import * as $TraderAvatar from "./islands/TraderAvatar.tsx";
 import * as $TradersCarousel from "./islands/TradersCarousel.tsx";
 import { type Manifest } from "$fresh/server.ts";
 
@@ -97,6 +98,7 @@ const manifest = {
     "./islands/SignalsForm.tsx": $SignalsForm,
     "./islands/SuggestProjectForm.tsx": $SuggestProjectForm,
     "./islands/TokenPageIsland.tsx": $TokenPageIsland,
+    "./islands/TraderAvatar.tsx": $TraderAvatar,
     "./islands/TradersCarousel.tsx": $TradersCarousel,
   },
   baseUrl: import.meta.url,
