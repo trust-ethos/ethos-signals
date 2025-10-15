@@ -4,6 +4,7 @@
 
 import * as $_app from "./routes/_app.tsx";
 import * as $admin_verified from "./routes/admin/verified.tsx";
+import * as $api_admin_projects_review from "./routes/api/admin/projects/review.ts";
 import * as $api_auth_connect from "./routes/api/auth/connect.ts";
 import * as $api_auth_revoke from "./routes/api/auth/revoke.ts";
 import * as $api_auth_verify from "./routes/api/auth/verify.ts";
@@ -16,6 +17,7 @@ import * as $api_price_dexscreener from "./routes/api/price/dexscreener.ts";
 import * as $api_price_nft_chart from "./routes/api/price/nft-chart.ts";
 import * as $api_price_nft from "./routes/api/price/nft.ts";
 import * as $api_price_token from "./routes/api/price/token.ts";
+import * as $api_projects_suggest from "./routes/api/projects/suggest.ts";
 import * as $api_search from "./routes/api/search.ts";
 import * as $api_signals_username_ from "./routes/api/signals/[username].ts";
 import * as $api_signals_delete_id_ from "./routes/api/signals/delete/[id].ts";
@@ -42,6 +44,7 @@ import * as $RelativeTime from "./islands/RelativeTime.tsx";
 import * as $SearchForm from "./islands/SearchForm.tsx";
 import * as $SignalPerformance from "./islands/SignalPerformance.tsx";
 import * as $SignalsForm from "./islands/SignalsForm.tsx";
+import * as $SuggestProjectForm from "./islands/SuggestProjectForm.tsx";
 import * as $TokenPageIsland from "./islands/TokenPageIsland.tsx";
 import * as $TradersCarousel from "./islands/TradersCarousel.tsx";
 import { type Manifest } from "$fresh/server.ts";
@@ -50,6 +53,7 @@ const manifest = {
   routes: {
     "./routes/_app.tsx": $_app,
     "./routes/admin/verified.tsx": $admin_verified,
+    "./routes/api/admin/projects/review.ts": $api_admin_projects_review,
     "./routes/api/auth/connect.ts": $api_auth_connect,
     "./routes/api/auth/revoke.ts": $api_auth_revoke,
     "./routes/api/auth/verify.ts": $api_auth_verify,
@@ -62,6 +66,7 @@ const manifest = {
     "./routes/api/price/nft-chart.ts": $api_price_nft_chart,
     "./routes/api/price/nft.ts": $api_price_nft,
     "./routes/api/price/token.ts": $api_price_token,
+    "./routes/api/projects/suggest.ts": $api_projects_suggest,
     "./routes/api/search.ts": $api_search,
     "./routes/api/signals/[username].ts": $api_signals_username_,
     "./routes/api/signals/delete/[id].ts": $api_signals_delete_id_,
@@ -90,6 +95,7 @@ const manifest = {
     "./islands/SearchForm.tsx": $SearchForm,
     "./islands/SignalPerformance.tsx": $SignalPerformance,
     "./islands/SignalsForm.tsx": $SignalsForm,
+    "./islands/SuggestProjectForm.tsx": $SuggestProjectForm,
     "./islands/TokenPageIsland.tsx": $TokenPageIsland,
     "./islands/TradersCarousel.tsx": $TradersCarousel,
   },

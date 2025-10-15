@@ -1,6 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import { listVerifiedProjects } from "../utils/database.ts";
+import SuggestProjectForm from "../islands/SuggestProjectForm.tsx";
 
 interface ProjectWithStats {
   id: string;
@@ -109,6 +110,9 @@ export default function ProjectsPage({ data }: PageProps<ProjectsPageData>) {
               Browse all tracked crypto projects with verified trading signals
             </p>
           </div>
+
+          {/* Suggest Project Form */}
+          <SuggestProjectForm />
 
           {/* Projects Grid */}
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -266,6 +266,113 @@ export async function checkRateLimit(
 }
 
 /**
+ * Check rate limit for project suggestions (5 per 24 hours)
+ */
+export async function checkSuggestionRateLimit(
+  authToken: string
+): Promise<RateLimitResult> {
+  const client = await getDbClient();
+  const SUGGESTIONS_PER_DAY = 5;
+  const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+  const windowStart = Date.now() - WINDOW_MS;
+  
+  try {
+    // Get or create rate limit record for suggestions
+    const result = await client.queryObject<{
+      suggestion_count: number;
+      window_start: Date;
+    }>(`
+      SELECT suggestion_count, window_start 
+      FROM project_suggestion_rate_limit 
+      WHERE auth_token = $1 
+        AND window_start > to_timestamp($2)
+      ORDER BY window_start DESC
+      LIMIT 1
+    `, [authToken, windowStart / 1000]);
+    
+    let suggestionCount = 0;
+    let currentWindowStart = Date.now();
+    
+    if (result.rows.length > 0) {
+      const row = result.rows[0];
+      suggestionCount = row.suggestion_count;
+      currentWindowStart = row.window_start.getTime();
+    }
+    
+    // Check if limit exceeded
+    if (suggestionCount >= SUGGESTIONS_PER_DAY) {
+      const resetAt = currentWindowStart + WINDOW_MS;
+      return {
+        allowed: false,
+        remaining: 0,
+        resetAt,
+        limit: SUGGESTIONS_PER_DAY,
+      };
+    }
+    
+    return {
+      allowed: true,
+      remaining: SUGGESTIONS_PER_DAY - suggestionCount,
+      resetAt: currentWindowStart + WINDOW_MS,
+      limit: SUGGESTIONS_PER_DAY,
+    };
+  } catch (error) {
+    console.error('Failed to check suggestion rate limit:', error);
+    // On error, allow the request but log it
+    return {
+      allowed: true,
+      remaining: SUGGESTIONS_PER_DAY,
+      resetAt: Date.now() + WINDOW_MS,
+      limit: SUGGESTIONS_PER_DAY,
+    };
+  }
+}
+
+/**
+ * Increment suggestion rate limit counter
+ */
+export async function incrementSuggestionCount(authToken: string): Promise<void> {
+  const client = await getDbClient();
+  const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+  const windowStart = Date.now() - WINDOW_MS;
+  
+  try {
+    // Try to get existing record
+    const result = await client.queryObject<{
+      id: string;
+      window_start: Date;
+    }>(`
+      SELECT id, window_start 
+      FROM project_suggestion_rate_limit 
+      WHERE auth_token = $1 
+        AND window_start > to_timestamp($2)
+      ORDER BY window_start DESC
+      LIMIT 1
+    `, [authToken, windowStart / 1000]);
+    
+    if (result.rows.length > 0) {
+      // Update existing record
+      await client.queryObject(`
+        UPDATE project_suggestion_rate_limit 
+        SET suggestion_count = suggestion_count + 1, 
+            last_suggestion_at = NOW()
+        WHERE id = $1
+      `, [result.rows[0].id]);
+    } else {
+      // Create new record
+      const id = ulid();
+      await client.queryObject(`
+        INSERT INTO project_suggestion_rate_limit 
+        (id, auth_token, suggestion_count, window_start, last_suggestion_at)
+        VALUES ($1, $2, 1, NOW(), NOW())
+      `, [id, authToken]);
+    }
+  } catch (error) {
+    console.error('Failed to increment suggestion count:', error);
+  }
+}
+
+/**
  * Revoke an authentication token
  */
 export async function revokeAuthToken(authToken: string): Promise<boolean> {

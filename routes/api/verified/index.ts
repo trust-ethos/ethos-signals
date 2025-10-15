@@ -48,9 +48,16 @@ export const handler: Handlers = {
       },
     });
   },
-  async GET(_req) {
+  async GET(req) {
     // GET is public - no authentication required (used to display verified projects)
-    const items = await listVerifiedProjects();
+    // Check for status query parameter
+    const url = new URL(req.url);
+    const status = url.searchParams.get("status") as "all" | "verified" | "unverified" | null;
+    
+    // Default to "verified" to maintain backwards compatibility
+    const verificationStatus = status === "all" || status === "unverified" ? status : "verified";
+    
+    const items = await listVerifiedProjects(verificationStatus);
     return new Response(JSON.stringify({ values: items }), { 
       headers: { 
         "content-type": "application/json",
@@ -105,6 +112,9 @@ export const handler: Handlers = {
       link,
       coinGeckoId,
       ticker,
+      isVerified: true, // Admin-created projects are automatically verified
+      verifiedAt: Date.now(),
+      verifiedBy: "admin",
       createdAt: Date.now(),
     });
     return new Response(JSON.stringify({ ok }), { 

@@ -46,6 +46,16 @@ export interface VerifiedProject {
   ticker?: string; // Token ticker symbol (e.g., MKR, ETH, XPL)
   hasPriceTracking?: boolean; // Whether to show price performance (default: true)
   createdAt: number;
+  isVerified?: boolean; // Whether admin has verified this project (default: true for admin-created)
+  suggestedByAuthToken?: string; // Auth token of user who suggested this
+  suggestedAt?: number; // Timestamp when suggested (epoch ms)
+  verifiedAt?: number; // Timestamp when verified (epoch ms)
+  verifiedBy?: string; // Admin identifier who verified it
+  suggestedBy?: {
+    walletAddress: string;
+    ethosUsername?: string;
+    ethosProfileId?: number;
+  };
 }
 
 // Signals functions
@@ -384,9 +394,13 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
     await client.queryObject(`
       INSERT INTO verified_projects (
         id, ethos_user_id, twitter_username, display_name, 
-        avatar_url, type, chain, link, coingecko_id, ticker, has_price_tracking, created_at
+        avatar_url, type, chain, link, coingecko_id, ticker, has_price_tracking, 
+        is_verified, suggested_by_auth_token, suggested_at, verified_at, verified_by, created_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, to_timestamp($12)
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 
+        (CASE WHEN $14::float IS NOT NULL THEN to_timestamp($14::float) ELSE NULL END)::timestamptz,
+        (CASE WHEN $15::float IS NOT NULL THEN to_timestamp($15::float) ELSE NULL END)::timestamptz,
+        $16, to_timestamp($17)
       )
       ON CONFLICT (ethos_user_id) DO UPDATE SET
         twitter_username = EXCLUDED.twitter_username,
@@ -397,7 +411,12 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
         link = EXCLUDED.link,
         coingecko_id = EXCLUDED.coingecko_id,
         ticker = EXCLUDED.ticker,
-        has_price_tracking = EXCLUDED.has_price_tracking
+        has_price_tracking = EXCLUDED.has_price_tracking,
+        is_verified = EXCLUDED.is_verified,
+        suggested_by_auth_token = EXCLUDED.suggested_by_auth_token,
+        suggested_at = EXCLUDED.suggested_at,
+        verified_at = EXCLUDED.verified_at,
+        verified_by = EXCLUDED.verified_by
     `, [
       project.id,
       project.ethosUserId,
@@ -410,6 +429,11 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
       project.coinGeckoId || null,
       project.ticker || null,
       project.hasPriceTracking !== false, // Default to true
+      project.isVerified !== false, // Default to true
+      project.suggestedByAuthToken || null,
+      project.suggestedAt ? project.suggestedAt / 1000 : null,
+      project.verifiedAt ? project.verifiedAt / 1000 : null,
+      project.verifiedBy || null,
       project.createdAt / 1000, // Convert to seconds
     ]);
     
@@ -420,9 +444,16 @@ export async function saveVerifiedProject(project: VerifiedProject): Promise<boo
   }
 }
 
-export async function listVerifiedProjects(): Promise<VerifiedProject[]> {
+export async function listVerifiedProjects(verificationStatus: "all" | "verified" | "unverified" = "verified"): Promise<VerifiedProject[]> {
   try {
     const client = await getDbClient();
+    
+    let whereClause = "";
+    if (verificationStatus === "verified") {
+      whereClause = "WHERE vp.is_verified = TRUE";
+    } else if (verificationStatus === "unverified") {
+      whereClause = "WHERE vp.is_verified = FALSE";
+    }
     
     const result = await client.queryObject<{
       id: string;
@@ -436,13 +467,28 @@ export async function listVerifiedProjects(): Promise<VerifiedProject[]> {
       coingecko_id: string | null;
       ticker: string | null;
       has_price_tracking: boolean;
+      is_verified: boolean;
+      suggested_by_auth_token: string | null;
+      suggested_at: Date | null;
+      verified_at: Date | null;
+      verified_by: string | null;
       created_at: Date;
+      suggester_wallet: string | null;
+      suggester_username: string | null;
+      suggester_profile_id: number | null;
     }>(`
       SELECT 
-        id, ethos_user_id, twitter_username, display_name, 
-        avatar_url, type, chain, link, coingecko_id, ticker, has_price_tracking, created_at
-      FROM verified_projects 
-      ORDER BY created_at DESC
+        vp.id, vp.ethos_user_id, vp.twitter_username, vp.display_name, 
+        vp.avatar_url, vp.type, vp.chain, vp.link, vp.coingecko_id, vp.ticker, 
+        vp.has_price_tracking, vp.is_verified, vp.suggested_by_auth_token, 
+        vp.suggested_at, vp.verified_at, vp.verified_by, vp.created_at,
+        eat.wallet_address as suggester_wallet,
+        eat.ethos_username as suggester_username,
+        eat.ethos_profile_id as suggester_profile_id
+      FROM verified_projects vp
+      LEFT JOIN extension_auth_tokens eat ON vp.suggested_by_auth_token = eat.auth_token
+      ${whereClause}
+      ORDER BY vp.created_at DESC
     `);
     
     return result.rows.map(row => ({
@@ -452,12 +498,22 @@ export async function listVerifiedProjects(): Promise<VerifiedProject[]> {
       displayName: row.display_name,
       avatarUrl: row.avatar_url,
       type: row.type,
-      chain: row.chain as "ethereum" | "base" | "solana",
+      chain: row.chain as "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid",
       link: row.link || undefined,
       coinGeckoId: row.coingecko_id || undefined,
       ticker: row.ticker || undefined,
       hasPriceTracking: row.has_price_tracking,
+      isVerified: row.is_verified,
+      suggestedByAuthToken: row.suggested_by_auth_token || undefined,
+      suggestedAt: row.suggested_at?.getTime(),
+      verifiedAt: row.verified_at?.getTime(),
+      verifiedBy: row.verified_by || undefined,
       createdAt: row.created_at.getTime(), // Convert to epoch ms
+      suggestedBy: row.suggester_wallet ? {
+        walletAddress: row.suggester_wallet,
+        ethosUsername: row.suggester_username || undefined,
+        ethosProfileId: row.suggester_profile_id || undefined,
+      } : undefined,
     }));
   } catch (error) {
     console.error("Failed to list verified projects:", error);
@@ -578,5 +634,152 @@ export async function cleanupExpiredCache(): Promise<void> {
     `);
   } catch (error) {
     console.error("Failed to cleanup expired cache:", error);
+  }
+}
+
+// Update verified project (for admin approval/edits)
+export async function updateVerifiedProject(id: string, updates: Partial<VerifiedProject>): Promise<boolean> {
+  const client = await getDbClient();
+  
+  try {
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    let paramIndex = 1;
+    
+    if (updates.twitterUsername !== undefined) {
+      setClauses.push(`twitter_username = $${paramIndex++}`);
+      values.push(updates.twitterUsername);
+    }
+    if (updates.displayName !== undefined) {
+      setClauses.push(`display_name = $${paramIndex++}`);
+      values.push(updates.displayName);
+    }
+    if (updates.avatarUrl !== undefined) {
+      setClauses.push(`avatar_url = $${paramIndex++}`);
+      values.push(updates.avatarUrl);
+    }
+    if (updates.type !== undefined) {
+      setClauses.push(`type = $${paramIndex++}`);
+      values.push(updates.type);
+    }
+    if (updates.chain !== undefined) {
+      setClauses.push(`chain = $${paramIndex++}`);
+      values.push(updates.chain);
+    }
+    if (updates.link !== undefined) {
+      setClauses.push(`link = $${paramIndex++}`);
+      values.push(updates.link || null);
+    }
+    if (updates.coinGeckoId !== undefined) {
+      setClauses.push(`coingecko_id = $${paramIndex++}`);
+      values.push(updates.coinGeckoId || null);
+    }
+    if (updates.ticker !== undefined) {
+      setClauses.push(`ticker = $${paramIndex++}`);
+      values.push(updates.ticker || null);
+    }
+    if (updates.hasPriceTracking !== undefined) {
+      setClauses.push(`has_price_tracking = $${paramIndex++}`);
+      values.push(updates.hasPriceTracking);
+    }
+    if (updates.isVerified !== undefined) {
+      setClauses.push(`is_verified = $${paramIndex++}`);
+      values.push(updates.isVerified);
+    }
+    if (updates.verifiedAt !== undefined) {
+      setClauses.push(`verified_at = $${paramIndex++}`);
+      values.push(updates.verifiedAt ? new Date(updates.verifiedAt) : null);
+    }
+    if (updates.verifiedBy !== undefined) {
+      setClauses.push(`verified_by = $${paramIndex++}`);
+      values.push(updates.verifiedBy || null);
+    }
+    
+    if (setClauses.length === 0) {
+      return true; // No updates to make
+    }
+    
+    values.push(id);
+    const result = await client.queryObject(`
+      UPDATE verified_projects 
+      SET ${setClauses.join(', ')}
+      WHERE id = $${paramIndex}
+    `, values);
+    
+    return result.rowCount !== undefined && result.rowCount > 0;
+  } catch (error) {
+    console.error("Failed to update verified project:", error);
+    return false;
+  }
+}
+
+// Get verified project by ID
+export async function getVerifiedProjectById(id: string): Promise<VerifiedProject | null> {
+  const client = await getDbClient();
+  
+  try {
+    const result = await client.queryObject<{
+      id: string;
+      ethos_user_id: number;
+      twitter_username: string;
+      display_name: string;
+      avatar_url: string;
+      type: VerifiedProjectType;
+      chain: string;
+      link: string | null;
+      coingecko_id: string | null;
+      ticker: string | null;
+      has_price_tracking: boolean;
+      is_verified: boolean;
+      suggested_by_auth_token: string | null;
+      suggested_at: Date | null;
+      verified_at: Date | null;
+      verified_by: string | null;
+      created_at: Date;
+      suggester_wallet: string | null;
+      suggester_username: string | null;
+      suggester_profile_id: number | null;
+    }>(`
+      SELECT 
+        vp.*,
+        eat.wallet_address as suggester_wallet,
+        eat.ethos_username as suggester_username,
+        eat.ethos_profile_id as suggester_profile_id
+      FROM verified_projects vp
+      LEFT JOIN extension_auth_tokens eat ON vp.suggested_by_auth_token = eat.auth_token
+      WHERE vp.id = $1
+      LIMIT 1
+    `, [id]);
+    
+    if (result.rows.length === 0) return null;
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      ethosUserId: row.ethos_user_id,
+      twitterUsername: row.twitter_username,
+      displayName: row.display_name,
+      avatarUrl: row.avatar_url,
+      type: row.type,
+      chain: row.chain as "ethereum" | "base" | "solana" | "bsc" | "plasma" | "hyperliquid",
+      link: row.link || undefined,
+      coinGeckoId: row.coingecko_id || undefined,
+      ticker: row.ticker || undefined,
+      hasPriceTracking: row.has_price_tracking,
+      isVerified: row.is_verified,
+      suggestedByAuthToken: row.suggested_by_auth_token || undefined,
+      suggestedAt: row.suggested_at?.getTime(),
+      verifiedAt: row.verified_at?.getTime(),
+      verifiedBy: row.verified_by || undefined,
+      createdAt: row.created_at.getTime(),
+      suggestedBy: row.suggester_wallet ? {
+        walletAddress: row.suggester_wallet,
+        ethosUsername: row.suggester_username || undefined,
+        ethosProfileId: row.suggester_profile_id || undefined,
+      } : undefined,
+    };
+  } catch (error) {
+    console.error("Failed to get verified project by ID:", error);
+    return null;
   }
 }

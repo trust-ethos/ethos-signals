@@ -527,7 +527,31 @@ class SignalsInjector {
       }
 
       if (filtered.length === 0) {
-        html = '<div style="padding: 20px; text-align: center; color: #9ca3af;">No projects found</div>';
+        html = `
+          <div style="padding: 20px; text-align: center;">
+            <div style="color: #9ca3af; margin-bottom: 12px;">No projects found</div>
+            <a 
+              href="https://signals.deno.dev/projects" 
+              target="_blank"
+              style="
+                display: inline-block;
+                padding: 10px 20px;
+                border: 1px solid rgba(59, 130, 246, 0.5);
+                border-radius: 12px;
+                background: rgba(59, 130, 246, 0.1);
+                color: #60a5fa;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 13px;
+                transition: all 0.3s;
+              "
+              onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='rgba(59, 130, 246, 0.8)';"
+              onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.borderColor='rgba(59, 130, 246, 0.5)';"
+            >
+              + Suggest this project on our website
+            </a>
+          </div>
+        `;
       }
 
       projectDropdown.innerHTML = html;
