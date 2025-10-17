@@ -783,3 +783,36 @@ export async function getVerifiedProjectById(id: string): Promise<VerifiedProjec
     return null;
   }
 }
+
+// Contributor statistics
+export interface ContributorStats {
+  twitterUsername: string;
+  signalCount: number;
+}
+
+export async function getContributorStatsLast7Days(): Promise<ContributorStats[]> {
+  const client = await getDbClient();
+  
+  try {
+    const result = await client.queryObject<{
+      twitter_username: string;
+      signal_count: string;
+    }>(`
+      SELECT 
+        twitter_username,
+        COUNT(*) as signal_count
+      FROM signals
+      WHERE created_at >= NOW() - INTERVAL '7 days'
+      GROUP BY twitter_username
+      ORDER BY signal_count DESC, twitter_username ASC
+    `);
+    
+    return result.rows.map(row => ({
+      twitterUsername: row.twitter_username,
+      signalCount: parseInt(row.signal_count),
+    }));
+  } catch (error) {
+    console.error("Failed to get contributor stats:", error);
+    return [];
+  }
+}

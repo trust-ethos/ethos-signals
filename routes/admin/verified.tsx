@@ -1,11 +1,12 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 // Admin page is server-rendered; client logic is injected below.
-import { VerifiedProject, listVerifiedProjects } from "../../utils/database.ts";
+import { VerifiedProject, listVerifiedProjects, ContributorStats, getContributorStatsLast7Days } from "../../utils/database.ts";
 import AdminVerified from "../../islands/AdminVerified.tsx";
 
 interface Data {
   items: VerifiedProject[];
+  contributorStats: ContributorStats[];
 }
 
 // Simple authentication middleware
@@ -52,8 +53,12 @@ export const handler: Handlers<Data> = {
       return unauthorizedResponse();
     }
 
-    const items = await listVerifiedProjects();
-    return ctx.render({ items });
+    const [items, contributorStats] = await Promise.all([
+      listVerifiedProjects(),
+      getContributorStatsLast7Days(),
+    ]);
+    
+    return ctx.render({ items, contributorStats });
   },
 };
 
@@ -66,7 +71,7 @@ export default function VerifiedAdminPage({ data }: PageProps<Data>) {
       <div class="min-h-screen gradient-mesh">
         <div class="max-w-5xl mx-auto px-4 py-8">
           <h1 class="text-3xl font-bold mb-6 text-white">Verified Projects</h1>
-          <AdminVerified initialItems={data.items} />
+          <AdminVerified initialItems={data.items} contributorStats={data.contributorStats} />
         </div>
       </div>
     </>
