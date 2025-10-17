@@ -786,7 +786,9 @@ export async function getVerifiedProjectById(id: string): Promise<VerifiedProjec
 
 // Contributor statistics
 export interface ContributorStats {
-  twitterUsername: string;
+  walletAddress: string;
+  ethosUsername?: string;
+  ethosProfileId?: number;
   signalCount: number;
 }
 
@@ -795,20 +797,27 @@ export async function getContributorStatsLast7Days(): Promise<ContributorStats[]
   
   try {
     const result = await client.queryObject<{
-      twitter_username: string;
+      wallet_address: string;
+      ethos_username: string | null;
+      ethos_profile_id: number | null;
       signal_count: string;
     }>(`
       SELECT 
-        twitter_username,
+        eat.wallet_address,
+        eat.ethos_username,
+        eat.ethos_profile_id,
         COUNT(*) as signal_count
-      FROM signals
-      WHERE created_at >= NOW() - INTERVAL '7 days'
-      GROUP BY twitter_username
-      ORDER BY signal_count DESC, twitter_username ASC
+      FROM signals s
+      INNER JOIN extension_auth_tokens eat ON s.auth_token = eat.auth_token
+      WHERE s.created_at >= NOW() - INTERVAL '7 days'
+      GROUP BY eat.wallet_address, eat.ethos_username, eat.ethos_profile_id
+      ORDER BY signal_count DESC, eat.ethos_username ASC
     `);
     
     return result.rows.map(row => ({
-      twitterUsername: row.twitter_username,
+      walletAddress: row.wallet_address,
+      ethosUsername: row.ethos_username || undefined,
+      ethosProfileId: row.ethos_profile_id || undefined,
       signalCount: parseInt(row.signal_count),
     }));
   } catch (error) {

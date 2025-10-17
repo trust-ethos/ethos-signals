@@ -23,7 +23,9 @@ interface ProjectItem {
 }
 
 interface ContributorStats {
-  twitterUsername: string;
+  walletAddress: string;
+  ethosUsername?: string;
+  ethosProfileId?: number;
   signalCount: number;
 }
 
@@ -238,21 +240,25 @@ export default function AdminVerified(props: Props) {
     <div>
       {/* Contributor Statistics - Last 7 Days */}
       <div class="mb-8 p-6 glass-strong rounded-2xl border border-white/10">
-        <h2 class="text-xl font-bold text-white mb-4">📊 Signal Contributions (Last 7 Days)</h2>
+        <h2 class="text-xl font-bold text-white mb-4">📊 Signal Contributors (Last 7 Days)</h2>
         {props.contributorStats.length === 0 ? (
-          <div class="text-center text-gray-400 py-4">No signals in the last 7 days</div>
+          <div class="text-center text-gray-400 py-4">No signals saved in the last 7 days</div>
         ) : (
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
             {props.contributorStats.map((stat) => (
-              <div key={stat.twitterUsername} class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all">
-                <a 
-                  href={`https://x.com/${stat.twitterUsername}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  class="text-sm text-blue-400 hover:text-blue-300 font-medium hover:underline"
-                >
-                  @{stat.twitterUsername}
-                </a>
+              <div key={stat.walletAddress} class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all">
+                {stat.ethosUsername ? (
+                  <a 
+                    href={`/profile/${stat.ethosUsername}`} 
+                    class="text-sm text-blue-400 hover:text-blue-300 font-medium hover:underline"
+                  >
+                    @{stat.ethosUsername}
+                  </a>
+                ) : (
+                  <span class="text-sm text-gray-300 font-mono">
+                    {stat.walletAddress.slice(0, 6)}...{stat.walletAddress.slice(-4)}
+                  </span>
+                )}
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-gray-400">signals:</span>
                   <span class="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-full text-sm font-bold">
