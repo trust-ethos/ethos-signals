@@ -1,8 +1,7 @@
 // Signals Chrome Extension - Popup Script
 
 const PROD_URL = 'https://signals.deno.dev';
-const DASHBOARD_URL = PROD_URL;
-const API_BASE_URL = PROD_URL;
+const LOCAL_URL = 'http://localhost:8000';
 
 // Ethos Score Levels (matching utils/ethos-score.ts)
 const SCORE_LEVELS = [
@@ -30,16 +29,117 @@ function getScoreColor(score) {
   return getScoreLevel(score).color;
 }
 
+// Environment management functions
+async function isLocalDevelopment() {
+  try {
+    // Try to fetch from localhost to see if dev server is running
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+    
+    const response = await fetch('http://localhost:8000', {
+      method: 'HEAD',
+      signal: controller.signal,
+      mode: 'no-cors' // Avoid CORS issues
+    });
+    
+    clearTimeout(timeoutId);
+    return true; // If we can reach localhost:8000, assume it's development
+  } catch (error) {
+    return false; // If localhost:8000 is not reachable, assume it's production
+  }
+}
+
+async function getCurrentApiBaseUrl() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['apiBaseUrl'], (result) => {
+      resolve(result.apiBaseUrl || PROD_URL);
+    });
+  });
+}
+
+async function setApiBaseUrl(url) {
+  return new Promise((resolve) => {
+    if (url === PROD_URL) {
+      // Remove custom URL to use default production
+      chrome.storage.sync.remove('apiBaseUrl', resolve);
+    } else {
+      chrome.storage.sync.set({ apiBaseUrl: url }, resolve);
+    }
+  });
+}
+
+async function initializeEnvironmentToggle() {
+  const envToggleSection = document.getElementById('env-toggle-section');
+  
+  // Only show environment toggle in development
+  // Check if localhost is reachable to determine if it's a dev environment
+  const isDevelopment = await isLocalDevelopment();
+  
+  if (!isDevelopment) {
+    // Hide the toggle section for production users
+    envToggleSection.style.display = 'none';
+    return;
+  }
+  
+  // Show toggle for development
+  envToggleSection.style.display = 'block';
+  
+  const envToggle = document.getElementById('env-toggle');
+  const envIndicator = document.getElementById('env-indicator');
+  
+  // Get current environment
+  const currentUrl = await getCurrentApiBaseUrl();
+  const isLocal = currentUrl === LOCAL_URL;
+  
+  // Set toggle state
+  envToggle.checked = isLocal;
+  
+  // Update indicator
+  updateEnvironmentIndicator(isLocal);
+  
+  // Add toggle event listener
+  envToggle.addEventListener('change', async () => {
+    const useLocal = envToggle.checked;
+    const newUrl = useLocal ? LOCAL_URL : PROD_URL;
+    
+    await setApiBaseUrl(newUrl);
+    updateEnvironmentIndicator(useLocal);
+    
+    showNotification(useLocal ? 'Switched to Local' : 'Switched to Production');
+    
+    // Refresh auth status as URLs may have changed
+    setTimeout(updateAuthStatus, 500);
+  });
+}
+
+function updateEnvironmentIndicator(isLocal) {
+  const envIndicator = document.getElementById('env-indicator');
+  
+  if (isLocal) {
+    envIndicator.textContent = 'Local';
+    envIndicator.className = 'env-indicator env-local';
+  } else {
+    envIndicator.textContent = 'Production';
+    envIndicator.className = 'env-indicator env-prod';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const connectWalletBtn = document.getElementById('connect-wallet-btn');
   const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
+  const envToggle = document.getElementById('env-toggle');
+  const envIndicator = document.getElementById('env-indicator');
+  
+  // Initialize environment toggle
+  await initializeEnvironmentToggle();
   
   // Load and display auth status
   await updateAuthStatus();
   
   // Connect wallet - open web-based onboarding page
   connectWalletBtn.addEventListener('click', async () => {
-    const onboardingUrl = `${PROD_URL}/extension-auth`;
+    const currentUrl = await getCurrentApiBaseUrl();
+    const onboardingUrl = `${currentUrl}/extension-auth`;
     
     // Open web-based onboarding page in a new tab
     chrome.tabs.create({ url: onboardingUrl });
@@ -52,8 +152,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   
   // Open dashboard
-  document.getElementById('open-dashboard').addEventListener('click', () => {
-    chrome.tabs.create({ url: DASHBOARD_URL });
+  document.getElementById('open-dashboard').addEventListener('click', async () => {
+    const currentUrl = await getCurrentApiBaseUrl();
+    chrome.tabs.create({ url: currentUrl });
   });
   
   async function fetchEthosProfile(username, walletAddress) {
@@ -180,7 +281,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (authStatus.authToken) {
         // Revoke token on backend
         try {
-          await fetch(`${API_BASE_URL}/api/auth/revoke`, {
+          const currentUrl = await getCurrentApiBaseUrl();
+          await fetch(`${currentUrl}/api/auth/revoke`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${authStatus.authToken}`,

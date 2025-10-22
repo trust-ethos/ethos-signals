@@ -4,10 +4,10 @@ import { EthosUser, getUserByTwitterUsername } from "../../utils/ethos-api.ts";
 import { Card, CardContent } from "../../components/ui/Card.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { Button } from "../../components/ui/Button.tsx";
-import SignalsForm from "../../islands/SignalsForm.tsx";
+import ContributorSignalsList from "../../islands/ContributorSignalsList.tsx";
 import PerformanceMetrics from "../../islands/PerformanceMetrics.tsx";
 import { getScoreLevelName, getScoreColor, getScoreBadgeVariant } from "../../utils/ethos-score.ts";
-import { listTestSignals, listVerifiedProjects } from "../../utils/database.ts";
+import { listTestSignals, listVerifiedProjects, getPaidPromoReportsByUsername, type PaidPromoReport, type TestSignal, type VerifiedProject } from "../../utils/database.ts";
 
 interface ProfileData {
   user: EthosUser;
@@ -17,6 +17,9 @@ interface ProfileData {
     incorrect: number;
     pending: number;
   };
+  paidPromoReports: PaidPromoReport[];
+  userSignals: TestSignal[];
+  verifiedProjects: VerifiedProject[];
 }
 
 export const handler: Handlers<ProfileData | null> = {
@@ -30,10 +33,11 @@ export const handler: Handlers<ProfileData | null> = {
         return ctx.renderNotFound();
       }
 
-      // Get user signals and verified projects to calculate stats
-      const [signals, verifiedProjects] = await Promise.all([
+      // Get user signals, verified projects, and paid promo reports
+      const [userSignals, verifiedProjects, paidPromoReports] = await Promise.all([
         listTestSignals(username),
-        listVerifiedProjects()
+        listVerifiedProjects(),
+        getPaidPromoReportsByUsername(username)
       ]);
       
       // Calculate signal accuracy
@@ -48,7 +52,7 @@ export const handler: Handlers<ProfileData | null> = {
       }
       
       // Check accuracy for each signal
-      await Promise.all(signals.map(async (signal) => {
+      await Promise.all(userSignals.map(async (signal) => {
         const project = projectsByUsername[signal.projectHandle.toLowerCase()];
         
         // Skip if no project or no price tracking
@@ -111,12 +115,15 @@ export const handler: Handlers<ProfileData | null> = {
 
       return ctx.render({ 
         user, 
-        totalSignals: signals.length,
+        totalSignals: userSignals.length,
         signalAccuracy: {
           correct,
           incorrect,
           pending
-        }
+        },
+        paidPromoReports,
+        userSignals,
+        verifiedProjects
       });
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -154,7 +161,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
     );
   }
 
-  const { user, totalSignals, signalAccuracy: _signalAccuracy } = data;
+  const { user, totalSignals, signalAccuracy: _signalAccuracy, paidPromoReports, userSignals, verifiedProjects } = data;
 
   return (
     <>
@@ -268,7 +275,7 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                   )}
 
                   {/* Stats Section - All in one row */}
-                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     {/* Total Signals */}
                     <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30 backdrop-blur-sm">
                       <div class="flex items-center gap-2 mb-2">
@@ -283,6 +290,20 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
                       <div class="text-xs text-blue-300">Tracked signals</div>
                     </div>
 
+                    {/* Paid Promo Reports */}
+                    <div class="bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl p-4 border border-orange-500/30 backdrop-blur-sm">
+                      <div class="flex items-center gap-2 mb-2">
+                        <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                        </div>
+                        <span class="text-sm font-medium text-orange-300">Paid Promo Reports</span>
+                      </div>
+                      <div class="text-3xl font-bold text-orange-100">{paidPromoReports.length}</div>
+                      <div class="text-xs text-orange-300">Reports submitted</div>
+                    </div>
+
                     {/* Performance Metrics */}
                     <PerformanceMetrics username={user.username || user.displayName} inline />
                   </div>
@@ -292,7 +313,16 @@ export default function ProfilePage({ data }: PageProps<ProfileData | null>) {
           </Card>
 
           {/* Signals History */}
-          <SignalsForm username={user.username || user.displayName} />
+          <Card class="glass-strong">
+            <CardContent class="p-8">
+              <ContributorSignalsList
+                signals={userSignals}
+                paidPromoReports={paidPromoReports}
+                verifiedProjects={verifiedProjects}
+                isOwnPage={false}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </>

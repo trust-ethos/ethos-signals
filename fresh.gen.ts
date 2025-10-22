@@ -10,6 +10,9 @@ import * as $api_auth_revoke from "./routes/api/auth/revoke.ts";
 import * as $api_auth_verify from "./routes/api/auth/verify.ts";
 import * as $api_cache_stats from "./routes/api/cache/stats.ts";
 import * as $api_coins_search from "./routes/api/coins/search.ts";
+import * as $api_paid_promos_username_ from "./routes/api/paid-promos/[username].ts";
+import * as $api_paid_promos_count from "./routes/api/paid-promos/count.ts";
+import * as $api_paid_promos_delete_id_ from "./routes/api/paid-promos/delete/[id].ts";
 import * as $api_performance_username_ from "./routes/api/performance/[username].ts";
 import * as $api_price_chart from "./routes/api/price/chart.ts";
 import * as $api_price_coingecko from "./routes/api/price/coingecko.ts";
@@ -60,6 +63,9 @@ const manifest = {
     "./routes/api/auth/verify.ts": $api_auth_verify,
     "./routes/api/cache/stats.ts": $api_cache_stats,
     "./routes/api/coins/search.ts": $api_coins_search,
+    "./routes/api/paid-promos/[username].ts": $api_paid_promos_username_,
+    "./routes/api/paid-promos/count.ts": $api_paid_promos_count,
+    "./routes/api/paid-promos/delete/[id].ts": $api_paid_promos_delete_id_,
     "./routes/api/performance/[username].ts": $api_performance_username_,
     "./routes/api/price/chart.ts": $api_price_chart,
     "./routes/api/price/coingecko.ts": $api_price_coingecko,

@@ -140,25 +140,14 @@ export default function ContributorPage({ data }: PageProps<ContributorPageData>
             )}
           </div>
 
-          {/* Signals List */}
+          {/* Signals */}
           <div class="glass-strong rounded-3xl shadow-2xl shadow-black/40 p-8">
-            <div class="flex items-center gap-3 mb-8">
-              <div class="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-              <h2 class="text-3xl font-bold text-white">Contributed Signals</h2>
-            </div>
-            
-            {signals.length === 0 ? (
-              <div class="text-gray-400 text-center py-16 glass-subtle rounded-2xl">
-                <div class="text-6xl mb-4">📊</div>
-                <p class="text-lg">No signals contributed yet.</p>
-              </div>
-            ) : (
-              <ContributorSignalsList
-                signals={signals}
-                verifiedProjects={verifiedProjects}
-                isOwnPage={isOwnPage}
-              />
-            )}
+            <ContributorSignalsList
+              signals={signals}
+              paidPromoReports={[]}
+              verifiedProjects={verifiedProjects}
+              isOwnPage={isOwnPage}
+            />
           </div>
         </div>
       </div>

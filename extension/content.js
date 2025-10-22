@@ -1,13 +1,23 @@
 // Signals Chrome Extension - Content Script
 // Injects save buttons on X.com tweets
 
-const SIGNALS_API_BASE = 'https://signals.deno.dev';
+const PROD_URL = 'https://signals.deno.dev';
+
+// Get current API base URL from storage
+async function getCurrentApiBaseUrl() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['apiBaseUrl'], (result) => {
+      resolve(result.apiBaseUrl || PROD_URL);
+    });
+  });
+}
 
 class SignalsInjector {
   constructor() {
     this.processedTweets = new Set();
     this.verifiedProjects = [];
     this.savedSignals = new Map(); // tweetUrl -> signal data
+    this.paidPromoCounts = new Map(); // tweetUrl -> count
     this.authToken = null;
     this.init();
   }
@@ -49,7 +59,8 @@ class SignalsInjector {
     if (this.loadedUsers?.has(username)) return;
     
     try {
-      const response = await fetch(`${SIGNALS_API_BASE}/api/signals/${username}`);
+      const apiBase = await getCurrentApiBaseUrl();
+      const response = await fetch(`${apiBase}/api/signals/${username}`);
       const data = await response.json();
       
       (data.values || []).forEach(signal => {
@@ -65,7 +76,8 @@ class SignalsInjector {
 
   async loadVerifiedProjects() {
     try {
-      const response = await fetch(`${SIGNALS_API_BASE}/api/verified`);
+      const apiBase = await getCurrentApiBaseUrl();
+      const response = await fetch(`${apiBase}/api/verified`);
       const data = await response.json();
       this.verifiedProjects = data.values || [];
     } catch (error) {
@@ -168,6 +180,11 @@ class SignalsInjector {
       await this.loadSignalsForUser(tweetData.username);
     }
     
+    // Load and display paid promo indicator if count > 0
+    if (tweetUrl && tweetData.username) {
+      await this.addPaidPromoIndicator(tweetElement, tweetUrl, tweetData.username);
+    }
+    
     const isAlreadySaved = tweetUrl && this.savedSignals.has(tweetUrl);
 
     // Create save button
@@ -192,8 +209,8 @@ class SignalsInjector {
           saveButton.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
-            // Navigate to profile
-            window.open(`${SIGNALS_API_BASE}/profile/${tweetData.username}`, '_blank');
+            // Allow dialog to open for paid promo reporting
+            this.showSignalDialog(tweetElement, tweetId);
           });
 
           // Add subtle performance indicator next to view count (only on original posts)
@@ -316,7 +333,7 @@ class SignalsInjector {
 
       <div style="margin-bottom: 24px;">
         <label style="display: block; font-weight: 500; margin-bottom: 10px; color: #e5e7eb; font-size: 14px;">
-          Signal Type
+          Report Type
         </label>
         <div style="display: flex; gap: 12px;">
           <button id="bullish-btn" style="
@@ -347,10 +364,24 @@ class SignalsInjector {
           ">
             Bearish
           </button>
+          <button id="paid-promo-btn" style="
+            flex: 1;
+            padding: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e5e7eb;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s;
+          ">
+            Paid Promo
+          </button>
         </div>
       </div>
 
-      <div style="margin-bottom: 28px; position: relative;">
+      <div id="project-selector" style="margin-bottom: 28px; position: relative;">
         <label style="display: block; font-weight: 500; margin-bottom: 10px; color: #e5e7eb; font-size: 14px;">
           Project
         </label>
@@ -388,6 +419,31 @@ class SignalsInjector {
           box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
           z-index: 1000;
         "></div>
+      </div>
+
+      <div id="evidence-field" style="margin-bottom: 28px; display: none;">
+        <label style="display: block; font-weight: 500; margin-bottom: 10px; color: #e5e7eb; font-size: 14px;">
+          Evidence
+        </label>
+        <textarea 
+          id="evidence-input" 
+          placeholder="Paste tweet URL or describe evidence..."
+          rows="4"
+          style="
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+            font-family: inherit;
+            resize: vertical;
+          "
+        ></textarea>
       </div>
 
       <div style="display: flex; gap: 12px; justify-content: flex-end;">
@@ -431,12 +487,16 @@ class SignalsInjector {
   async setupModalEventListeners(overlay, tweetData) {
     const bullishBtn = overlay.querySelector('#bullish-btn');
     const bearishBtn = overlay.querySelector('#bearish-btn');
+    const paidPromoBtn = overlay.querySelector('#paid-promo-btn');
     const projectSearch = overlay.querySelector('#project-search');
     const projectDropdown = overlay.querySelector('#project-dropdown');
+    const projectSelector = overlay.querySelector('#project-selector');
+    const evidenceField = overlay.querySelector('#evidence-field');
+    const evidenceInput = overlay.querySelector('#evidence-input');
     const saveBtn = overlay.querySelector('#save-signal-btn');
     const cancelBtn = overlay.querySelector('#cancel-btn');
 
-    let selectedSentiment = null;
+    let selectedType = null; // 'bullish', 'bearish', or 'paid_promo'
     let selectedProject = null;
     let recentProjectIds = [];
 
@@ -450,29 +510,56 @@ class SignalsInjector {
       console.error('Failed to load recent projects:', error);
     }
 
-    // Sentiment selection
-    [bullishBtn, bearishBtn].forEach(btn => {
+    // Type selection (Bullish/Bearish/Paid Promo)
+    [bullishBtn, bearishBtn, paidPromoBtn].forEach(btn => {
       btn.addEventListener('click', () => {
-        [bullishBtn, bearishBtn].forEach(b => {
+        // Reset all buttons
+        [bullishBtn, bearishBtn, paidPromoBtn].forEach(b => {
           b.style.borderColor = 'rgba(255, 255, 255, 0.1)';
           b.style.background = 'rgba(255, 255, 255, 0.05)';
           b.style.color = '#e5e7eb';
         });
         
+        // Style the selected button
         if (btn.id === 'bullish-btn') {
           btn.style.borderColor = '#10b981';
           btn.style.background = 'rgba(16, 185, 129, 0.15)';
           btn.style.color = '#34d399';
-        } else {
+          selectedType = 'bullish';
+          // Show project selector, hide evidence field
+          projectSelector.style.display = 'block';
+          evidenceField.style.display = 'none';
+          saveBtn.textContent = 'Save Signal';
+        } else if (btn.id === 'bearish-btn') {
           btn.style.borderColor = '#ef4444';
           btn.style.background = 'rgba(239, 68, 68, 0.15)';
           btn.style.color = '#f87171';
+          selectedType = 'bearish';
+          // Show project selector, hide evidence field
+          projectSelector.style.display = 'block';
+          evidenceField.style.display = 'none';
+          saveBtn.textContent = 'Save Signal';
+        } else if (btn.id === 'paid-promo-btn') {
+          btn.style.borderColor = '#fb923c';
+          btn.style.background = 'rgba(251, 146, 60, 0.15)';
+          btn.style.color = '#fb923c';
+          selectedType = 'paid_promo';
+          // Hide project selector, show evidence field
+          projectSelector.style.display = 'none';
+          evidenceField.style.display = 'block';
+          saveBtn.textContent = 'Report Paid Promo';
         }
         
-        selectedSentiment = btn.id === 'bullish-btn' ? 'bullish' : 'bearish';
-        this.updateSaveButtonState(saveBtn, selectedSentiment, selectedProject);
+        this.updateSaveButtonState(saveBtn, selectedType, selectedProject, evidenceInput ? evidenceInput.value : '');
       });
     });
+
+    // Update validation on evidence input
+    if (evidenceInput) {
+      evidenceInput.addEventListener('input', () => {
+        this.updateSaveButtonState(saveBtn, selectedType, selectedProject, evidenceInput.value);
+      });
+    }
 
     // Render projects dropdown
     const renderProjectDropdown = (searchTerm = '') => {
@@ -569,7 +656,7 @@ class SignalsInjector {
           selectedProject = this.verifiedProjects.find(p => p.id === projectId);
           projectSearch.value = selectedProject.displayName;
           projectDropdown.style.display = 'none';
-          this.updateSaveButtonState(saveBtn, selectedSentiment, selectedProject);
+          this.updateSaveButtonState(saveBtn, selectedType, selectedProject, evidenceInput ? evidenceInput.value : '');
         });
       });
     };
@@ -580,13 +667,13 @@ class SignalsInjector {
       projectDropdown.style.display = 'block';
     });
 
-    // Filter on input
-    projectSearch.addEventListener('input', () => {
-      selectedProject = null;
-      renderProjectDropdown(projectSearch.value);
-      projectDropdown.style.display = 'block';
-      this.updateSaveButtonState(saveBtn, selectedSentiment, selectedProject);
-    });
+      // Filter on input
+      projectSearch.addEventListener('input', () => {
+        selectedProject = null;
+        renderProjectDropdown(projectSearch.value);
+        projectDropdown.style.display = 'block';
+        this.updateSaveButtonState(saveBtn, selectedType, selectedProject, evidenceInput ? evidenceInput.value : '');
+      });
 
     // Hide dropdown when clicking outside
     document.addEventListener('click', (e) => {
@@ -595,62 +682,101 @@ class SignalsInjector {
       }
     });
 
-    // Save signal
+    // Save signal or paid promo report
     saveBtn.addEventListener('click', async () => {
-      if (!selectedSentiment || !selectedProject) return;
+      if (selectedType === 'paid_promo') {
+        // Handle paid promo report
+        const evidence = evidenceInput.value.trim();
+        if (!evidence) return;
 
-      saveBtn.textContent = 'Saving...';
-      saveBtn.disabled = true;
+        saveBtn.textContent = 'Reporting...';
+        saveBtn.disabled = true;
 
-      try {
-        const response = await this.saveSignal({
-          twitterUsername: tweetData.username,
-          sentiment: selectedSentiment,
-          tweetUrl: tweetData.tweetUrl,
-          tweetContent: tweetData.text,
-          projectHandle: selectedProject.twitterUsername,
-          notedAt: new Date(tweetData.timestamp).toISOString().slice(0, 10),
-          tweetTimestamp: tweetData.timestamp,
-          projectUserId: selectedProject.ethosUserId,
-          projectDisplayName: selectedProject.displayName,
-          projectAvatarUrl: selectedProject.avatarUrl,
-        });
-        
-        // Add to saved signals cache
-        this.savedSignals.set(tweetData.tweetUrl, {
-          id: response.id,
-          sentiment: selectedSentiment,
-          tweetUrl: tweetData.tweetUrl,
-          projectHandle: selectedProject.twitterUsername,
-        });
-
-        // Save to recently used
         try {
-          if (chrome && chrome.storage && chrome.storage.local) {
-            const updatedRecent = [selectedProject.id, ...recentProjectIds.filter(id => id !== selectedProject.id)].slice(0, 5);
-            await chrome.storage.local.set({ recentProjects: updatedRecent });
+          await this.savePaidPromoReport({
+            twitterUsername: tweetData.username,
+            tweetUrl: tweetData.tweetUrl,
+            tweetContent: tweetData.text,
+            evidence: evidence,
+          });
+          
+          // Show success with profile link
+          const apiBase = await getCurrentApiBaseUrl();
+          const profileUrl = `${apiBase}/profile/${tweetData.username}`;
+          this.showToast('Paid promo reported successfully!', 'success', profileUrl);
+          overlay.remove();
+        } catch (error) {
+          console.error('Failed to save paid promo report:', error);
+          const errorMessage = error.message || 'Failed to save report';
+          
+          // If auth error, suggest reconnection
+          if (errorMessage.includes('Authentication')) {
+            this.showToast(errorMessage + ' Open the extension to reconnect.', 'error');
+          } else {
+            this.showToast(errorMessage, 'error');
           }
-        } catch (storageError) {
-          console.warn('Could not save to recently used:', storageError);
+          
+          saveBtn.textContent = 'Report Paid Promo';
+          saveBtn.disabled = false;
         }
-        
-        // Show success with profile link
-        const profileUrl = `${SIGNALS_API_BASE}/profile/${tweetData.username}`;
-        this.showToast('Signal saved successfully!', 'success', profileUrl);
-        overlay.remove();
-      } catch (error) {
-        console.error('Failed to save signal:', error);
-        const errorMessage = error.message || 'Failed to save signal';
-        
-        // If auth error, suggest reconnection
-        if (errorMessage.includes('Authentication')) {
-          this.showToast(errorMessage + ' Open the extension to reconnect.', 'error');
-        } else {
-          this.showToast(errorMessage, 'error');
+      } else {
+        // Handle regular signal (bullish/bearish)
+        if (!selectedType || !selectedProject) return;
+
+        saveBtn.textContent = 'Saving...';
+        saveBtn.disabled = true;
+
+        try {
+          const response = await this.saveSignal({
+            twitterUsername: tweetData.username,
+            sentiment: selectedType,
+            tweetUrl: tweetData.tweetUrl,
+            tweetContent: tweetData.text,
+            projectHandle: selectedProject.twitterUsername,
+            notedAt: new Date(tweetData.timestamp).toISOString().slice(0, 10),
+            tweetTimestamp: tweetData.timestamp,
+            projectUserId: selectedProject.ethosUserId,
+            projectDisplayName: selectedProject.displayName,
+            projectAvatarUrl: selectedProject.avatarUrl,
+          });
+          
+          // Add to saved signals cache
+          this.savedSignals.set(tweetData.tweetUrl, {
+            id: response.id,
+            sentiment: selectedType,
+            tweetUrl: tweetData.tweetUrl,
+            projectHandle: selectedProject.twitterUsername,
+          });
+
+          // Save to recently used
+          try {
+            if (chrome && chrome.storage && chrome.storage.local) {
+              const updatedRecent = [selectedProject.id, ...recentProjectIds.filter(id => id !== selectedProject.id)].slice(0, 5);
+              await chrome.storage.local.set({ recentProjects: updatedRecent });
+            }
+          } catch (storageError) {
+            console.warn('Could not save to recently used:', storageError);
+          }
+          
+          // Show success with profile link
+          const apiBase = await getCurrentApiBaseUrl();
+          const profileUrl = `${apiBase}/contributors/${tweetData.username}`;
+          this.showToast('Signal saved successfully!', 'success', profileUrl);
+          overlay.remove();
+        } catch (error) {
+          console.error('Failed to save signal:', error);
+          const errorMessage = error.message || 'Failed to save signal';
+          
+          // If auth error, suggest reconnection
+          if (errorMessage.includes('Authentication')) {
+            this.showToast(errorMessage + ' Open the extension to reconnect.', 'error');
+          } else {
+            this.showToast(errorMessage, 'error');
+          }
+          
+          saveBtn.textContent = 'Save Signal';
+          saveBtn.disabled = false;
         }
-        
-        saveBtn.textContent = 'Save Signal';
-        saveBtn.disabled = false;
       }
     });
 
@@ -661,8 +787,17 @@ class SignalsInjector {
     });
   }
 
-  updateSaveButtonState(saveBtn, sentiment, project) {
-    const isValid = sentiment && project;
+  updateSaveButtonState(saveBtn, type, project, evidence = '') {
+    let isValid = false;
+    
+    if (type === 'paid_promo') {
+      // For paid promo, only need evidence
+      isValid = evidence.trim().length > 0;
+    } else {
+      // For signals, need type and project
+      isValid = type && project;
+    }
+    
     saveBtn.disabled = !isValid;
     saveBtn.style.opacity = isValid ? '1' : '0.5';
   }
@@ -683,10 +818,58 @@ class SignalsInjector {
       'Authorization': `Bearer ${this.authToken}`,
     };
 
-    const response = await fetch(`${SIGNALS_API_BASE}/api/signals/${signalData.twitterUsername}`, {
+    const apiBase = await getCurrentApiBaseUrl();
+    const response = await fetch(`${apiBase}/api/signals/${signalData.twitterUsername}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(signalData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      
+      // Handle auth errors
+      if (response.status === 401) {
+        this.authToken = null;
+        throw new Error('Authentication expired. Please reconnect your wallet.');
+      }
+      
+      // Handle rate limit errors
+      if (response.status === 429) {
+        throw new Error(errorData.error || 'Rate limit exceeded. Please try again later.');
+      }
+      
+      throw new Error(errorData.error || `API error: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async savePaidPromoReport(reportData) {
+    // Ensure we have auth token
+    if (!this.authToken) {
+      await this.loadAuthToken();
+    }
+
+    if (!this.authToken) {
+      throw new Error('Authentication required. Please connect your wallet in the extension.');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Ethos-Client': 'signals-extension@1.0.0',
+      'Authorization': `Bearer ${this.authToken}`,
+    };
+
+    const apiBase = await getCurrentApiBaseUrl();
+    const response = await fetch(`${apiBase}/api/paid-promos/${reportData.twitterUsername}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        tweetUrl: reportData.tweetUrl,
+        tweetContent: reportData.tweetContent,
+        evidence: reportData.evidence,
+      }),
     });
 
     if (!response.ok) {
@@ -915,9 +1098,77 @@ class SignalsInjector {
     }
   }
 
+  async addPaidPromoIndicator(tweetElement, tweetUrl, username) {
+    // Check if we already added the indicator
+    if (tweetElement.querySelector('.signals-paid-promo-indicator')) {
+      return;
+    }
+
+    try {
+      // Fetch paid promo count for this tweet
+      const apiBase = await getCurrentApiBaseUrl();
+      const response = await fetch(
+        `${apiBase}/api/paid-promos/count?tweetUrl=${encodeURIComponent(tweetUrl)}`
+      );
+      
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      const count = data.count || 0;
+      
+      if (count === 0) return; // No reports, don't show anything
+      
+      // Find the tweet text element
+      const tweetTextElement = tweetElement.querySelector('[data-testid="tweetText"]');
+      if (!tweetTextElement) return;
+      
+      // Create the paid promo indicator
+      const indicator = document.createElement('div');
+      indicator.className = 'signals-paid-promo-indicator';
+      indicator.style.cssText = `
+        margin-bottom: 8px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 15px;
+        font-weight: 400;
+        line-height: 20px;
+        cursor: pointer;
+      `;
+      
+      const link = document.createElement('a');
+      link.href = `${apiBase}/profile/${username}`;
+      link.target = '_blank';
+      link.style.cssText = `
+        color: #CF9A2F;
+        text-decoration: none;
+        transition: color 0.2s;
+      `;
+      link.innerHTML = `⚠️ ${count} reported as paid promo`;
+      
+      // Add hover effect to match X's link styling (underline)
+      link.addEventListener('mouseenter', () => {
+        link.style.textDecoration = 'underline';
+      });
+      
+      link.addEventListener('mouseleave', () => {
+        link.style.textDecoration = 'none';
+      });
+      
+      indicator.appendChild(link);
+      
+      // Insert before the tweet text
+      tweetTextElement.parentNode.insertBefore(indicator, tweetTextElement);
+      
+      console.log(`Added paid promo indicator: ${count} reports for ${username}`);
+    } catch (error) {
+      console.error('Failed to add paid promo indicator:', error);
+    }
+  }
+
   async getSignalPerformance(signalData, tweetData) {
     console.log('Looking for project with handle:', signalData.projectHandle);
     console.log('Available verified projects:', this.verifiedProjects.map(p => p.twitterUsername));
+    
+    const apiBase = await getCurrentApiBaseUrl();
     
     // Find the verified project for this signal
     const project = this.verifiedProjects.find(p => 
@@ -939,10 +1190,10 @@ class SignalsInjector {
           // Contract-based token
           const chain = project.chain || 'ethereum';
           const callResponse = await fetch(
-            `${SIGNALS_API_BASE}/api/price/token?chain=${chain}&address=${project.link}&timestamp=${tweetData.timestamp}`
+            `${apiBase}/api/price/token?chain=${chain}&address=${project.link}&timestamp=${tweetData.timestamp}`
           );
           const currentResponse = await fetch(
-            `${SIGNALS_API_BASE}/api/price/token?chain=${chain}&address=${project.link}`
+            `${apiBase}/api/price/token?chain=${chain}&address=${project.link}`
           );
           
           const callData = await callResponse.json();
@@ -953,10 +1204,10 @@ class SignalsInjector {
         } else if (project.coinGeckoId) {
           // CoinGecko ID-based token (Layer 1s)
           const callResponse = await fetch(
-            `${SIGNALS_API_BASE}/api/price/coingecko?id=${project.coinGeckoId}&date=${new Date(tweetData.timestamp).toISOString().slice(0, 10)}`
+            `${apiBase}/api/price/coingecko?id=${project.coinGeckoId}&date=${new Date(tweetData.timestamp).toISOString().slice(0, 10)}`
           );
           const currentResponse = await fetch(
-            `${SIGNALS_API_BASE}/api/price/coingecko?id=${project.coinGeckoId}`
+            `${apiBase}/api/price/coingecko?id=${project.coinGeckoId}`
           );
           
           const callData = await callResponse.json();
@@ -969,10 +1220,10 @@ class SignalsInjector {
         // NFT floor price
         const chain = project.chain || 'ethereum';
         const callResponse = await fetch(
-          `${SIGNALS_API_BASE}/api/price/nft?chain=${chain}&address=${project.link}&date=${new Date(tweetData.timestamp).toISOString().slice(0, 10)}`
+          `${apiBase}/api/price/nft?chain=${chain}&address=${project.link}&date=${new Date(tweetData.timestamp).toISOString().slice(0, 10)}`
         );
         const currentResponse = await fetch(
-          `${SIGNALS_API_BASE}/api/price/nft?chain=${chain}&address=${project.link}`
+          `${apiBase}/api/price/nft?chain=${chain}&address=${project.link}`
         );
         
         const callData = await callResponse.json();
@@ -1000,4 +1251,5 @@ if (document.readyState === 'loading') {
 } else {
   new SignalsInjector();
 }
+
 

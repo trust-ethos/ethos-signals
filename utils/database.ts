@@ -31,6 +31,21 @@ export interface TestSignal {
   };
 }
 
+export interface PaidPromoReport {
+  id: string;
+  tweetUrl: string;
+  twitterUsername: string;
+  tweetContent?: string;
+  evidence?: string;
+  reportedAt: number; // epoch ms
+  authToken?: string;
+  reportedBy?: {
+    walletAddress: string;
+    ethosUsername?: string;
+    ethosProfileId?: number;
+  };
+}
+
 export type VerifiedProjectType = "token" | "nft" | "pre_tge";
 
 export interface VerifiedProject {
@@ -823,5 +838,117 @@ export async function getContributorStatsLast7Days(): Promise<ContributorStats[]
   } catch (error) {
     console.error("Failed to get contributor stats:", error);
     return [];
+  }
+}
+
+// Paid Promo Reports functions
+export async function savePaidPromoReport(report: PaidPromoReport): Promise<boolean> {
+  const client = await getDbClient();
+  
+  try {
+    await client.queryObject(`
+      INSERT INTO paid_promo_reports (
+        id, tweet_url, twitter_username, tweet_content, evidence, reported_at, auth_token
+      ) VALUES (
+        $1, $2, $3, $4, $5, to_timestamp($6), $7
+      )
+      ON CONFLICT (tweet_url, auth_token) DO UPDATE SET
+        tweet_content = EXCLUDED.tweet_content,
+        evidence = EXCLUDED.evidence,
+        reported_at = EXCLUDED.reported_at
+    `, [
+      report.id,
+      report.tweetUrl,
+      report.twitterUsername,
+      report.tweetContent || null,
+      report.evidence || null,
+      report.reportedAt / 1000, // Convert to seconds for PostgreSQL
+      report.authToken || null,
+    ]);
+    
+    return true;
+  } catch (error) {
+    console.error("Failed to save paid promo report:", error);
+    return false;
+  }
+}
+
+export async function getPaidPromoReportsByUsername(username: string): Promise<PaidPromoReport[]> {
+  const client = await getDbClient();
+  
+  try {
+    const result = await client.queryObject<{
+      id: string;
+      tweet_url: string;
+      twitter_username: string;
+      tweet_content: string | null;
+      evidence: string | null;
+      reported_at: Date;
+      auth_token: string | null;
+      reported_by_wallet: string | null;
+      reported_by_ethos_username: string | null;
+      reported_by_ethos_profile_id: number | null;
+    }>(`
+      SELECT 
+        ppr.*,
+        eat.wallet_address as reported_by_wallet,
+        eat.ethos_username as reported_by_ethos_username,
+        eat.ethos_profile_id as reported_by_ethos_profile_id
+      FROM paid_promo_reports ppr
+      LEFT JOIN extension_auth_tokens eat ON ppr.auth_token = eat.auth_token
+      WHERE ppr.twitter_username = $1
+      ORDER BY ppr.reported_at DESC
+    `, [username]);
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      tweetUrl: row.tweet_url,
+      twitterUsername: row.twitter_username,
+      tweetContent: row.tweet_content || undefined,
+      evidence: row.evidence || undefined,
+      reportedAt: row.reported_at.getTime(), // Convert to epoch ms
+      authToken: row.auth_token || undefined,
+      reportedBy: row.reported_by_wallet ? {
+        walletAddress: row.reported_by_wallet,
+        ethosUsername: row.reported_by_ethos_username || undefined,
+        ethosProfileId: row.reported_by_ethos_profile_id || undefined,
+      } : undefined,
+    }));
+  } catch (error) {
+    console.error("Failed to get paid promo reports by username:", error);
+    return [];
+  }
+}
+
+export async function getPaidPromoCountForTweet(tweetUrl: string): Promise<number> {
+  const client = await getDbClient();
+  
+  try {
+    const result = await client.queryObject<{ count: string }>(`
+      SELECT COUNT(*) as count 
+      FROM paid_promo_reports
+      WHERE tweet_url = $1
+    `, [tweetUrl]);
+    
+    return parseInt(result.rows[0]?.count || "0");
+  } catch (error) {
+    console.error("Failed to get paid promo count:", error);
+    return 0;
+  }
+}
+
+export async function deletePaidPromoReport(id: string, authToken: string): Promise<boolean> {
+  const client = await getDbClient();
+  
+  try {
+    const result = await client.queryObject(`
+      DELETE FROM paid_promo_reports 
+      WHERE id = $1 AND auth_token = $2
+    `, [id, authToken]);
+    
+    return result.rowCount !== undefined && result.rowCount > 0;
+  } catch (error) {
+    console.error("Failed to delete paid promo report:", error);
+    return false;
   }
 }

@@ -5,8 +5,22 @@ import PriceChart from "./PriceChart.tsx";
 
 type Sentiment = "bullish" | "bearish";
 
+interface PaidPromoReport {
+  id: string;
+  tweetUrl: string;
+  twitterUsername: string;
+  evidence?: string;
+  reportedAt: number;
+  reportedBy?: {
+    walletAddress: string;
+    ethosUsername?: string;
+    ethosProfileId?: number;
+  };
+}
+
 interface Props {
   username: string;
+  paidPromoReports?: PaidPromoReport[];
 }
 
 interface SignalItem {
@@ -45,7 +59,7 @@ interface VerifiedItem {
 
 interface PriceSnapshot { called?: number | null; d1?: number | null; d7?: number | null; d28?: number | null; }
 
-export default function SignalsForm({ username }: Props) {
+export default function SignalsForm({ username, paidPromoReports = [] }: Props) {
   // Test mode state removed - signals managed via Chrome extension only
   const [error, _setError] = useState<string | null>(null);
   const [list, setList] = useState<SignalItem[]>([]);
