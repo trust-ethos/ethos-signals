@@ -102,10 +102,11 @@ export const handler: Handlers = {
     }
     
     const body = await req.json();
-    const { tweetUrl, tweetContent, evidence } = body as {
+    const { tweetUrl, tweetContent, evidence, disclosureStatus } = body as {
       tweetUrl: string;
       tweetContent?: string;
       evidence?: string;
+      disclosureStatus?: "disclosed" | "undisclosed";
     };
     
     if (!tweetUrl) {
@@ -130,6 +131,7 @@ export const handler: Handlers = {
       twitterUsername: username,
       tweetContent,
       evidence,
+      disclosureStatus: disclosureStatus || "disclosed", // Default to disclosed
       reportedAt: Date.now(),
       authToken: auth.authToken,
     });

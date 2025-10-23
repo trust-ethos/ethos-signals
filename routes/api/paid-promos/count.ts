@@ -28,9 +28,9 @@ export const handler: Handlers = {
       );
     }
     
-    const count = await getPaidPromoCountForTweet(tweetUrl);
+    const countResult = await getPaidPromoCountForTweet(tweetUrl);
     
-    return new Response(JSON.stringify({ count }), {
+    return new Response(JSON.stringify(countResult), {
       headers: { 
         "content-type": "application/json",
         "access-control-allow-origin": "*",

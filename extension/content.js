@@ -214,12 +214,8 @@ class SignalsInjector {
           });
 
           // Add subtle performance indicator next to view count (only on original posts)
-          console.log('🔍 Checking if original post for performance indicator...');
           if (this.isOriginalPost(tweetElement)) {
-            console.log('✅ This is an original post, adding performance indicator');
             this.addViewsPerformanceIndicator(tweetElement, tweetData, this.savedSignals.get(tweetUrl));
-          } else {
-            console.log('❌ This is not an original post, skipping performance indicator');
           }
         } else {
           // Save icon styled like other Twitter buttons with extra spacing
@@ -423,6 +419,39 @@ class SignalsInjector {
 
       <div id="evidence-field" style="margin-bottom: 28px; display: none;">
         <label style="display: block; font-weight: 500; margin-bottom: 10px; color: #e5e7eb; font-size: 14px;">
+          Disclosure Status
+        </label>
+        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+          <button id="disclosed-btn" style="
+            flex: 1;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e5e7eb;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+          ">
+            Disclosed
+          </button>
+          <button id="undisclosed-btn" style="
+            flex: 1;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e5e7eb;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+          ">
+            Undisclosed
+          </button>
+        </div>
+        <label style="display: block; font-weight: 500; margin-bottom: 10px; color: #e5e7eb; font-size: 14px;">
           Evidence
         </label>
         <textarea 
@@ -488,6 +517,8 @@ class SignalsInjector {
     const bullishBtn = overlay.querySelector('#bullish-btn');
     const bearishBtn = overlay.querySelector('#bearish-btn');
     const paidPromoBtn = overlay.querySelector('#paid-promo-btn');
+    const disclosedBtn = overlay.querySelector('#disclosed-btn');
+    const undisclosedBtn = overlay.querySelector('#undisclosed-btn');
     const projectSearch = overlay.querySelector('#project-search');
     const projectDropdown = overlay.querySelector('#project-dropdown');
     const projectSelector = overlay.querySelector('#project-selector');
@@ -498,6 +529,7 @@ class SignalsInjector {
 
     let selectedType = null; // 'bullish', 'bearish', or 'paid_promo'
     let selectedProject = null;
+    let selectedDisclosureStatus = 'disclosed'; // Default to disclosed
     let recentProjectIds = [];
 
     // Load recently used projects
@@ -558,6 +590,38 @@ class SignalsInjector {
     if (evidenceInput) {
       evidenceInput.addEventListener('input', () => {
         this.updateSaveButtonState(saveBtn, selectedType, selectedProject, evidenceInput.value);
+      });
+    }
+
+    // Disclosure status selection
+    if (disclosedBtn && undisclosedBtn) {
+      // Set disclosed as default selected
+      disclosedBtn.style.borderColor = '#10b981';
+      disclosedBtn.style.background = 'rgba(16, 185, 129, 0.15)';
+      disclosedBtn.style.color = '#34d399';
+
+      [disclosedBtn, undisclosedBtn].forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Reset both buttons
+          [disclosedBtn, undisclosedBtn].forEach(b => {
+            b.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            b.style.background = 'rgba(255, 255, 255, 0.05)';
+            b.style.color = '#e5e7eb';
+          });
+          
+          // Style the selected button
+          if (btn.id === 'disclosed-btn') {
+            btn.style.borderColor = '#10b981';
+            btn.style.background = 'rgba(16, 185, 129, 0.15)';
+            btn.style.color = '#34d399';
+            selectedDisclosureStatus = 'disclosed';
+          } else {
+            btn.style.borderColor = '#ef4444';
+            btn.style.background = 'rgba(239, 68, 68, 0.15)';
+            btn.style.color = '#f87171';
+            selectedDisclosureStatus = 'undisclosed';
+          }
+        });
       });
     }
 
@@ -698,6 +762,7 @@ class SignalsInjector {
             tweetUrl: tweetData.tweetUrl,
             tweetContent: tweetData.text,
             evidence: evidence,
+            disclosureStatus: selectedDisclosureStatus,
           });
           
           // Show success with profile link
@@ -869,6 +934,7 @@ class SignalsInjector {
         tweetUrl: reportData.tweetUrl,
         tweetContent: reportData.tweetContent,
         evidence: reportData.evidence,
+        disclosureStatus: reportData.disclosureStatus,
       }),
     });
 
@@ -1036,8 +1102,6 @@ class SignalsInjector {
   }
 
   async addViewsPerformanceIndicator(tweetElement, tweetData, signalData) {
-    console.log('🎯 Adding performance indicator to tweet:', tweetElement);
-    
     // Find any element containing "Views" text
     let viewsElement = null;
     const allElements = tweetElement.querySelectorAll('*');
@@ -1046,16 +1110,11 @@ class SignalsInjector {
       const text = element.textContent || '';
       if (text.includes('Views') && !element.querySelector('.signals-perf-indicator')) {
         viewsElement = element;
-        console.log('✅ Found Views element:', element, 'Text:', text);
         break;
       }
     }
     
-    if (!viewsElement) {
-      console.log('❌ Could not find Views element in tweet');
-      console.log('Tweet text content:', tweetElement.textContent);
-      return;
-    }
+    if (!viewsElement) return;
 
     // Create performance indicator container
     const performanceSpan = document.createElement('span');
@@ -1070,13 +1129,10 @@ class SignalsInjector {
 
     // Insert the performance indicator right after the views element
     viewsElement.appendChild(performanceSpan);
-    console.log('Added performance indicator after Views');
 
     // Fetch performance data
     try {
-      console.log('Fetching performance for signal:', signalData);
       const performance = await this.getSignalPerformance(signalData, tweetData);
-      console.log('Performance result:', performance);
       
       if (performance !== null) {
         const isPositive = performance >= 0;
@@ -1086,14 +1142,10 @@ class SignalsInjector {
         performanceSpan.innerHTML = `<span style="color: ${color}; font-weight: 500;">
           ${arrow}${Math.abs(performance).toFixed(1)}%
         </span>`;
-        
-        console.log('Added performance indicator:', `${arrow}${Math.abs(performance).toFixed(1)}%`);
       } else {
-        console.log('No performance data available, removing indicator');
         performanceSpan.remove();
       }
     } catch (error) {
-      console.error('Failed to get performance data:', error);
       performanceSpan.remove();
     }
   }
@@ -1114,9 +1166,24 @@ class SignalsInjector {
       if (!response.ok) return;
       
       const data = await response.json();
-      const count = data.count || 0;
       
-      if (count === 0) return; // No reports, don't show anything
+      // Safely extract values with defaults
+      const total = (data && typeof data.total === 'number') ? data.total : 0;
+      const disclosed = (data && typeof data.disclosed === 'number') ? data.disclosed : 0;
+      const undisclosed = (data && typeof data.undisclosed === 'number') ? data.undisclosed : 0;
+      
+      // Only show indicator if there are actual reports
+      if (!total || total === 0) return;
+      
+      // Build disclosure status text
+      let disclosureText = '';
+      if (disclosed > 0 && undisclosed > 0) {
+        disclosureText = ' (disclosed and undisclosed)';
+      } else if (disclosed > 0) {
+        disclosureText = ' (disclosed)';
+      } else if (undisclosed > 0) {
+        disclosureText = ' (undisclosed)';
+      }
       
       // Find the tweet text element
       const tweetTextElement = tweetElement.querySelector('[data-testid="tweetText"]');
@@ -1142,7 +1209,7 @@ class SignalsInjector {
         text-decoration: none;
         transition: color 0.2s;
       `;
-      link.innerHTML = `⚠️ ${count} reported as paid promo`;
+      link.innerHTML = `⚠️ ${total} reported as paid promo${disclosureText}`;
       
       // Add hover effect to match X's link styling (underline)
       link.addEventListener('mouseenter', () => {
@@ -1157,17 +1224,12 @@ class SignalsInjector {
       
       // Insert before the tweet text
       tweetTextElement.parentNode.insertBefore(indicator, tweetTextElement);
-      
-      console.log(`Added paid promo indicator: ${count} reports for ${username}`);
     } catch (error) {
-      console.error('Failed to add paid promo indicator:', error);
+      // Silently fail - don't log to avoid console spam
     }
   }
 
   async getSignalPerformance(signalData, tweetData) {
-    console.log('Looking for project with handle:', signalData.projectHandle);
-    console.log('Available verified projects:', this.verifiedProjects.map(p => p.twitterUsername));
-    
     const apiBase = await getCurrentApiBaseUrl();
     
     // Find the verified project for this signal
@@ -1175,12 +1237,7 @@ class SignalsInjector {
       p.twitterUsername.toLowerCase() === signalData.projectHandle.toLowerCase()
     );
     
-    if (!project) {
-      console.log('No verified project found for:', signalData.projectHandle);
-      return null;
-    }
-    
-    console.log('Found project:', project);
+    if (!project) return null;
 
     try {
       let callPrice, currentPrice;
@@ -1239,7 +1296,6 @@ class SignalsInjector {
       
       return null;
     } catch (error) {
-      console.error('Error fetching price data:', error);
       return null;
     }
   }

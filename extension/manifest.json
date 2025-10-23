@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Signals - Trading Signal Tracker",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Track bullish and bearish trading signals on X.com with Ethos Network accountability",
   "permissions": [
     "activeTab",

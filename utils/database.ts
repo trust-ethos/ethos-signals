@@ -37,6 +37,7 @@ export interface PaidPromoReport {
   twitterUsername: string;
   tweetContent?: string;
   evidence?: string;
+  disclosureStatus: "disclosed" | "undisclosed";
   reportedAt: number; // epoch ms
   authToken?: string;
   reportedBy?: {
@@ -848,13 +849,14 @@ export async function savePaidPromoReport(report: PaidPromoReport): Promise<bool
   try {
     await client.queryObject(`
       INSERT INTO paid_promo_reports (
-        id, tweet_url, twitter_username, tweet_content, evidence, reported_at, auth_token
+        id, tweet_url, twitter_username, tweet_content, evidence, disclosure_status, reported_at, auth_token
       ) VALUES (
-        $1, $2, $3, $4, $5, to_timestamp($6), $7
+        $1, $2, $3, $4, $5, $6, to_timestamp($7), $8
       )
       ON CONFLICT (tweet_url, auth_token) DO UPDATE SET
         tweet_content = EXCLUDED.tweet_content,
         evidence = EXCLUDED.evidence,
+        disclosure_status = EXCLUDED.disclosure_status,
         reported_at = EXCLUDED.reported_at
     `, [
       report.id,
@@ -862,6 +864,7 @@ export async function savePaidPromoReport(report: PaidPromoReport): Promise<bool
       report.twitterUsername,
       report.tweetContent || null,
       report.evidence || null,
+      report.disclosureStatus,
       report.reportedAt / 1000, // Convert to seconds for PostgreSQL
       report.authToken || null,
     ]);
@@ -883,6 +886,7 @@ export async function getPaidPromoReportsByUsername(username: string): Promise<P
       twitter_username: string;
       tweet_content: string | null;
       evidence: string | null;
+      disclosure_status: "disclosed" | "undisclosed";
       reported_at: Date;
       auth_token: string | null;
       reported_by_wallet: string | null;
@@ -906,6 +910,7 @@ export async function getPaidPromoReportsByUsername(username: string): Promise<P
       twitterUsername: row.twitter_username,
       tweetContent: row.tweet_content || undefined,
       evidence: row.evidence || undefined,
+      disclosureStatus: row.disclosure_status,
       reportedAt: row.reported_at.getTime(), // Convert to epoch ms
       authToken: row.auth_token || undefined,
       reportedBy: row.reported_by_wallet ? {
@@ -920,20 +925,46 @@ export async function getPaidPromoReportsByUsername(username: string): Promise<P
   }
 }
 
-export async function getPaidPromoCountForTweet(tweetUrl: string): Promise<number> {
+export interface PaidPromoCountResult {
+  total: number;
+  disclosed: number;
+  undisclosed: number;
+}
+
+export async function getPaidPromoCountForTweet(tweetUrl: string): Promise<PaidPromoCountResult> {
   const client = await getDbClient();
   
   try {
-    const result = await client.queryObject<{ count: string }>(`
-      SELECT COUNT(*) as count 
+    const result = await client.queryObject<{ 
+      disclosure_status: "disclosed" | "undisclosed";
+      count: string;
+    }>(`
+      SELECT disclosure_status, COUNT(*) as count 
       FROM paid_promo_reports
       WHERE tweet_url = $1
+      GROUP BY disclosure_status
     `, [tweetUrl]);
     
-    return parseInt(result.rows[0]?.count || "0");
+    let disclosed = 0;
+    let undisclosed = 0;
+    
+    for (const row of result.rows) {
+      const count = parseInt(row.count);
+      if (row.disclosure_status === 'disclosed') {
+        disclosed = count;
+      } else if (row.disclosure_status === 'undisclosed') {
+        undisclosed = count;
+      }
+    }
+    
+    return {
+      total: disclosed + undisclosed,
+      disclosed,
+      undisclosed,
+    };
   } catch (error) {
     console.error("Failed to get paid promo count:", error);
-    return 0;
+    return { total: 0, disclosed: 0, undisclosed: 0 };
   }
 }
 

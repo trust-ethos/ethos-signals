@@ -22,6 +22,7 @@ interface PaidPromoReport {
   twitterUsername: string;
   tweetContent?: string;
   evidence?: string;
+  disclosureStatus: "disclosed" | "undisclosed";
   reportedAt: number;
   reportedBy?: {
     walletAddress: string;
@@ -304,9 +305,21 @@ export default function ContributorSignalsList({
                         <h3 class="text-xl font-bold text-white mb-2">
                           Reported as Paid Promo
                         </h3>
-                        <Badge variant="default" class="text-sm bg-orange-500/20 text-orange-400 border-orange-500/30">
-                          Paid Promotion
-                        </Badge>
+                        <div class="flex gap-2">
+                          <Badge variant="default" class="text-sm bg-orange-500/20 text-orange-400 border-orange-500/30">
+                            Paid Promotion
+                          </Badge>
+                          <Badge 
+                            variant="default" 
+                            class={`text-sm ${
+                              report.disclosureStatus === 'disclosed' 
+                                ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                                : 'bg-red-500/20 text-red-400 border-red-500/30'
+                            }`}
+                          >
+                            {report.disclosureStatus === 'disclosed' ? 'Disclosed' : 'Undisclosed'}
+                          </Badge>
+                        </div>
                       </div>
 
                       {/* Tweet Content */}
